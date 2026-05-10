@@ -27,36 +27,335 @@
     <div class="test-progress"><div class="test-progress-bar" id="progressBar" style="width:0%"></div></div>
 
     <div id="loadState" class="empty">
-      <div class="empty-title">Test delivery not enabled yet</div>
-      The chapter test + EASE adaptive engine will plug in here.
-      For now, this page is a scaffold.
+      <div class="empty-title">Loading…</div>
+      Fetching your test.
+    </div>
+
+    <div id="errorState" class="empty" hidden>
+      <div class="empty-title" id="errorTitle">Something went wrong</div>
+      <div id="errorMsg" style="margin-bottom:14px"></div>
+      <a href="/" class="btn btn-secondary">Back to dashboard</a>
     </div>
 
     <div id="testBody" hidden>
       <div class="qstem" id="qstem"></div>
       <div id="qopts"></div>
+      <div id="qNumeric" hidden>
+        <input id="numericInput" class="input" inputmode="decimal" placeholder="Type your answer">
+      </div>
+      <div id="qShort" hidden>
+        <input id="shortInput" class="input" placeholder="Type your answer">
+      </div>
       <div class="test-nav">
         <button class="btn btn-secondary" id="prevBtn" type="button">Back</button>
-        <button class="btn btn-primary"   id="nextBtn" type="button" disabled>Next</button>
+        <button class="btn btn-primary"   id="nextBtn" type="button">Next</button>
+      </div>
+    </div>
+
+    <div id="reviewState" hidden>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head"><div class="card-title">Review your answers</div></div>
+        <div id="reviewList"></div>
+      </div>
+      <div class="test-nav">
+        <button class="btn btn-secondary" id="reviewBack" type="button">Go back</button>
+        <button class="btn btn-primary"   id="submitBtn" type="button">Submit test</button>
+      </div>
+    </div>
+
+    <div id="doneState" hidden>
+      <div class="card" style="text-align:center; padding:36px">
+        <div style="font-family:'Lora',serif; font-size:1.4rem; margin-bottom:6px">Test submitted ✓</div>
+        <div style="color:var(--ink-3); margin-bottom:18px">Your teacher will review the results.</div>
+        <a href="/tests" class="btn btn-primary">Back to my tests</a>
       </div>
     </div>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
-  <script>
-    // Test-mode lockdown — discourage tab-switching during a test.
-    // (Light-touch only; not a security boundary. Heavy-handed kiosk
-    // mode comes in Phase 2 when essay/EASE delivery ships.)
+  <script type="module">
+    import {
+      doc, getDoc, getDocs, collection, updateDoc, serverTimestamp, query, orderBy
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // ─── State ──────────────────────────────────────────────────
+    let attempt = null;       // chapter_test_attempts/{id} doc data
+    let test = null;          // chapter_tests/{id} doc data
+    let items = [];           // ordered items array
+    let answers = {};         // itemId -> { answer, isCorrect, marks }
+    let cur = 0;              // current item index
+    let timerHandle = null;
+    let endsAt = null;        // earlier of session.closesAt and start+durationMin
     let tabSwitches = 0;
+
+    // Lockdown signals
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) tabSwitches++;
     });
     window.addEventListener('beforeunload', (e) => {
-      // Don't actually block — just nudge.
-      // Real submit will clear the warning by setting window.__submitted.
       if (window.__submitted) return;
       e.preventDefault(); e.returnValue = '';
     });
+
+    window.addEventListener('authReady', async (ev) => {
+      if (!ev.detail.signedIn) { window.location.href = '/login'; return; }
+      const params = new URLSearchParams(window.location.search);
+      const attemptId = params.get('attemptId');
+      if (!attemptId) return showError('No test specified', 'Open a test from your dashboard or /tests page.');
+
+      try {
+        // 1. Load attempt
+        const aRef = doc(window.db, 'chapter_test_attempts', attemptId);
+        const aSnap = await getDoc(aRef);
+        if (!aSnap.exists()) return showError('Test not found', 'This test may have been removed.');
+        attempt = { id: aSnap.id, ...aSnap.data() };
+
+        // 2. Verify ownership
+        if (attempt.studentUid !== window.currentUser.uid) {
+          return showError('Not your test', 'You can only take tests assigned to you.');
+        }
+
+        // 3. Verify status
+        if (attempt.status === 'submitted' || attempt.status === 'scored' || attempt.status === 'flagged') {
+          window.location.href = `/report?attemptId=${attemptId}`;
+          return;
+        }
+        if (attempt.status === 'cancelled') {
+          return showError('Test cancelled', 'Your teacher cancelled this session.');
+        }
+
+        // 4. Verify time window
+        const now = Date.now();
+        const opens = attempt.opensAt && attempt.opensAt.toDate ? attempt.opensAt.toDate().getTime() : 0;
+        const closes = attempt.closesAt && attempt.closesAt.toDate ? attempt.closesAt.toDate().getTime() : Infinity;
+        if (now < opens) return showError('Not open yet', 'This test opens at ' + new Date(opens).toLocaleString('en-GB'));
+        if (now > closes) return showError('Test closed', 'This test closed at ' + new Date(closes).toLocaleString('en-GB'));
+
+        // 5. Load test definition + items
+        const tSnap = await getDoc(doc(window.db, 'chapter_tests', attempt.testId));
+        if (!tSnap.exists()) return showError('Test definition missing', 'The author may have removed it.');
+        test = { id: tSnap.id, ...tSnap.data() };
+        const iSnap = await getDocs(query(
+          collection(window.db, 'chapter_tests', attempt.testId, 'items'),
+          orderBy('seq', 'asc')
+        ));
+        items = iSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (items.length === 0) return showError('No items', 'This test has no questions yet.');
+
+        // 6. Set timer end: earlier of session close OR start+durationMin
+        const startedAt = attempt.startedAt && attempt.startedAt.toDate
+          ? attempt.startedAt.toDate().getTime()
+          : Date.now();
+        const durationCutoff = startedAt + (test.durationMin || 30) * 60_000;
+        endsAt = Math.min(durationCutoff, closes);
+
+        // 7. Mark attempt as in_progress
+        if (attempt.status === 'draft') {
+          await updateDoc(aRef, {
+            status: 'in_progress',
+            startedAt: serverTimestamp(),
+          });
+        }
+
+        // 8. Load any saved answers (resume)
+        if (attempt.responses && Array.isArray(attempt.responses)) {
+          attempt.responses.forEach(r => { answers[r.itemId] = r; });
+        }
+
+        document.getElementById('testEyebrow').textContent = `Chapter Test · ${test.unitCode || ''}`;
+        document.getElementById('testTitle').textContent = test.unitTitle || '(untitled)';
+        document.getElementById('loadState').hidden = true;
+        document.getElementById('testBody').hidden = false;
+        startTimer();
+        renderItem();
+      } catch (e) {
+        showError('Could not load test', e.message || e.code);
+      }
+    });
+
+    function showError(title, msg) {
+      document.getElementById('loadState').hidden = true;
+      document.getElementById('errorState').hidden = false;
+      document.getElementById('errorTitle').textContent = title;
+      document.getElementById('errorMsg').textContent = msg;
+    }
+
+    function startTimer() {
+      function tick() {
+        const remaining = endsAt - Date.now();
+        const el = document.getElementById('testTimer');
+        if (remaining <= 0) {
+          el.textContent = '00:00';
+          if (timerHandle) clearInterval(timerHandle);
+          autoSubmit();
+          return;
+        }
+        const mins = Math.floor(remaining / 60_000);
+        const secs = Math.floor((remaining % 60_000) / 1000);
+        el.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+      }
+      tick();
+      timerHandle = setInterval(tick, 1000);
+    }
+
+    function renderItem() {
+      const it = items[cur];
+      document.getElementById('qstem').textContent = `Q${cur+1}. ${it.stem}`;
+      const optsBox = document.getElementById('qopts');
+      const numBox  = document.getElementById('qNumeric');
+      const shortBox= document.getElementById('qShort');
+      optsBox.hidden = true; numBox.hidden = true; shortBox.hidden = true;
+
+      const saved = answers[it.id];
+      if (it.type === 'mcq') {
+        optsBox.hidden = false;
+        optsBox.innerHTML = (it.options || []).map((o, i) => `
+          <div class="qopt ${saved && saved.answer === i ? 'selected' : ''}" data-i="${i}">
+            <span class="qopt-letter">${String.fromCharCode(65+i)}</span>
+            <span class="qopt-text">${escHtml(o)}</span>
+          </div>
+        `).join('');
+        optsBox.querySelectorAll('.qopt').forEach(el => {
+          el.addEventListener('click', () => {
+            optsBox.querySelectorAll('.qopt').forEach(x => x.classList.remove('selected'));
+            el.classList.add('selected');
+            saveAnswer(it, Number(el.dataset.i));
+          });
+        });
+      } else if (it.type === 'numeric') {
+        numBox.hidden = false;
+        const inp = document.getElementById('numericInput');
+        inp.value = saved ? String(saved.answer || '') : '';
+        inp.oninput = () => saveAnswer(it, inp.value);
+      } else if (it.type === 'short') {
+        shortBox.hidden = false;
+        const inp = document.getElementById('shortInput');
+        inp.value = saved ? String(saved.answer || '') : '';
+        inp.oninput = () => saveAnswer(it, inp.value);
+      }
+
+      document.getElementById('progressBar').style.width =
+        Math.round(((cur + 1) / items.length) * 100) + '%';
+      document.getElementById('prevBtn').disabled = cur === 0;
+      document.getElementById('nextBtn').textContent = cur === items.length - 1 ? 'Review' : 'Next';
+    }
+
+    function saveAnswer(it, ans) {
+      let isCorrect = false;
+      if (it.type === 'mcq') {
+        isCorrect = (Number(ans) === Number(it.correctIdx));
+      } else if (it.type === 'numeric') {
+        const a = String(ans || '').trim();
+        const c = String(it.correctAnswer || '').trim();
+        // Try numeric equality first, fall back to string match
+        const aN = Number(a), cN = Number(c);
+        if (!isNaN(aN) && !isNaN(cN)) isCorrect = (aN === cN);
+        else isCorrect = (a.toLowerCase() === c.toLowerCase());
+      } else if (it.type === 'short') {
+        isCorrect = String(ans || '').trim().toLowerCase() === String(it.correctAnswer || '').trim().toLowerCase();
+      }
+      answers[it.id] = {
+        itemId: it.id, seq: it.seq, answer: ans, isCorrect,
+        marks: it.marks || 1, type: it.type,
+      };
+      // Best-effort persist (debounced not implemented for MVP)
+      persistProgress();
+    }
+
+    let persistTimer = null;
+    function persistProgress() {
+      if (persistTimer) clearTimeout(persistTimer);
+      persistTimer = setTimeout(async () => {
+        try {
+          await updateDoc(doc(window.db, 'chapter_test_attempts', attempt.id), {
+            responses: Object.values(answers),
+            tabSwitches,
+            updatedAt: serverTimestamp(),
+          });
+        } catch (_) {}
+      }, 500);
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (cur > 0) { cur--; renderItem(); }
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (cur < items.length - 1) { cur++; renderItem(); }
+      else showReview();
+    });
+
+    function showReview() {
+      document.getElementById('testBody').hidden = true;
+      document.getElementById('reviewState').hidden = false;
+      const list = document.getElementById('reviewList');
+      list.innerHTML = items.map((it, i) => {
+        const a = answers[it.id];
+        const status = a ? '✓ Answered' : '⚠ Not answered';
+        const color  = a ? 'var(--ok)' : 'var(--warn)';
+        return `
+          <div style="padding:10px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:12px;">
+            <div>
+              <div style="font-size:.84rem; color:var(--ink-3)">Q${i+1}</div>
+              <div style="font-size:.94rem">${escHtml((it.stem || '').slice(0, 80))}${(it.stem||'').length > 80 ? '…' : ''}</div>
+            </div>
+            <div style="color:${color}; font-size:.84rem; white-space:nowrap; align-self:center;">${status}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('reviewBack').addEventListener('click', () => {
+      document.getElementById('reviewState').hidden = true;
+      document.getElementById('testBody').hidden = false;
+      cur = items.length - 1;
+      renderItem();
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', () => submit(false));
+
+    async function autoSubmit() {
+      if (window.__submitted) return;
+      await submit(true);
+    }
+
+    async function submit(isAuto) {
+      if (window.__submitted) return;
+      const responses = Object.values(answers);
+      const totalMarks = items.reduce((s, i) => s + (i.marks || 1), 0);
+      const earnedMarks = responses.reduce((s, r) => s + (r.isCorrect ? (r.marks || 1) : 0), 0);
+      const rawScorePct = totalMarks > 0 ? Math.round((earnedMarks / totalMarks) * 100) : 0;
+      const passThreshold = test.passThresholdPct || 60;
+      const passed = rawScorePct >= passThreshold;
+
+      // Check whether any non-auto-gradeable items exist (none in MVP — short text uses exact match)
+      const hasUnGradable = false;
+      const finalStatus = hasUnGradable ? 'flagged' : 'scored';
+
+      try {
+        await updateDoc(doc(window.db, 'chapter_test_attempts', attempt.id), {
+          responses,
+          rawScorePct,
+          earnedMarks, totalMarks,
+          passed, status: finalStatus,
+          submittedAt: serverTimestamp(),
+          autoSubmit: !!isAuto,
+          tabSwitches,
+        });
+        window.__submitted = true;
+        if (timerHandle) clearInterval(timerHandle);
+        document.getElementById('testBody').hidden = true;
+        document.getElementById('reviewState').hidden = true;
+        document.getElementById('doneState').hidden = false;
+      } catch (e) {
+        alert('Submit failed: ' + (e.message || e.code) + '\nTry again.');
+      }
+    }
+
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
   </script>
 </body>
 </html>

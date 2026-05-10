@@ -24,21 +24,27 @@
     .grid-2 { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
     @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
 
-    .stat {
-      display: flex; align-items: baseline; gap: 8px;
-    }
-    .stat-num { font-size: 2rem; font-weight: 700; color: var(--ink); font-family: 'Lora', serif; }
-    .stat-lbl { font-size: .86rem; color: var(--ink-3); }
-
     .test-row {
       display: flex; align-items: center; justify-content: space-between;
       gap: 12px; padding: 12px 0;
       border-bottom: 1px solid var(--border);
+      text-decoration: none; color: inherit;
     }
     .test-row:last-child { border-bottom: none; }
-    .test-row-info { flex: 1; }
+    .test-row:hover { background: var(--paper); margin: 0 -12px; padding: 12px; border-radius: 8px; text-decoration: none; }
+    .test-row-info { flex: 1; min-width: 0; }
     .test-row-title { font-weight: 500; color: var(--ink); }
-    .test-row-meta  { font-size: .82rem; color: var(--ink-3); }
+    .test-row-meta  { font-size: .82rem; color: var(--ink-3); margin-top: 2px; }
+    .test-row-cta {
+      padding: 6px 14px; border-radius: 8px; font-size: .84rem; font-weight: 600;
+      background: var(--mor); color: #fff;
+    }
+    .test-row-score {
+      padding: 4px 10px; border-radius: 99px;
+      font-size: .82rem; font-weight: 600;
+    }
+    .test-row-score.pass { background: var(--ok-bg); color: var(--ok); }
+    .test-row-score.fail { background: var(--danger-bg); color: var(--danger); }
   </style>
 </head>
 <body style="display:none">
@@ -55,12 +61,10 @@
     <section class="grid-2">
       <div class="card">
         <div class="card-head">
-          <div class="card-title">Upcoming tests</div>
+          <div class="card-title">Tests available now</div>
         </div>
         <div id="upcomingList">
-          <div class="empty" style="padding:18px 0">
-            No tests scheduled for your class yet.
-          </div>
+          <div class="empty" style="padding:18px 0">Loading…</div>
         </div>
       </div>
 
@@ -70,9 +74,7 @@
           <a href="/tests" class="card-sub">View all →</a>
         </div>
         <div id="recentList">
-          <div class="empty" style="padding:18px 0">
-            You haven't taken any tests yet.
-          </div>
+          <div class="empty" style="padding:18px 0">Loading…</div>
         </div>
       </div>
     </section>
@@ -83,17 +85,19 @@
         <a href="/growth" class="card-sub">See chart →</a>
       </div>
       <div id="growthSummary" class="empty" style="padding:18px 0">
-        Take an EASE assessment to start tracking your growth.
+        EASE growth assessments will start in the Fall window. Stay tuned!
       </div>
     </section>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
-  <script>
-    // Inject navbar
+  <script type="module">
+    import {
+      collection, query, where, onSnapshot, orderBy, limit
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
-      // Re-run inline script in the partial
       document.querySelectorAll('#navbar-container script').forEach(old => {
         const s = document.createElement('script');
         s.textContent = old.textContent;
@@ -102,14 +106,89 @@
     });
 
     window.addEventListener('authReady', (ev) => {
-      if (!ev.detail.signedIn) return; // shouldn't happen here
+      if (!ev.detail.signedIn) return;
       const p = window.studentProfile;
       const first = (p.displayName || '').split(' ')[0] || '';
-      document.getElementById('helloName').textContent = 'Hi ' + first + (first ? '' : 'there') + ' 👋';
+      document.getElementById('helloName').textContent = 'Hi ' + (first || 'there') + ' 👋';
       document.getElementById('helloMeta').textContent =
         [p.school, p.className, p.gradeLevel ? 'Grade ' + p.gradeLevel : null]
           .filter(Boolean).join(' · ');
+
+      subscribeAttempts(window.currentUser.uid);
     });
+
+    function subscribeAttempts(uid) {
+      const q = query(
+        collection(window.db, 'chapter_test_attempts'),
+        where('studentUid', '==', uid),
+        orderBy('opensAt', 'desc'),
+        limit(20)
+      );
+      onSnapshot(q, snap => {
+        const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const now = Date.now();
+        const upcoming = all.filter(a => {
+          if (a.status === 'submitted' || a.status === 'scored' || a.status === 'flagged' || a.status === 'cancelled') return false;
+          const opens = a.opensAt && a.opensAt.toDate ? a.opensAt.toDate().getTime() : 0;
+          const closes = a.closesAt && a.closesAt.toDate ? a.closesAt.toDate().getTime() : Infinity;
+          return now >= opens && now <= closes;
+        });
+        const recent = all.filter(a => a.status === 'scored' || a.status === 'flagged' || a.status === 'submitted').slice(0, 5);
+        renderUpcoming(upcoming);
+        renderRecent(recent);
+      }, err => {
+        document.getElementById('upcomingList').innerHTML = '<div class="empty" style="padding:18px 0">Could not load tests: ' + escHtml(err.message || err.code) + '</div>';
+      });
+    }
+
+    function renderUpcoming(list) {
+      const box = document.getElementById('upcomingList');
+      if (list.length === 0) {
+        box.innerHTML = '<div class="empty" style="padding:18px 0">No tests available right now.</div>';
+        return;
+      }
+      box.innerHTML = list.map(a => `
+        <a href="/test?attemptId=${escAttr(a.id)}" class="test-row">
+          <div class="test-row-info">
+            <div class="test-row-title">${escHtml(a.testTitle || a.testId)}</div>
+            <div class="test-row-meta">Closes ${formatTs(a.closesAt)}</div>
+          </div>
+          <span class="test-row-cta">${a.status === 'in_progress' ? 'Continue' : 'Start'}</span>
+        </a>
+      `).join('');
+    }
+
+    function renderRecent(list) {
+      const box = document.getElementById('recentList');
+      if (list.length === 0) {
+        box.innerHTML = '<div class="empty" style="padding:18px 0">No results yet.</div>';
+        return;
+      }
+      box.innerHTML = list.map(a => {
+        const score = typeof a.rawScorePct === 'number' ? a.rawScorePct + '%' : '—';
+        const passClass = a.passed === true ? 'pass' : a.passed === false ? 'fail' : '';
+        return `
+          <a href="/report?attemptId=${escAttr(a.id)}" class="test-row">
+            <div class="test-row-info">
+              <div class="test-row-title">${escHtml(a.testTitle || a.testId)}</div>
+              <div class="test-row-meta">${formatTs(a.submittedAt || a.opensAt)}</div>
+            </div>
+            <span class="test-row-score ${passClass}">${score}</span>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function formatTs(ts) {
+      if (!ts || !ts.toDate) return '';
+      return ts.toDate().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+    function escAttr(s) { return escHtml(s); }
   </script>
 </body>
 </html>

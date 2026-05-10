@@ -25,10 +25,20 @@
       padding: 14px 16px; background: var(--white);
       border: 1px solid var(--border); border-radius: 12px;
       margin-bottom: 8px;
+      text-decoration: none; color: inherit;
     }
-    .test-item-info { flex: 1; }
+    .test-item:hover { border-color: var(--mor); text-decoration: none; }
+    .test-item-info { flex: 1; min-width: 0; }
     .test-item-title { font-weight: 500; }
     .test-item-meta  { font-size: .82rem; color: var(--ink-3); margin-top: 2px; }
+    .pill {
+      padding: 4px 10px; border-radius: 99px;
+      font-size: .78rem; font-weight: 600;
+    }
+    .pill-pass { background: var(--ok-bg); color: var(--ok); }
+    .pill-fail { background: var(--danger-bg); color: var(--danger); }
+    .pill-open { background: var(--mor-2); color: var(--mor); }
+    .pill-progress { background: var(--cyan-2); color: var(--cyan); }
   </style>
 </head>
 <body style="display:none">
@@ -38,30 +48,27 @@
 
   <main class="page">
     <h1 style="margin-bottom:6px">Tests</h1>
-    <p style="color:var(--ink-3); margin-bottom:18px">Chapter tests and EASE growth assessments.</p>
+    <p style="color:var(--ink-3); margin-bottom:18px">Chapter tests scheduled for your class.</p>
 
     <div class="tab-bar">
-      <button class="tab-btn active" data-tab="upcoming">Upcoming</button>
+      <button class="tab-btn active" data-tab="upcoming">Available now</button>
       <button class="tab-btn"        data-tab="past">Past</button>
     </div>
 
     <div id="paneUpcoming">
-      <div class="empty">
-        <div class="empty-title">No tests scheduled</div>
-        Once your teacher schedules a chapter test or EASE window, it will show up here.
-      </div>
+      <div class="empty">Loading…</div>
     </div>
-
     <div id="panePast" hidden>
-      <div class="empty">
-        <div class="empty-title">No completed tests yet</div>
-        Your past attempts and scores will appear here.
-      </div>
+      <div class="empty">Loading…</div>
     </div>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
-  <script>
+  <script type="module">
+    import {
+      collection, query, where, onSnapshot, orderBy, limit
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
       document.querySelectorAll('#navbar-container script').forEach(old => {
@@ -70,6 +77,8 @@
         old.replaceWith(s);
       });
     });
+
+    let allAttempts = [];
 
     document.querySelectorAll('.tab-btn').forEach(b => {
       b.addEventListener('click', () => {
@@ -80,6 +89,77 @@
         document.getElementById('panePast').hidden     = tab !== 'past';
       });
     });
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) return;
+      const q = query(
+        collection(window.db, 'chapter_test_attempts'),
+        where('studentUid', '==', window.currentUser.uid),
+        orderBy('opensAt', 'desc'),
+        limit(50)
+      );
+      onSnapshot(q, snap => {
+        allAttempts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        render();
+      });
+    });
+
+    function render() {
+      const now = Date.now();
+      const upcoming = [], past = [];
+      allAttempts.forEach(a => {
+        const opens  = a.opensAt && a.opensAt.toDate ? a.opensAt.toDate().getTime() : 0;
+        const closes = a.closesAt && a.closesAt.toDate ? a.closesAt.toDate().getTime() : Infinity;
+        const submitted = a.status === 'submitted' || a.status === 'scored' || a.status === 'flagged';
+        if (submitted || a.status === 'cancelled' || now > closes) past.push(a);
+        else if (now >= opens) upcoming.push(a);
+        else upcoming.push(a); // not yet open shows as upcoming-but-locked
+      });
+
+      const upBox = document.getElementById('paneUpcoming');
+      if (upcoming.length === 0) upBox.innerHTML = '<div class="empty"><div class="empty-title">No upcoming tests</div>Your teacher will schedule chapter tests here.</div>';
+      else upBox.innerHTML = upcoming.map(a => {
+        const opens = a.opensAt && a.opensAt.toDate ? a.opensAt.toDate() : null;
+        const isOpen = opens && opens.getTime() <= now;
+        const inProgress = a.status === 'in_progress';
+        return `
+          <a href="${isOpen ? '/test?attemptId=' + a.id : '#'}" class="test-item" ${isOpen ? '' : 'onclick="event.preventDefault()"'}>
+            <div class="test-item-info">
+              <div class="test-item-title">${escHtml(a.testTitle || a.testId)}</div>
+              <div class="test-item-meta">${isOpen ? 'Closes ' + formatTs(a.closesAt) : 'Opens ' + formatTs(a.opensAt)}</div>
+            </div>
+            <span class="pill ${inProgress ? 'pill-progress' : 'pill-open'}">${inProgress ? 'In progress' : (isOpen ? 'Open' : 'Locked')}</span>
+          </a>
+        `;
+      }).join('');
+
+      const pastBox = document.getElementById('panePast');
+      if (past.length === 0) pastBox.innerHTML = '<div class="empty"><div class="empty-title">No past tests</div>Your completed tests will show here.</div>';
+      else pastBox.innerHTML = past.map(a => {
+        const score = typeof a.rawScorePct === 'number' ? a.rawScorePct + '%' : '—';
+        const passClass = a.passed === true ? 'pill-pass' : a.passed === false ? 'pill-fail' : '';
+        return `
+          <a href="/report?attemptId=${escAttr(a.id)}" class="test-item">
+            <div class="test-item-info">
+              <div class="test-item-title">${escHtml(a.testTitle || a.testId)}</div>
+              <div class="test-item-meta">${escHtml(a.status)} · ${formatTs(a.submittedAt || a.opensAt)}</div>
+            </div>
+            <span class="pill ${passClass}">${score}</span>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function formatTs(ts) {
+      if (!ts || !ts.toDate) return '';
+      return ts.toDate().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+    function escAttr(s) { return escHtml(s); }
   </script>
 </body>
 </html>
