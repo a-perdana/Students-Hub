@@ -49,6 +49,20 @@ import {
 document.body.style.display = 'none';
 
 // ─── Init Firebase ────────────────────────────────────────────────
+// Defensive: surface a clear error if window.ENV didn't load. Possible causes:
+//   1. partials/firebase-env.html wasn't inlined (build pipeline broken)
+//   2. Vercel env vars not set (FIREBASE_API_KEY empty string)
+//   3. firebase-config.js missing locally (gitignored — copy from sibling hub)
+if (!window.ENV || !window.ENV.FIREBASE_API_KEY) {
+  document.body.style.display = '';
+  document.body.innerHTML =
+    '<div style="font-family:DM Sans,system-ui,sans-serif; max-width:520px; margin:80px auto; padding:24px; border:1px solid #fecaca; background:#fef2f2; color:#991b1b; border-radius:12px;">'
+    + '<h2 style="margin:0 0 8px;font-family:Lora,serif;">Configuration error</h2>'
+    + '<p style="margin:0 0 12px;line-height:1.5;">Firebase config is missing. If you are the deployer, set Vercel env vars (FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID) and redeploy.</p>'
+    + '<p style="margin:0;font-size:.85rem;color:#7f1d1d;">For local dev: copy <code>firebase-config.example.js</code> to <code>firebase-config.js</code> with real values from the sibling Hub.</p>'
+    + '</div>';
+  throw new Error('window.ENV.FIREBASE_API_KEY is not set — see banner.');
+}
 const cfg = {
   apiKey:            window.ENV.FIREBASE_API_KEY,
   authDomain:        window.ENV.FIREBASE_AUTH_DOMAIN,

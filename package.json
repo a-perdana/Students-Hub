@@ -2,7 +2,7 @@
   "name": "students-hub",
   "version": "0.1.0",
   "private": true,
-  "description": "Eduversal Students Hub — assessment delivery + growth tracking for partner-school students",
+  "description": "Students Hub — assessment delivery + growth tracking for partner-school students",
   "scripts": {
     "build": "node build.js",
     "dev": "node build.js && npx serve dist"
