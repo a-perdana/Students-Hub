@@ -71,13 +71,26 @@
         <div class="card-head"><div class="card-title">Question by question</div></div>
         <div id="itemsList"></div>
       </div>
+
+      <div class="card" id="shareCard" style="margin-bottom:18px">
+        <div class="card-head"><div class="card-title">Share with a parent</div></div>
+        <p style="color:var(--ink-3); font-size:.88rem; margin-bottom:12px">Generate a link your parent can open without signing in. The link expires in 30 days.</p>
+        <button class="btn btn-secondary" id="shareBtn" type="button">Generate share link</button>
+        <div id="shareResult" hidden style="margin-top:14px">
+          <input id="shareLink" class="input" readonly style="font-family:monospace; font-size:.78rem;">
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button class="btn btn-primary" id="copyBtn" type="button">Copy</button>
+            <button class="btn btn-ghost" id="revokeBtn" type="button">Revoke</button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      doc, getDoc, collection, getDocs, query, orderBy
+      doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, Timestamp
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -157,6 +170,59 @@
       const el = document.getElementById('errState');
       el.hidden = false;
       el.innerHTML = `<div class="empty-title">${escHtml(msg)}</div>`;
+    }
+
+    // Parent share — generates a parent_share_tokens doc keyed by a
+    // random URL-safe string. Doc is gettable by anyone who knows the
+    // token; rule blocks list. Default 30-day expiry. Student can revoke
+    // by deleting (rule allows owner-delete).
+    let currentShareToken = null;
+    document.getElementById('shareBtn').addEventListener('click', generateShare);
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const inp = document.getElementById('shareLink');
+      inp.select();
+      document.execCommand('copy');
+      inp.blur();
+    });
+    document.getElementById('revokeBtn').addEventListener('click', revokeShare);
+
+    async function generateShare() {
+      const params = new URLSearchParams(window.location.search);
+      const attemptId = params.get('attemptId');
+      if (!attemptId) return;
+      const token = randomToken();
+      try {
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        await setDoc(doc(window.db, 'parent_share_tokens', token), {
+          studentUid: window.currentUser.uid,
+          attemptId,
+          expiresAt: Timestamp.fromDate(expiresAt),
+          createdAt: Timestamp.fromDate(new Date()),
+        });
+        currentShareToken = token;
+        const url = window.location.origin + '/shared?token=' + token;
+        document.getElementById('shareLink').value = url;
+        document.getElementById('shareResult').hidden = false;
+        document.getElementById('shareBtn').hidden = true;
+      } catch (e) {
+        alert('Could not create share link: ' + (e.message || e.code));
+      }
+    }
+    async function revokeShare() {
+      if (!currentShareToken) return;
+      try {
+        await deleteDoc(doc(window.db, 'parent_share_tokens', currentShareToken));
+        currentShareToken = null;
+        document.getElementById('shareResult').hidden = true;
+        document.getElementById('shareBtn').hidden = false;
+      } catch (e) {
+        alert('Revoke failed: ' + (e.message || e.code));
+      }
+    }
+    function randomToken() {
+      const arr = new Uint8Array(24);
+      crypto.getRandomValues(arr);
+      return Array.from(arr).map(b => b.toString(36).padStart(2, '0')).join('').slice(0, 32);
     }
 
     function formatTs(ts) {

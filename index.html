@@ -85,7 +85,7 @@
         <a href="/growth" class="card-sub">See chart →</a>
       </div>
       <div id="growthSummary" class="empty" style="padding:18px 0">
-        EASE growth assessments will start in the Fall window. Stay tuned!
+        Loading…
       </div>
     </section>
   </main>
@@ -93,7 +93,7 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      collection, query, where, onSnapshot, orderBy, limit
+      collection, query, where, onSnapshot, orderBy, limit, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -115,7 +115,71 @@
           .filter(Boolean).join(' · ');
 
       subscribeAttempts(window.currentUser.uid);
+      loadGrowthSummary(window.currentUser.uid);
     });
+
+    async function loadGrowthSummary(uid) {
+      try {
+        // Open EASE window?
+        const wsnap = await getDocs(query(
+          collection(window.db, 'ease_test_windows'),
+          where('status', '==', 'open')
+        ));
+        const now = Date.now();
+        const openWin = wsnap.docs.map(d => ({ id: d.id, ...d.data() })).find(w => {
+          const o = w.opensAt?.toDate?.()?.getTime() || 0;
+          const c = w.closesAt?.toDate?.()?.getTime() || Infinity;
+          return now >= o && now <= c;
+        });
+
+        const gsnap = await getDocs(query(
+          collection(window.db, 'ease_growth'),
+          where('studentUid', '==', uid)
+        ));
+        const SUBJ_LABEL = { math: 'Math', english: 'English', science: 'Science' };
+        const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
+        const have = {};
+        gsnap.forEach(d => { have[d.data().subjectId] = d.data(); });
+
+        const box = document.getElementById('growthSummary');
+        const lines = [];
+
+        // Latest scores
+        Object.entries(have).forEach(([s, g]) => {
+          const w = (g.windows || []).slice(-1)[0];
+          if (!w) return;
+          const growth = w.growthVsPrev != null
+            ? `<span style="margin-left:6px; padding:2px 8px; border-radius:99px; font-size:.78rem; font-weight:600; background:${w.growthVsPrev >= 0 ? 'var(--ok-bg)' : 'var(--danger-bg)'}; color:${w.growthVsPrev >= 0 ? 'var(--ok)' : 'var(--danger)'}">${w.growthVsPrev >= 0 ? '+' : ''}${w.growthVsPrev}</span>`
+            : '';
+          lines.push(`<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
+            <span>${SUBJ_GLYPH[s]} ${SUBJ_LABEL[s]}</span>
+            <span><strong>${w.ritScore}</strong>${growth}</span>
+          </div>`);
+        });
+
+        // CTA if open window
+        if (openWin) {
+          const submitted = new Set();
+          (openWin.subjects || []).forEach(s => {
+            const g = have[s];
+            const last = g?.windows?.slice(-1)[0];
+            if (last && last.windowId === openWin.id) submitted.add(s);
+          });
+          const pending = (openWin.subjects || []).filter(s => !submitted.has(s));
+          if (pending.length > 0) {
+            lines.unshift(`<div style="background:linear-gradient(135deg,var(--mor),var(--cyan)); color:#fff; padding:14px 16px; border-radius:12px; margin-bottom:10px;">
+              <div style="font-weight:600; margin-bottom:2px">EASE ${openWin.window} window is open</div>
+              <div style="font-size:.84rem; opacity:.85; margin-bottom:10px">${pending.map(s => SUBJ_LABEL[s] || s).join(', ')} pending</div>
+              <a href="/ease-test" style="display:inline-block; background:#fff; color:var(--mor); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; font-size:.86rem">Take EASE →</a>
+            </div>`);
+          }
+        }
+
+        box.innerHTML = lines.length ? lines.join('') : 'EASE growth assessments will start when a window opens. Stay tuned!';
+      } catch (e) {
+        console.error('[dashboard] growth summary error', e);
+      }
+    }
 
     function subscribeAttempts(uid) {
       const q = query(

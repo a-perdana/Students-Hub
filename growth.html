@@ -8,6 +8,27 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
+  <style>
+    .subject-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; margin-bottom: 16px;
+    }
+    .subject-card h3 { margin-bottom: 4px; }
+    .subject-meta { color: var(--ink-3); font-size: .86rem; margin-bottom: 14px; }
+    .latest-rit { font-family: 'Lora', serif; font-size: 2.2rem; line-height: 1; color: var(--mor); }
+    .growth-chip {
+      display: inline-block; margin-left: 8px; padding: 3px 9px; border-radius: 99px;
+      font-size: .82rem; font-weight: 600; vertical-align: middle;
+    }
+    .growth-up   { background: var(--ok-bg); color: var(--ok); }
+    .growth-down { background: var(--danger-bg); color: var(--danger); }
+    .growth-flat { background: var(--paper); color: var(--ink-3); }
+    .chart-wrap { margin-top: 14px; }
+    .cta-row {
+      display: flex; gap: 10px; margin-top: 18px;
+    }
+    .cta-row .btn { flex: 1; justify-content: center; }
+  </style>
 </head>
 <body style="display:none">
   <!-- FIREBASE_ENV -->
@@ -16,18 +37,24 @@
 
   <main class="page">
     <h1>Your growth journey</h1>
-    <p style="color:var(--ink-3); margin-bottom:18px">EASE growth measures how much you're learning over time, in Math, English, and Science.</p>
+    <p style="color:var(--ink-3); margin-bottom:18px">EASE Growth measures how much you're learning across Math, English, and Science. Each window's score is on a 100–300 scale — higher is better, and growth is the change from window to window.</p>
 
-    <div class="card">
-      <div class="empty">
-        <div class="empty-title">No growth data yet</div>
-        Take your first EASE assessment to start your growth chart.
-      </div>
+    <div id="loadState" class="empty" style="padding:30px 20px">Loading…</div>
+    <div id="cardsBox"></div>
+
+    <div id="ctaBox" class="card" hidden style="margin-top:18px; text-align:center;">
+      <h3 id="ctaTitle">EASE window is open</h3>
+      <p id="ctaSub" style="color:var(--ink-3); margin: 4px 0 14px;">Take an EASE assessment now to track your growth.</p>
+      <a href="/ease-test" class="btn btn-primary">Start EASE</a>
     </div>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
-  <script>
+  <script type="module">
+    import {
+      collection, query, where, getDocs, limit
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
       document.querySelectorAll('#navbar-container script').forEach(old => {
@@ -36,6 +63,130 @@
         old.replaceWith(s);
       });
     });
+
+    const SUBJ = ['math', 'english', 'science'];
+    const SUBJ_LABEL = { math: 'Mathematics', english: 'English', science: 'Science' };
+    const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
+
+    window.addEventListener('authReady', async ev => {
+      if (!ev.detail.signedIn) return;
+      // Open windows
+      let openWin = null;
+      try {
+        const wsnap = await getDocs(query(
+          collection(window.db, 'ease_test_windows'),
+          where('status', '==', 'open')
+        ));
+        const now = Date.now();
+        const open = wsnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(w => {
+          const o = w.opensAt && w.opensAt.toDate ? w.opensAt.toDate().getTime() : 0;
+          const c = w.closesAt && w.closesAt.toDate ? w.closesAt.toDate().getTime() : Infinity;
+          return now >= o && now <= c;
+        });
+        openWin = open[0] || null;
+      } catch (_) {}
+
+      // Load growth docs for this user
+      const gsnap = await getDocs(query(
+        collection(window.db, 'ease_growth'),
+        where('studentUid', '==', window.currentUser.uid)
+      ));
+      const growth = {};
+      gsnap.forEach(d => { growth[d.data().subjectId] = d.data(); });
+
+      // Find sessions in current open window so we know what's still pending
+      let pendingSubjects = [];
+      let submittedThisWindow = new Set();
+      if (openWin) {
+        const ssnap = await getDocs(query(
+          collection(window.db, 'ease_sessions'),
+          where('studentUid', '==', window.currentUser.uid),
+          where('windowId', '==', openWin.id)
+        ));
+        ssnap.forEach(d => {
+          if (d.data().status === 'submitted') submittedThisWindow.add(d.data().subjectId);
+        });
+        pendingSubjects = (openWin.subjects || []).filter(s => !submittedThisWindow.has(s));
+      }
+
+      document.getElementById('loadState').hidden = true;
+      const box = document.getElementById('cardsBox');
+      const cards = SUBJ.map(s => renderSubject(s, growth[s], submittedThisWindow.has(s), openWin && (openWin.subjects || []).includes(s)));
+      box.innerHTML = cards.join('') || '<div class="empty"><div class="empty-title">No EASE data yet</div>Once you take your first EASE window, your growth journey appears here.</div>';
+
+      // CTA
+      if (openWin && pendingSubjects.length > 0) {
+        const cta = document.getElementById('ctaBox');
+        cta.hidden = false;
+        document.getElementById('ctaTitle').textContent = `${openWin.window} window is open`;
+        document.getElementById('ctaSub').textContent = `Closes ${formatTs(openWin.closesAt)} · Pending: ${pendingSubjects.map(s => SUBJ_LABEL[s] || s).join(', ')}`;
+      }
+    });
+
+    function renderSubject(subj, growth, submittedNow, isInWindow) {
+      const ws = growth?.windows || [];
+      if (ws.length === 0 && !isInWindow) return '';
+      const latest = ws[ws.length - 1];
+      const latestRit = latest?.ritScore;
+      const growthChip = (() => {
+        if (!latest || latest.growthVsPrev == null) return '';
+        const v = latest.growthVsPrev;
+        const cls = v > 0 ? 'growth-up' : v < 0 ? 'growth-down' : 'growth-flat';
+        const sign = v > 0 ? '+' : '';
+        return `<span class="growth-chip ${cls}">${sign}${v}</span>`;
+      })();
+
+      // SVG sparkline: 320×80 viewBox, 100..300 scale on Y
+      const width = 320, height = 80, padX = 14, padY = 10;
+      let pathD = '';
+      let dots = '';
+      if (ws.length >= 2) {
+        const xs = ws.map((w, i) => padX + (i / (ws.length - 1)) * (width - 2 * padX));
+        const ys = ws.map(w => height - padY - ((w.ritScore - 100) / 200) * (height - 2 * padY));
+        pathD = xs.map((x, i) => (i === 0 ? `M${x},${ys[i]}` : `L${x},${ys[i]}`)).join(' ');
+        dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="4" fill="var(--mor)"/>`).join('');
+      } else if (ws.length === 1) {
+        const x = width / 2, y = height - padY - ((ws[0].ritScore - 100) / 200) * (height - 2 * padY);
+        dots = `<circle cx="${x}" cy="${y}" r="5" fill="var(--mor)"/>`;
+      }
+
+      return `
+        <div class="subject-card">
+          <h3>${SUBJ_GLYPH[subj]} ${SUBJ_LABEL[subj]}</h3>
+          <div class="subject-meta">${ws.length} window${ws.length === 1 ? '' : 's'} completed${submittedNow ? ' · just submitted ✓' : ''}</div>
+          ${latestRit != null ? `<div><span class="latest-rit">${latestRit}</span> ${growthChip}</div>` : '<div style="color:var(--ink-3)">No EASE submissions yet.</div>'}
+          ${ws.length > 0 ? `
+            <div class="chart-wrap">
+              <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" style="max-width:100%">
+                <line x1="0" y1="${height - padY}" x2="${width}" y2="${height - padY}" stroke="var(--border)"/>
+                <line x1="0" y1="${padY}" x2="${width}" y2="${padY}" stroke="var(--border)" stroke-dasharray="2 4"/>
+                ${pathD ? `<path d="${pathD}" fill="none" stroke="url(#grad-${subj})" stroke-width="2.5"/>` : ''}
+                ${dots}
+                <defs><linearGradient id="grad-${subj}" x1="0" x2="1"><stop offset="0%" stop-color="var(--mor)"/><stop offset="100%" stop-color="var(--cyan)"/></linearGradient></defs>
+              </svg>
+              <div style="display:flex; justify-content:space-between; font-size:.74rem; color:var(--ink-3); margin-top:4px;">
+                <span>${formatWindowLabel(ws[0])}</span>
+                ${ws.length > 1 ? `<span>${formatWindowLabel(ws[ws.length - 1])}</span>` : ''}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function formatWindowLabel(w) {
+      if (!w) return '';
+      const id = w.windowId || '';
+      // ID format: 2025-2026_fall
+      const m = id.match(/^([\d-]+)_(\w+)$/);
+      if (m) return m[2] + ' ' + m[1].split('-')[0];
+      return id;
+    }
+    function formatTs(ts) {
+      if (!ts || !ts.toDate) return '—';
+      return ts.toDate().toLocaleString('en-GB', { day: '2-digit', month: 'short' });
+    }
+    function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   </script>
 </body>
 </html>

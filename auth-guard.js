@@ -94,6 +94,8 @@ window.signOutStudent = async function () {
 const PATH       = window.location.pathname.replace(/\/$/, '') || '/';
 // /login and /shared can render without an authed student.
 // /class-picker and /waiting REQUIRE auth but tolerate non-active status.
+// /ease-test is auth-required (active student); status-required path
+// is enforced via the test runner's session-create rule.
 const SIGNED_OUT_OK = new Set(['/login', '/shared']);
 
 // ─── Resolve schoolId from email domain ───────────────────────────

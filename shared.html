@@ -8,6 +8,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
+  <style>
+    .score-hero {
+      background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
+      color: #fff; border-radius: 16px;
+      padding: 32px; text-align: center; margin-bottom: 22px;
+    }
+    .score-num { font-family: 'Lora', serif; font-size: 3.6rem; font-weight: 600; line-height: 1; }
+    .score-sub { color: rgba(255,255,255,.85); margin-top: 8px; font-size: 1rem; }
+    .score-eyebrow { color: rgba(255,255,255,.7); font-size: .82rem; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 12px; }
+    .item-list { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .item-list h3 { font-size: 1rem; margin-bottom: 12px; }
+    .ir { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .ir:last-child { border-bottom: none; }
+    .ir-stem { font-weight: 500; margin-bottom: 4px; }
+    .ir-meta { font-size: 12px; color: var(--ink-3); }
+    .ir.is-correct { border-left: 3px solid #16a34a; padding-left: 12px; }
+    .ir.is-wrong { border-left: 3px solid #dc2626; padding-left: 12px; }
+  </style>
 </head>
 <body>
   <!-- FIREBASE_ENV -->
@@ -20,12 +38,107 @@
   </header>
 
   <main class="page">
-    <div class="empty">
-      <div class="empty-title">Loading shared result…</div>
-      No sign-in needed. Open the link your child sent you.
+    <div id="loadState" class="empty" style="padding:50px 20px">Loading…</div>
+    <div id="errState" class="empty" hidden></div>
+    <div id="resultBody" hidden>
+      <div id="hero" class="score-hero"></div>
+      <div id="itemListBox" class="item-list"></div>
+      <p style="margin-top:18px; font-size:.82rem; color:var(--ink-3); text-align:center;">
+        This link was shared by your child. It expires automatically. Eduversal never collected your email or login.
+      </p>
     </div>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      doc, getDoc, collection, getDocs, query, orderBy
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('token');
+      if (!token) return showErr('No token in link');
+      try {
+        const tSnap = await getDoc(doc(window.db, 'parent_share_tokens', token));
+        if (!tSnap.exists()) return showErr('This share link is invalid or has been removed.');
+        const t = tSnap.data();
+        const exp = t.expiresAt && t.expiresAt.toDate ? t.expiresAt.toDate() : null;
+        if (exp && exp.getTime() < Date.now()) return showErr('This share link has expired.');
+
+        if (t.attemptId) await renderChapter(t);
+        else if (t.sessionId) await renderEase(t);
+        else return showErr('Unknown share content.');
+      } catch (e) {
+        showErr('Could not load: ' + (e.message || e.code));
+      }
+    })();
+
+    async function renderChapter(t) {
+      const aSnap = await getDoc(doc(window.db, 'chapter_test_attempts', t.attemptId));
+      if (!aSnap.exists()) return showErr('Attempt not found.');
+      const a = aSnap.data();
+      const items = (await getDocs(query(
+        collection(window.db, 'chapter_tests', a.testId, 'items'),
+        orderBy('seq', 'asc')
+      ))).docs.map(d => ({ id: d.id, ...d.data() }));
+
+      document.getElementById('hero').innerHTML = `
+        <div class="score-eyebrow">Chapter Test · ${escHtml(a.studentName || '')}</div>
+        <div style="font-family:'Lora',serif; font-size:1.05rem; opacity:.92; margin-bottom:8px">${escHtml(a.testTitle || a.testId)}</div>
+        <div class="score-num">${typeof a.rawScorePct === 'number' ? a.rawScorePct + '%' : '—'}</div>
+        <div class="score-sub">${a.earnedMarks || 0} of ${a.totalMarks || 0} marks · ${a.passed ? '✓ Mastered' : 'Keep practising'}</div>
+      `;
+
+      const resp = {};
+      (a.responses || []).forEach(r => { resp[r.itemId] = r; });
+
+      document.getElementById('itemListBox').innerHTML = `
+        <h3>Question by question</h3>
+        ${items.map((it, i) => {
+          const r = resp[it.id];
+          const ok = r && r.isCorrect;
+          let userAnswer = '(no answer)';
+          if (r) userAnswer = it.type === 'mcq' ? (it.options || [])[Number(r.answer)] || '' : String(r.answer || '');
+          return `
+            <div class="ir ${ok ? 'is-correct' : 'is-wrong'}">
+              <div class="ir-stem">Q${i+1}. ${escHtml(it.stem)}</div>
+              <div class="ir-meta">Answer: <strong>${escHtml(userAnswer)}</strong> ${ok ? '· ✓' : '· ✗'}</div>
+            </div>
+          `;
+        }).join('')}
+      `;
+      reveal();
+    }
+
+    async function renderEase(t) {
+      const sSnap = await getDoc(doc(window.db, 'ease_sessions', t.sessionId));
+      if (!sSnap.exists()) return showErr('EASE session not found.');
+      const s = sSnap.data();
+      const SUBJ_LABEL = { math: 'Mathematics', english: 'English', science: 'Science' };
+      document.getElementById('hero').innerHTML = `
+        <div class="score-eyebrow">EASE Growth · ${escHtml(SUBJ_LABEL[s.subjectId] || s.subjectId)}</div>
+        <div class="score-num">${s.ritScore || '—'}</div>
+        <div class="score-sub">${s.itemsAnswered || 0} questions · ${s.windowId}</div>
+      `;
+      document.getElementById('itemListBox').innerHTML = `
+        <h3>About this score</h3>
+        <p style="color:var(--ink-2); line-height:1.6;">EASE Growth uses an adaptive engine that picks each question based on the student's last answer. The score is on a 100–300 scale that's comparable across grade levels — higher means stronger ability, and growth is the change between the same student's windows.</p>
+      `;
+      reveal();
+    }
+
+    function reveal() {
+      document.getElementById('loadState').hidden = true;
+      document.getElementById('resultBody').hidden = false;
+    }
+    function showErr(msg) {
+      document.getElementById('loadState').hidden = true;
+      const e = document.getElementById('errState');
+      e.hidden = false;
+      e.innerHTML = `<div class="empty-title">Couldn't load</div>${escHtml(msg)}`;
+    }
+    function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  </script>
 </body>
 </html>

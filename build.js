@@ -41,6 +41,7 @@ const ROUTES = {
   'growth.html':       'growth',        // EASE growth journey
   'profile.html':      'profile',       // read-only profile + sign out
   'shared.html':       'shared',        // parent share link landing
+  'ease-test.html':    'ease-test',     // EASE Growth adaptive runner
 };
 
 // Internal href rewrites — same pattern as TH/AH/CH builds.
@@ -55,6 +56,7 @@ const LINK_REWRITES = [
   [/href="growth\.html"/g,       'href="/growth"'],
   [/href="profile\.html"/g,      'href="/profile"'],
   [/href="shared\.html(\?[^"]*)?"/g, (m, q) => `href="/shared${q || ''}"`],
+  [/href="ease-test\.html(\?[^"]*)?"/g, (m, q) => `href="/ease-test${q || ''}"`],
 ];
 
 // Read partials/firebase-env.html once (injected via comment placeholder).
