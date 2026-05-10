@@ -153,18 +153,19 @@ Bump this when expanding the pilot to other grades.
 
 | Source file | Route | Auth | Purpose |
 |---|---|---|---|
-| `index.html` | `/` | active | Dashboard — upcoming tests, recent results, growth summary |
+| `index.html` | `/` | active | Dashboard — upcoming chapter tests, recent results, EASE growth summary (open-window CTA + per-subject latest RIT + growth chip) |
 | `login.html` | `/login` | none | Google SSO landing |
-| `class-picker.html` | `/class-picker` | signed-in, status=`needs_class` | School + class self-enrol |
+| `class-picker.html` | `/class-picker` | signed-in, status=`needs_class` | School + class self-enrol (filtered to `ALLOWED_GRADES = [7, 8]`) |
 | `waiting.html` | `/waiting` | signed-in, status=`pending_approval` | Polls every 30s for approval |
-| `tests.html` | `/tests` | active | Upcoming + past tests list |
-| `test.html` | `/test?attemptId=…` | active | Active test taking surface (chapter or EASE) |
-| `report.html` | `/report?attemptId=…` | active | Single-attempt result detail |
-| `growth.html` | `/growth` | active | EASE growth journey (line chart per subject) |
+| `tests.html` | `/tests` | active | Upcoming + past chapter tests list. Live `chapter_test_attempts` subscription. |
+| `test.html` | `/test?attemptId=…` | active | **Chapter test runner** (Phase 1). Auto-grades MCQ/numeric/short. Tab-switch counter. Timer-based auto-submit. |
+| `ease-test.html` | `/ease-test` (or `?sessionId=…`) | active | **EASE Growth adaptive runner** (Phase 2). Subject picker → Rasch-lite engine → RIT-equivalent submit. Resumable mid-window. |
+| `report.html` | `/report?attemptId=…` | active | Single-chapter-attempt result detail + Share-with-parent token generator. |
+| `growth.html` | `/growth` | active | EASE growth journey — per-subject SVG sparkline reading `ease_growth/{uid}_{subjectId}` aggregate. Open-window CTA. Phase 2. |
 | `profile.html` | `/profile` | active | Read-only profile + sign-out |
-| `shared.html` | `/shared?token=…` | NONE | Parent share link landing — token-gated read of one attempt |
+| `shared.html` | `/shared?token=…` | NONE | Parent share link landing. Token-gated `get`; renders chapter attempt OR EASE session report based on which field the token doc carries. Phase 2. |
 
-10 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
+11 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
 
 ---
 
@@ -180,7 +181,28 @@ Special-cased layout — `<body class="test-mode">` strips the topbar and replac
 - `document.visibilitychange` increments a `tabSwitches` counter persisted to the attempt doc
 - `beforeunload` warning until submit (cleared by setting `window.__submitted = true`)
 
-**Heavy-handed kiosk mode** (forced fullscreen, copy/paste disable, right-click block) is intentionally **deferred to Phase 2** — the MVP scaffolds this page but the real adaptive engine + chapter test renderer aren't wired yet.
+**Heavy-handed kiosk mode** (forced fullscreen, copy/paste disable, right-click block) is intentionally **deferred to Phase 3** — current implementation tab-switch counter is informational only.
+
+### Chapter test runner (`test.html`)
+
+Live and production-ready as of 2026-05-10. Loads a `chapter_test_attempts/{attemptId}` doc, fetches the parent `chapter_tests/{id}` definition + `items/` subcollection, walks the student through each item one at a time. Saves progress to the attempt doc on every change (debounced 500ms persist). Timer-based auto-submit when window closes. `rawScorePct + earnedMarks + passed` computed at submit; status flips `in_progress → scored` (no `flagged` path yet — short-text uses exact match).
+
+### EASE adaptive runner (`ease-test.html`)
+
+Live and production-ready as of 2026-05-10 — Phase 2. Distinct from `test.html` because it adapts in flight rather than walking a fixed item set.
+
+- **Engine: Rasch-lite (client-side).** Item difficulty band → logit (`easy −1.2`, `medium 0`, `hard +1.2`). Theta updates per item via Bayesian-ish step: `theta += se * (isCorrect ? (1 - pCorrect) : -pCorrect)`. SE shrinks `0.92×` per item.
+- **Stop conditions.** Hit `itemCountTarget` (default 25) OR `answered ≥ 10 AND SE < seStopThreshold` (default 0.4). Both come from the `ease_test_windows/{windowId}` doc.
+- **Item selection.** `bank.filter(i => !usedItemIds.has(i.id))` then sort by `Math.abs(DIFF_LOGIT[i.difficulty] - theta)` ascending. Pick the closest to current theta.
+- **No going back.** UI explicitly states "every answer changes what comes next; there's no going back" — adaptive integrity.
+- **RIT-equivalent submit.** `200 + theta * 33` clamped to [100, 300]. Updates `ease_growth/{uid}_{subjectId}` aggregate with `growthVsPrev = clamped - lastWindow.ritScore`.
+- **Resume.** If a session is `in_progress` for the same (student, window, subject), resume from `currentTheta` / `currentSE` / `itemsAnswered` and reload already-used itemIds from `ease_responses where sessionId == X`.
+
+### Parent share
+
+Student clicks "Generate share link" on `report.html` → writes `parent_share_tokens/{token}` (random URL-safe ≥24 chars) with `studentUid`, `attemptId` (or `sessionId`), `expiresAt: now + 30 days`, `createdAt`. Token IS the credential. Rule allows `get` by id (lint allow-listed under `PUBLIC_COLLECTIONS`); `list` blocked even for admin (Charter NN5 spirit). `/shared?token=X` resolves the token doc, then loads the chapter attempt OR EASE session and renders read-only.
+
+Owner (student) can revoke by deleting the token doc — owner-delete path in rule.
 
 ---
 
@@ -191,12 +213,14 @@ Special-cased layout — `<body class="test-mode">` strips the topbar and replac
 | `students/{uid}` | Student profile (separate from `users/{uid}`). Fields: email, emailLower, displayName, photoURL, schoolId, school, classId, className, gradeLevel, status, createdAt, lastLoginAt, classPickedAt | self-create on first login (constrained); self-update during `needs_class → pending_approval` only; teachers/admin flip to `active`/`rejected`/`graduated` |
 | `partner_schools/{schoolId}` | Read-only here. Used to validate the email domain. | central_admin (CH) |
 | `partner_schools/{id}/classes/{classId}` | Read-only here. Class picker source. | TH teachers + central_admin |
-| `chapter_tests/{testId}` (Phase 2) | Network-uniform chapter test definitions | CH coordinator (subject specialist) |
-| `chapter_test_attempts/{attemptId}` (Phase 2) | Per-student attempt records | student write own; teacher + admin update |
-| `ease_sessions/{sessionId}` (Phase 2) | Adaptive growth sessions | student own session only |
-| `parent_share_tokens/{token}` (Phase 2) | Token-gated shared attempt reads | student create own; auto-expire |
-
-Phase 2 collections are documented in `docs/FIRESTORE_SCHEMA.md §18` but not yet enforced in rules — the assessment engine ships in a later phase.
+| `chapter_tests/{testId}` (+ `items/`) | Read-only here. Loaded in `test.html` to render the question-by-question runner. Active students can `get` published tests (rule). | CH coordinator (subject specialist) |
+| `chapter_test_attempts/{attemptId}` | **Created by TH `/test-session-launcher` writeBatch** at session schedule time, NOT by the student. Student self-update path: append `responses[]`, flip `status` to `submitted`/`scored`, write `rawScorePct` + `passed`. Once `submitted`/`scored`/`flagged`, immutable for student. | TH teacher (creates batch); student (own attempt update); teacher / admin (any field) |
+| `ease_items/{itemId}` | Read by `ease-test.html` runner — fetches all items for chosen subject and the adaptive engine picks one at a time. Active students can read. | CH coordinator (CH `/ease-item-author`) |
+| `ease_test_windows/{windowId}` | Read by `ease-test.html` (subject picker + stop conditions) and `growth.html` + dashboard CTA (open-window detection). | central_admin (CH `/ease-window-admin`) |
+| `ease_sessions/{sessionId}` | Created on subject pick by the student themselves (rule pins `studentUid == auth.uid` + `schoolId == students/{uid}.schoolId`). Self-update while `in_progress`; immutable post-`submitted`. | active student (own session only) |
+| `ease_responses/{responseId}` | Per-item adaptive trail row. Student appends own response while session is `in_progress`. **Immutable** after creation. | active student (own row append only) |
+| `ease_growth/{uid}_{subjectId}` | Cross-window aggregate. Student writes own doc on submit (current MVP); Phase 3 Cloud Function will recompute server-side. | active student (own doc); admin/staff read |
+| `parent_share_tokens/{token}` | Token-gated shared attempt reads. Token IS the credential (`get` allow-listed in lint `PUBLIC_COLLECTIONS`); `list:false` even for admin. Owner can revoke (delete). | active student creates own; owner-delete |
 
 **Timestamp:** `createdAt` (serverTimestamp). NEVER `timestamp`.
 
@@ -257,15 +281,24 @@ Phase 2 collections are documented in `docs/FIRESTORE_SCHEMA.md §18` but not ye
 
 ---
 
-## Known scaffolding gaps (Phase 2 work)
+## Phase status (closed gaps)
 
-The following are stubbed but not functional yet — calling them out so future-you doesn't think they're broken:
+Phase 1 / 1.5 / 2 are all SHIPPED as of 2026-05-10. Only Phase 3 work remains; the original "scaffolding gaps" list is closed:
 
-1. **`/test` page** is a scaffold. Real chapter test renderer + EASE adaptive engine are Phase 2.
-2. **`/report`** shows "no attempt id" empty state — wire to `chapter_test_attempts/{attemptId}` once the data model lands.
-3. **`/growth`** shows empty state — needs `ease_sessions` + `egas_growth` aggregator.
-4. **`/shared`** is a placeholder — needs Cloud Function endpoint + `parent_share_tokens` collection.
-5. **Class picker** filters to grade 7–8 hardcoded — relax via `ALLOWED_GRADES` const when pilot expands.
-6. **No `/test-session-launcher` on TH yet** — class teachers can't approve `pending_approval` students from inside the system. MVP workflow needs this before pilot day-1. Manually editing `students/{uid}.status` in Firestore Console works as a stopgap.
+- ~~`/test` page is a scaffold~~ → **Live** (chapter test runner with auto-grade + tab-switch counter + timer auto-submit).
+- ~~`/report` shows empty state~~ → **Live** (score hero + per-question breakdown + Share-with-parent button).
+- ~~`/growth` shows empty state~~ → **Live** (real per-subject SVG sparkline reading `ease_growth`).
+- ~~`/shared` is a placeholder~~ → **Live** (`parent_share_tokens` get-by-id token landing for chapter or EASE attempts).
+- ~~Class picker hardcoded to 7–8~~ → **Still hardcoded; intentional for pilot** — bump `ALLOWED_GRADES` const in `class-picker.html` when expanding.
+- ~~No `/test-session-launcher` on TH~~ → **Live in TH** (`/test-session-launcher` + `/student-approvals`).
 
-When you start Phase 2, update this section as gaps close.
+### Phase 3 backlog (deferred work)
+
+- **Server-side EASE scoring + calibration.** Cloud Function trigger on `ease_responses` to recompute theta server-side (current implementation is client-side; trustable for pilot but not adversarial). Same Function will calibrate item logits/discrimination from accumulated response data, leaving `ease_items.difficulty` as a bootstrap and `ease_items.pilotPhase` flipping to `false`.
+- **`chapter_mastery/{studentUid}_{subjectId}_{unitCode}` aggregate** + Cloud Function trigger on `chapter_test_attempts` write. Current TH `/class-assessment` heatmap computes from raw attempts — fine for one class but not for `/teaching-progress`-style cross-school dashboards. Once aggregates land, pacing dashboards can read mastery directly without re-scanning attempts.
+- **Heavy-handed kiosk lockdown** — forced fullscreen, copy/paste disable, right-click block, exam-style network heartbeats. Current implementation is informational `tabSwitches` counter only.
+- **Item exposure cap** — adaptive engine currently has no exposure ceiling, so a popular medium-difficulty item could dominate the bank. Phase 3 should track `seenCount` ratio and weight item selection accordingly.
+- **Cross-window growth claims.** UI must label first 3 windows as "window-specific norm"; growth claims are reliable from window 4 only (item calibration unstable until then).
+- **Parent persistent login.** Current parent flow is token-share-only. Phase 3 may add parent Auth (separate from student domain whitelist) + multi-child linking. Token-share keeps working in parallel.
+- **`/teaching-progress` mastery integration.** TH pacing dashboards still read teacher self-report; once `chapter_mastery` aggregates ship, swap pacing data source to objective mastery.
+- **Religion / PPKn / IPS coverage.** Old EASE handbook covered these; new EASE Growth = Math/English/Science only. Decision pending: (a) chapter tests cover them, OR (b) "EASE Achievement" parallel product, OR (c) drop from network assessment scope. Talk to directors.
