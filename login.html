@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduversal Students — Sign in</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background:
+        radial-gradient(circle at 80% 20%, rgba(8,145,178,.18) 0%, transparent 50%),
+        radial-gradient(circle at 15% 80%, rgba(108,92,231,.18) 0%, transparent 55%),
+        var(--paper);
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: 18px;
+      padding: 44px 36px;
+      width: min(440px, 100%);
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+    .brand-stack {
+      width: 64px; height: 64px; margin: 0 auto 18px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-family: 'Lora', serif; font-size: 1.8rem; font-weight: 700;
+    }
+    .login-title { margin-bottom: 6px; }
+    .login-sub   { color: var(--ink-3); font-size: 0.92rem; margin-bottom: 28px; }
+    .google-btn {
+      width: 100%; padding: 13px 16px; border-radius: 12px;
+      border: 1px solid var(--border-2); background: var(--white);
+      font-family: inherit; font-size: 0.96rem; font-weight: 600;
+      color: var(--ink); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+      transition: background .15s, border-color .15s;
+    }
+    .google-btn:hover { background: var(--paper); border-color: var(--mor); }
+    .google-btn svg { width: 20px; height: 20px; }
+    .login-help {
+      margin-top: 22px; font-size: 0.82rem; color: var(--ink-3);
+      line-height: 1.55;
+    }
+    .err {
+      margin-top: 16px;
+      padding: 10px 14px; border-radius: 10px;
+      background: var(--danger-bg); color: var(--danger);
+      font-size: 0.86rem; line-height: 1.45; text-align: left;
+      border: 1px solid #fca5a5;
+    }
+  </style>
+</head>
+<body>
+  <!-- FIREBASE_ENV -->
+
+  <main class="login-card">
+    <div class="brand-stack">E</div>
+    <h1 class="login-title">Eduversal Students</h1>
+    <p class="login-sub">Sign in with your school Google account.</p>
+
+    <button id="googleBtn" class="google-btn" type="button">
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.7 4.7-6.2 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+        <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.1 0-9.5-3.3-11.2-8l-6.5 5C9.5 39.6 16.1 44 24 44z"/>
+        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l6.2 5.2C40.9 35.7 44 30.3 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+      </svg>
+      Sign in with Google
+    </button>
+
+    <div id="errBox" class="err" hidden></div>
+
+    <p class="login-help">
+      Use the email your school gave you (e.g. <strong>name@yourschool.sch.id</strong>).<br>
+      Personal Gmail accounts won't work.
+    </p>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    // Surface ?error=... messages from auth-guard redirects
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    if (err) {
+      const map = {
+        'invalid-domain': "That email isn't from a partner school. Use your school account.",
+        'no-email':       "We couldn't read your email from Google.",
+        'graduated':      "Your account is marked as graduated. Contact your school if this is wrong.",
+        'rejected':       "Your account access was declined. Contact your teacher or school.",
+      };
+      const box = document.getElementById('errBox');
+      box.textContent = map[err] || ('Sign-in error: ' + err);
+      box.hidden = false;
+    }
+
+    document.getElementById('googleBtn').addEventListener('click', async () => {
+      const box = document.getElementById('errBox');
+      box.hidden = true;
+      try {
+        await window.signInWithGoogle();
+        // onAuthStateChanged in auth-guard.js handles redirects.
+      } catch (e) {
+        box.textContent = 'Sign-in failed: ' + (e.message || e.code || 'unknown error');
+        box.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>

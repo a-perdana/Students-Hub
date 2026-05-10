@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pick your class — Eduversal Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    body { background: var(--paper); min-height: 100vh; }
+    .picker-shell {
+      max-width: 560px; margin: 0 auto;
+      padding: 36px 20px 80px;
+    }
+    .picker-head { text-align: center; margin-bottom: 28px; }
+    .picker-head h1 { margin-bottom: 8px; }
+    .picker-head p  { color: var(--ink-3); }
+    .school-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: var(--cyan-2); border: 1px solid #b8e8f0;
+      border-radius: 10px; margin-bottom: 24px;
+      font-size: 0.92rem;
+    }
+    .school-row strong { color: var(--cyan-dk); }
+    .pick-grid { display: grid; gap: 10px; }
+    .pick-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: 12px; cursor: pointer;
+      transition: all .15s;
+    }
+    .pick-row:hover    { border-color: var(--mor); background: var(--mor-2); }
+    .pick-row.selected { border-color: var(--mor); background: var(--mor-2); }
+    .pick-name   { flex: 1; font-weight: 500; }
+    .pick-grade  { font-size: 0.84rem; color: var(--ink-3); }
+    .err { margin-top: 14px; padding: 10px 14px; border-radius: 10px;
+           background: var(--danger-bg); color: var(--danger);
+           font-size: 0.86rem; border: 1px solid #fca5a5; }
+    .actions { margin-top: 24px; display: flex; gap: 12px; }
+    .signout-link {
+      display: block; text-align: center; margin-top: 18px;
+      font-size: 0.84rem; color: var(--ink-3);
+    }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <main class="picker-shell">
+    <div class="picker-head">
+      <h1>Welcome to Eduversal Students</h1>
+      <p>Pick your class so your teachers can find you.</p>
+    </div>
+
+    <div id="schoolRow" class="school-row" hidden></div>
+
+    <!-- Multi-school domain: school first, then class -->
+    <div id="schoolStep" hidden>
+      <h3 style="margin-bottom:12px">Which school?</h3>
+      <div id="schoolList" class="pick-grid"></div>
+    </div>
+
+    <div id="classStep" hidden>
+      <h3 style="margin-bottom:12px">Which class are you in?</h3>
+      <div id="classList" class="pick-grid"></div>
+      <div id="errBox" class="err" hidden></div>
+      <div class="actions">
+        <button id="confirmBtn" class="btn btn-primary btn-block btn-lg" disabled>Confirm</button>
+      </div>
+    </div>
+
+    <div id="loadState" class="empty">Loading classes…</div>
+
+    <a href="#" id="signOutLink" class="signout-link">Not you? Sign out</a>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      doc, getDoc, setDoc, serverTimestamp,
+      collection, query, where, getDocs, orderBy
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    document.getElementById('signOutLink').addEventListener('click', e => {
+      e.preventDefault(); window.signOutStudent();
+    });
+
+    // Eligible grade levels for the pilot (Grade 7-8 only at MVP).
+    const ALLOWED_GRADES = [7, 8];
+
+    let chosenSchoolId  = null;
+    let chosenSchoolNm  = null;
+    let chosenClassId   = null;
+    let chosenClassNm   = null;
+    let chosenGrade     = null;
+
+    window.addEventListener('authReady', async (ev) => {
+      if (!ev.detail.signedIn) { window.location.href = '/login'; return; }
+      const profile = window.studentProfile;
+      // If schoolId already set (single-school domain), skip school step.
+      if (profile.schoolId) {
+        chosenSchoolId = profile.schoolId;
+        chosenSchoolNm = profile.school || '';
+        showSchoolBanner();
+        await loadClasses();
+      } else {
+        // Multi-school domain — let user pick which school.
+        await loadSchoolPicker();
+      }
+    });
+
+    function showSchoolBanner() {
+      const row = document.getElementById('schoolRow');
+      row.innerHTML = 'School: <strong>' + escapeHtml(chosenSchoolNm) + '</strong>';
+      row.hidden = false;
+    }
+
+    async function loadSchoolPicker() {
+      // Re-query partner_schools by email domain to populate options.
+      const dom = (window.studentProfile.emailLower || '').split('@')[1];
+      if (!dom) return;
+      const q = await getDocs(query(
+        collection(window.db, 'partner_schools'),
+        where('domain', '==', dom)
+      ));
+      const list = document.getElementById('schoolList');
+      list.innerHTML = '';
+      q.forEach(d => {
+        const data = d.data();
+        const row = document.createElement('div');
+        row.className = 'pick-row';
+        row.dataset.schoolId   = d.id;
+        row.dataset.schoolName = data.name || d.id;
+        row.innerHTML = '<span class="pick-name">' + escapeHtml(data.name || d.id) + '</span>';
+        row.addEventListener('click', () => {
+          [...list.querySelectorAll('.pick-row')].forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          chosenSchoolId = d.id;
+          chosenSchoolNm = data.name || d.id;
+          showSchoolBanner();
+          document.getElementById('schoolStep').hidden = true;
+          loadClasses();
+        });
+        list.appendChild(row);
+      });
+      document.getElementById('loadState').hidden = true;
+      document.getElementById('schoolStep').hidden = false;
+    }
+
+    async function loadClasses() {
+      document.getElementById('loadState').hidden = false;
+      document.getElementById('classStep').hidden = true;
+
+      const classesQ = await getDocs(query(
+        collection(window.db, 'partner_schools', chosenSchoolId, 'classes')
+      ));
+      const list = document.getElementById('classList');
+      list.innerHTML = '';
+
+      const filtered = classesQ.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(c => ALLOWED_GRADES.includes(Number(c.grade)))
+        .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (a.name || '').localeCompare(b.name || ''));
+
+      if (filtered.length === 0) {
+        document.getElementById('loadState').innerHTML =
+          '<div class="empty-title">No classes found yet</div>' +
+          'Your school hasn\'t set up Grade 7 or 8 classes for the pilot. ' +
+          'Ask your teacher to create your class first.';
+        return;
+      }
+
+      filtered.forEach(c => {
+        const row = document.createElement('div');
+        row.className = 'pick-row';
+        row.dataset.classId = c.id;
+        row.dataset.gradeLevel = c.grade;
+        row.dataset.className  = c.name || c.id;
+        row.innerHTML =
+          '<span class="pick-name">' + escapeHtml(c.name || c.id) + '</span>' +
+          '<span class="pick-grade">Grade ' + escapeHtml(String(c.grade)) + '</span>';
+        row.addEventListener('click', () => {
+          [...list.querySelectorAll('.pick-row')].forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          chosenClassId = c.id;
+          chosenClassNm = c.name || c.id;
+          chosenGrade   = Number(c.grade);
+          document.getElementById('confirmBtn').disabled = false;
+        });
+        list.appendChild(row);
+      });
+
+      document.getElementById('loadState').hidden = true;
+      document.getElementById('classStep').hidden = false;
+    }
+
+    document.getElementById('confirmBtn').addEventListener('click', async () => {
+      if (!chosenClassId) return;
+      const btn  = document.getElementById('confirmBtn');
+      const err  = document.getElementById('errBox');
+      btn.disabled = true; btn.textContent = 'Saving…'; err.hidden = true;
+      try {
+        const ref  = doc(window.db, 'students', window.currentUser.uid);
+        await setDoc(ref, {
+          schoolId:   chosenSchoolId,
+          school:     chosenSchoolNm,
+          classId:    chosenClassId,
+          className:  chosenClassNm,
+          gradeLevel: chosenGrade,
+          status:     'pending_approval',
+          classPickedAt: serverTimestamp(),
+        }, { merge: true });
+        window.location.href = '/waiting';
+      } catch (e) {
+        err.textContent = 'Could not save: ' + (e.message || e.code);
+        err.hidden = false;
+        btn.disabled = false; btn.textContent = 'Confirm';
+      }
+    });
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+  </script>
+</body>
+</html>

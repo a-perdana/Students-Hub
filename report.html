@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test result — Eduversal Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page">
+    <a href="/tests" style="font-size:.86rem">← Back to tests</a>
+    <h1 style="margin-top:8px">Test result</h1>
+    <div class="empty" style="margin-top:24px">
+      <div class="empty-title">No attempt id provided</div>
+      Open this page from your tests list.
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script>
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+  </script>
+</body>
+</html>

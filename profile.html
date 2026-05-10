@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — Eduversal Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .profile-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .profile-row:last-child { border: none; }
+    .profile-row-label { width: 120px; color: var(--ink-3); font-size: .86rem; }
+    .profile-row-value { flex: 1; font-weight: 500; }
+    .lock-note { font-size: .78rem; color: var(--ink-3); margin-top: 4px; }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page-narrow">
+    <h1 style="margin-bottom:18px">Profile</h1>
+
+    <div class="card">
+      <div class="profile-row">
+        <div class="profile-row-label">Name</div>
+        <div class="profile-row-value" id="pName">—</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-label">Email</div>
+        <div class="profile-row-value" id="pEmail">—</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-label">School</div>
+        <div class="profile-row-value" id="pSchool">—</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-label">Class</div>
+        <div class="profile-row-value" id="pClass">—</div>
+      </div>
+      <div class="profile-row">
+        <div class="profile-row-label">Grade</div>
+        <div class="profile-row-value" id="pGrade">—</div>
+      </div>
+    </div>
+    <p class="lock-note">School, class, grade, and email are managed by your teacher and can't be edited here. If something is wrong, ask your teacher to fix it.</p>
+
+    <div style="margin-top:24px">
+      <button class="btn btn-secondary" id="signOutBtn" type="button">Sign out</button>
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script>
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) return;
+      const p = window.studentProfile;
+      document.getElementById('pName').textContent   = p.displayName || '—';
+      document.getElementById('pEmail').textContent  = p.email || '—';
+      document.getElementById('pSchool').textContent = p.school || '—';
+      document.getElementById('pClass').textContent  = p.className || '—';
+      document.getElementById('pGrade').textContent  = p.gradeLevel ? ('Grade ' + p.gradeLevel) : '—';
+    });
+    document.getElementById('signOutBtn').addEventListener('click', () => window.signOutStudent());
+  </script>
+</body>
+</html>

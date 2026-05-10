@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Eduversal Students</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .hello-banner {
+      background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      margin-bottom: 24px;
+    }
+    .hello-banner h1 {
+      color: #fff; font-size: 1.6rem; margin-bottom: 4px;
+    }
+    .hello-banner p { color: rgba(255,255,255,.85); font-size: .94rem; }
+    .grid-2 { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .stat {
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .stat-num { font-size: 2rem; font-weight: 700; color: var(--ink); font-family: 'Lora', serif; }
+    .stat-lbl { font-size: .86rem; color: var(--ink-3); }
+
+    .test-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .test-row:last-child { border-bottom: none; }
+    .test-row-info { flex: 1; }
+    .test-row-title { font-weight: 500; color: var(--ink); }
+    .test-row-meta  { font-size: .82rem; color: var(--ink-3); }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page">
+    <section class="hello-banner">
+      <h1 id="helloName">Welcome back</h1>
+      <p id="helloMeta">Loading your class…</p>
+    </section>
+
+    <section class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Upcoming tests</div>
+        </div>
+        <div id="upcomingList">
+          <div class="empty" style="padding:18px 0">
+            No tests scheduled for your class yet.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Recent results</div>
+          <a href="/tests" class="card-sub">View all →</a>
+        </div>
+        <div id="recentList">
+          <div class="empty" style="padding:18px 0">
+            You haven't taken any tests yet.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:16px">
+      <div class="card-head">
+        <div class="card-title">Your growth journey</div>
+        <a href="/growth" class="card-sub">See chart →</a>
+      </div>
+      <div id="growthSummary" class="empty" style="padding:18px 0">
+        Take an EASE assessment to start tracking your growth.
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script>
+    // Inject navbar
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      // Re-run inline script in the partial
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) return; // shouldn't happen here
+      const p = window.studentProfile;
+      const first = (p.displayName || '').split(' ')[0] || '';
+      document.getElementById('helloName').textContent = 'Hi ' + first + (first ? '' : 'there') + ' 👋';
+      document.getElementById('helloMeta').textContent =
+        [p.school, p.className, p.gradeLevel ? 'Grade ' + p.gradeLevel : null]
+          .filter(Boolean).join(' · ');
+    });
+  </script>
+</body>
+</html>

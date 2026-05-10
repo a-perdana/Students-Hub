@@ -1,0 +1,195 @@
+// auth-guard.js — Students Hub
+// ─────────────────────────────────────────────────────────────────
+// Authenticates students via Google SSO, validates the email domain
+// against partner_schools.domain, then bridges the auth user onto a
+// students/{uid} doc.
+//
+// CRITICAL DIFFERENCES from CH/AH/TH auth-guard:
+//
+// 1. NO `users/{uid}` doc.  Student profiles live in students/{uid}.
+//    Auth-guard NEVER reads or writes users/{uid} — that collection
+//    is exclusively for staff/HQ across the other 3 hubs.
+//
+// 2. NO role / sub-role fields.  Every authenticated student has the
+//    same access; there is no `role_studentshub`, no sub-roles, no
+//    page-access gating.  All student-facing pages are open to every
+//    active student.
+//
+// 3. NO `applyStaffBridge()`.  Students aren't in `staff/`.  We use
+//    a simpler "self-enrol via class picker" flow instead.
+//
+// 4. Domain whitelist is DERIVED from `partner_schools.domain`, not
+//    hardcoded.  `@fatih.sch.id` matches partner_schools where
+//    `domain == 'fatih.sch.id'` and stamps schoolId on the student.
+//    Multi-school domains (e.g. semesta.sch.id used by 2 schools)
+//    leave schoolId null and the user picks the school in
+//    /class-picker.
+//
+// 5. status flow:
+//    - First login (no doc)         → /class-picker (pick class)
+//    - status='pending_approval'    → /waiting (teacher approves)
+//    - status='active'              → dashboard
+//    - status='graduated' / 'rejected' → /login?error=...  (signed out)
+//
+// Helper is NOT shared with the other hubs.  Don't paste this into
+// the staff-bridge helpers.
+// ─────────────────────────────────────────────────────────────────
+
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import {
+  getAuth, onAuthStateChanged, GoogleAuthProvider,
+  signInWithPopup, signOut
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, setDoc, serverTimestamp,
+  collection, query, where, getDocs, limit
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// ─── Hide body until auth completes ───────────────────────────────
+document.body.style.display = 'none';
+
+// ─── Init Firebase ────────────────────────────────────────────────
+const cfg = {
+  apiKey:            window.ENV.FIREBASE_API_KEY,
+  authDomain:        window.ENV.FIREBASE_AUTH_DOMAIN,
+  projectId:         window.ENV.FIREBASE_PROJECT_ID,
+  storageBucket:     window.ENV.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
+  appId:             window.ENV.FIREBASE_APP_ID,
+};
+const app  = getApps().length ? getApps()[0] : initializeApp(cfg);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+window.firebaseApp = app;
+window.auth        = auth;
+window.db          = db;
+
+// ─── Public helpers (used by login.html, class-picker.html, etc.) ─
+window.signInWithGoogle = async function () {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return signInWithPopup(auth, provider);
+};
+window.signOutStudent = async function () {
+  await signOut(auth);
+  window.location.href = '/login';
+};
+
+// ─── Bypass: pages that don't need a logged-in active student ────
+const PATH       = window.location.pathname.replace(/\/$/, '') || '/';
+// /login and /shared can render without an authed student.
+// /class-picker and /waiting REQUIRE auth but tolerate non-active status.
+const SIGNED_OUT_OK = new Set(['/login', '/shared']);
+
+// ─── Resolve schoolId from email domain ───────────────────────────
+async function resolveSchoolFromDomain(emailLower) {
+  const at  = emailLower.indexOf('@');
+  if (at < 0) return null;
+  const dom = emailLower.slice(at + 1);
+  const q   = await getDocs(query(
+    collection(db, 'partner_schools'),
+    where('domain', '==', dom),
+    limit(2) // need to detect multi-school domains
+  ));
+  if (q.empty)        return { schools: [],   domain: dom };
+  if (q.size === 1)   return { schools: [{ id: q.docs[0].id, ...q.docs[0].data() }], domain: dom };
+  return { schools: q.docs.map(d => ({ id: d.id, ...d.data() })), domain: dom };
+}
+
+// ─── Main auth flow ───────────────────────────────────────────────
+onAuthStateChanged(auth, async (user) => {
+  // 1. Not signed in → /login (unless already on a signed-out-OK page)
+  if (!user) {
+    if (SIGNED_OUT_OK.has(PATH)) {
+      document.body.style.display = '';
+      window.dispatchEvent(new CustomEvent('authReady', { detail: { signedIn: false } }));
+      return;
+    }
+    window.location.href = '/login';
+    return;
+  }
+
+  // 2. Domain check — must be a partner school's domain
+  const emailLower = (user.email || '').toLowerCase();
+  if (!emailLower) {
+    await signOut(auth);
+    window.location.href = '/login?error=no-email';
+    return;
+  }
+
+  const resolved = await resolveSchoolFromDomain(emailLower);
+  if (!resolved || resolved.schools.length === 0) {
+    await signOut(auth);
+    window.location.href = '/login?error=invalid-domain';
+    return;
+  }
+
+  // 3. Fetch / auto-create students/{uid}
+  const studentRef = doc(db, 'students', user.uid);
+  let snap = await getDoc(studentRef);
+  let profile;
+
+  if (!snap.exists()) {
+    // First login — derive schoolId if single-school domain, else null
+    const singleSchool = resolved.schools.length === 1 ? resolved.schools[0] : null;
+    profile = {
+      uid:           user.uid,
+      email:         user.email,
+      emailLower,
+      displayName:   user.displayName || user.email.split('@')[0],
+      photoURL:      user.photoURL || null,
+      schoolId:      singleSchool ? singleSchool.id   : null,
+      school:        singleSchool ? singleSchool.name : null,
+      classId:       null,
+      gradeLevel:    null,
+      status:        'needs_class',  // → /class-picker
+      createdAt:     serverTimestamp(),
+      lastLoginAt:   serverTimestamp(),
+    };
+    await setDoc(studentRef, profile, { merge: true });
+  } else {
+    profile = snap.data();
+    // touch lastLoginAt (best-effort, non-blocking)
+    setDoc(studentRef, { lastLoginAt: serverTimestamp() }, { merge: true }).catch(() => {});
+  }
+
+  window.currentUser     = user;
+  window.studentProfile  = profile;
+
+  // 4. Status routing
+  const status = profile.status || 'needs_class';
+
+  if (status === 'graduated') {
+    await signOut(auth);
+    window.location.href = '/login?error=graduated';
+    return;
+  }
+  if (status === 'rejected') {
+    await signOut(auth);
+    window.location.href = '/login?error=rejected';
+    return;
+  }
+  if (status === 'needs_class') {
+    if (PATH !== '/class-picker') { window.location.href = '/class-picker'; return; }
+  } else if (status === 'pending_approval') {
+    if (PATH !== '/waiting') { window.location.href = '/waiting'; return; }
+  } else if (status === 'active') {
+    // signed-in active student landing on auth-flow page → bounce home
+    if (PATH === '/login' || PATH === '/class-picker' || PATH === '/waiting') {
+      window.location.href = '/';
+      return;
+    }
+  } else {
+    // unknown status — fail safe
+    await signOut(auth);
+    window.location.href = '/login?error=unknown-status';
+    return;
+  }
+
+  // 5. Reveal page + emit authReady
+  document.body.style.display = '';
+  window.dispatchEvent(new CustomEvent('authReady', {
+    detail: { signedIn: true, status, schoolId: profile.schoolId }
+  }));
+});

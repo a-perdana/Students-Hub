@@ -1,0 +1,50 @@
+<!--
+  partials/navbar.html — Students Hub topbar.
+  Loaded by every authenticated page (NOT login / class-picker /
+  waiting / shared which need a clean header).
+
+  No dropdowns, no admin tooling — Students Hub deliberately keeps
+  the chrome minimal because the audience is 12-18 year-old students
+  on phones.
+-->
+<header class="topbar">
+  <a href="/" class="topbar-brand">
+    <span class="brand-mark">E</span>
+    <span>Eduversal Students</span>
+  </a>
+  <nav class="topbar-nav" id="topbarNav">
+    <a href="/" data-nav="dashboard">Dashboard</a>
+    <a href="/tests" data-nav="tests">Tests</a>
+    <a href="/growth" data-nav="growth">Growth</a>
+    <a href="/profile" data-nav="profile">Profile</a>
+  </nav>
+  <div class="topbar-user">
+    <div class="topbar-avatar" id="topbarAvatar">·</div>
+  </div>
+</header>
+<script>
+  // Highlight active nav link based on current path.
+  (function () {
+    const path = (window.location.pathname.replace(/\/$/, '') || '/');
+    const map  = { '/': 'dashboard', '/tests': 'tests', '/growth': 'growth', '/profile': 'profile' };
+    const activeKey = map[path] || (path.startsWith('/test') ? 'tests' : null);
+    if (activeKey) {
+      const link = document.querySelector('#topbarNav a[data-nav="' + activeKey + '"]');
+      if (link) link.classList.add('active');
+    }
+    // Fill avatar once authReady fires
+    function paintAvatar() {
+      const av = document.getElementById('topbarAvatar');
+      if (!av) return;
+      const p = window.studentProfile;
+      if (!p) return;
+      if (p.photoURL) {
+        av.innerHTML = '<img src="' + p.photoURL + '" alt="">';
+      } else {
+        av.textContent = (p.displayName || p.email || '?').charAt(0).toUpperCase();
+      }
+    }
+    if (window.studentProfile) paintAvatar();
+    else window.addEventListener('authReady', paintAvatar);
+  })();
+</script>

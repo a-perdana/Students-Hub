@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tests — Eduversal Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .tab-bar {
+      display: flex; gap: 4px; margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 10px 16px; border: none; background: transparent;
+      font-family: inherit; font-size: .92rem; font-weight: 500;
+      color: var(--ink-3); cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active { color: var(--mor); border-bottom-color: var(--mor); }
+    .test-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; background: var(--white);
+      border: 1px solid var(--border); border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .test-item-info { flex: 1; }
+    .test-item-title { font-weight: 500; }
+    .test-item-meta  { font-size: .82rem; color: var(--ink-3); margin-top: 2px; }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page">
+    <h1 style="margin-bottom:6px">Tests</h1>
+    <p style="color:var(--ink-3); margin-bottom:18px">Chapter tests and EASE growth assessments.</p>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="upcoming">Upcoming</button>
+      <button class="tab-btn"        data-tab="past">Past</button>
+    </div>
+
+    <div id="paneUpcoming">
+      <div class="empty">
+        <div class="empty-title">No tests scheduled</div>
+        Once your teacher schedules a chapter test or EASE window, it will show up here.
+      </div>
+    </div>
+
+    <div id="panePast" hidden>
+      <div class="empty">
+        <div class="empty-title">No completed tests yet</div>
+        Your past attempts and scores will appear here.
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script>
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        const tab = b.dataset.tab;
+        document.getElementById('paneUpcoming').hidden = tab !== 'upcoming';
+        document.getElementById('panePast').hidden     = tab !== 'past';
+      });
+    });
+  </script>
+</body>
+</html>

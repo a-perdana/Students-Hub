@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test — Eduversal Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+</head>
+<body class="test-mode" style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <main class="test-shell">
+    <div class="test-header">
+      <div>
+        <div style="font-size:.78rem; color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em;" id="testEyebrow">Chapter Test</div>
+        <div style="font-weight:600; font-size:1.05rem" id="testTitle">Loading…</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.78rem; color:var(--ink-3)">Time</div>
+        <div style="font-weight:600; font-size:1.1rem; font-variant-numeric: tabular-nums;" id="testTimer">--:--</div>
+      </div>
+    </div>
+
+    <div class="test-progress"><div class="test-progress-bar" id="progressBar" style="width:0%"></div></div>
+
+    <div id="loadState" class="empty">
+      <div class="empty-title">Test delivery not enabled yet</div>
+      The chapter test + EASE adaptive engine will plug in here.
+      For now, this page is a scaffold.
+    </div>
+
+    <div id="testBody" hidden>
+      <div class="qstem" id="qstem"></div>
+      <div id="qopts"></div>
+      <div class="test-nav">
+        <button class="btn btn-secondary" id="prevBtn" type="button">Back</button>
+        <button class="btn btn-primary"   id="nextBtn" type="button" disabled>Next</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script>
+    // Test-mode lockdown — discourage tab-switching during a test.
+    // (Light-touch only; not a security boundary. Heavy-handed kiosk
+    // mode comes in Phase 2 when essay/EASE delivery ships.)
+    let tabSwitches = 0;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) tabSwitches++;
+    });
+    window.addEventListener('beforeunload', (e) => {
+      // Don't actually block — just nudge.
+      // Real submit will clear the warning by setting window.__submitted.
+      if (window.__submitted) return;
+      e.preventDefault(); e.returnValue = '';
+    });
+  </script>
+</body>
+</html>

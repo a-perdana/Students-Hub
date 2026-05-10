@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Waiting for approval — Eduversal Students</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .waiting-card {
+      background: var(--white); border-radius: 18px;
+      box-shadow: var(--shadow-lg);
+      padding: 40px 32px; max-width: 480px; width: 100%;
+      text-align: center;
+    }
+    .pulse-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--cyan); display: inline-block;
+      animation: pulse 1.4s infinite ease-in-out;
+      margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%     { opacity: .4; transform: scale(.7); }
+    }
+    .waiting-title { margin-bottom: 12px; }
+    .waiting-info {
+      background: var(--paper); border-radius: 10px;
+      padding: 14px 16px; margin: 18px 0;
+      font-size: 0.92rem; line-height: 1.55; text-align: left;
+    }
+    .waiting-info strong { color: var(--ink); }
+    .actions { display: flex; gap: 10px; justify-content: center; margin-top: 18px; }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <main class="waiting-card">
+    <div><span class="pulse-dot"></span><span style="color:var(--ink-3); font-size:.86rem; font-weight:500;">Awaiting teacher approval</span></div>
+    <h1 class="waiting-title" style="margin-top:14px">You're almost in</h1>
+    <p style="color:var(--ink-3)">Your teacher needs to confirm you joined the right class.</p>
+
+    <div class="waiting-info">
+      <div><strong id="wName">—</strong></div>
+      <div id="wSchool" style="color:var(--ink-3); font-size:.88rem; margin-top:2px;">—</div>
+      <div id="wClass"  style="color:var(--ink-3); font-size:.88rem;">—</div>
+    </div>
+
+    <p style="font-size:.86rem; color:var(--ink-3); line-height:1.5;">
+      This page checks for approval automatically every 30 seconds.
+      You can also close this tab and come back later — once approved,
+      you'll go straight to your dashboard.
+    </p>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="refreshBtn" type="button">Check now</button>
+      <button class="btn btn-ghost"     id="signOutBtn" type="button">Sign out</button>
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) { window.location.href = '/login'; return; }
+      const p = window.studentProfile;
+      document.getElementById('wName').textContent   = p.displayName || p.email || '';
+      document.getElementById('wSchool').textContent = p.school    ? ('School: ' + p.school)  : '';
+      document.getElementById('wClass').textContent  = p.className ? ('Class: '  + p.className + ' · Grade ' + (p.gradeLevel || '?')) : '';
+      // If status changed away from pending_approval since auth-guard ran, send onward.
+      if (p.status !== 'pending_approval' && p.status !== 'needs_class') {
+        if (p.status === 'active') window.location.href = '/';
+      }
+      startPolling();
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', checkOnce);
+    document.getElementById('signOutBtn').addEventListener('click', () => window.signOutStudent());
+
+    let pollHandle = null;
+    function startPolling() {
+      if (pollHandle) return;
+      pollHandle = setInterval(checkOnce, 30000);
+    }
+
+    async function checkOnce() {
+      try {
+        const ref = doc(window.db, 'students', window.currentUser.uid);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const status = snap.data().status;
+        if (status === 'active')      window.location.href = '/';
+        else if (status === 'rejected') window.signOutStudent();
+      } catch (_) { /* swallow */ }
+    }
+  </script>
+</body>
+</html>

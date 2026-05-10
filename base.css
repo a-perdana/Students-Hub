@@ -1,0 +1,269 @@
+/* base.css — Students Hub
+ * Shared design tokens + reset + components.
+ * Brand: mor #6c5ce7 (primary), cyan #0891b2 (accent).
+ * Type: DM Sans (body), Lora (titles).
+ *
+ * Students Hub is intentionally simpler than CH/AH/TH:
+ *   - no dropdown navbars
+ *   - no admin tooling chrome
+ *   - mobile-first (most students will use phones/tablets)
+ */
+
+:root {
+  --mor:        #6c5ce7;
+  --mor-dk:     #5a4ed1;
+  --mor-2:      #efedfb;
+  --cyan:       #0891b2;
+  --cyan-dk:    #0e7490;
+  --cyan-2:     #ecfeff;
+
+  --ink:        #1a1d29;
+  --ink-2:      #475066;
+  --ink-3:      #7d869c;
+  --paper:      #f7f7fb;
+  --white:      #ffffff;
+  --border:     #e3e5ed;
+  --border-2:   #d3d7e1;
+
+  --ok:         #166534;
+  --ok-bg:      #dcfce7;
+  --warn:       #92400e;
+  --warn-bg:    #fef3c7;
+  --danger:     #b91c1c;
+  --danger-bg:  #fee2e2;
+
+  --radius:     12px;
+  --radius-sm:  8px;
+  --radius-lg:  16px;
+  --shadow-sm:  0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+  --shadow:     0 4px 12px rgba(16,24,40,.08);
+  --shadow-lg:  0 12px 32px rgba(16,24,40,.12);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h1, h2, h3 { font-family: 'Lora', Georgia, serif; font-weight: 600; line-height: 1.2; margin: 0; }
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem;  }
+
+a { color: var(--mor); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ─── Layout ──────────────────────────────────────────────────── */
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+.page-narrow {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+/* ─── Top bar (minimal, not a dropdown nav) ───────────────────── */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Lora', serif; font-size: 1.05rem; font-weight: 600;
+  color: var(--ink);
+}
+.topbar-brand .brand-mark {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 0.85rem; font-weight: 700;
+}
+.topbar-nav {
+  display: flex; align-items: center; gap: 4px;
+}
+.topbar-nav a {
+  padding: 7px 12px; border-radius: 8px;
+  font-size: 0.88rem; font-weight: 500;
+  color: var(--ink-2);
+}
+.topbar-nav a:hover     { background: var(--mor-2); color: var(--mor); text-decoration: none; }
+.topbar-nav a.active    { background: var(--mor); color: #fff; }
+.topbar-user {
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--mor-2); color: var(--mor);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 0.85rem;
+  overflow: hidden;
+}
+.topbar-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ─── Cards ──────────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 14px;
+}
+.card-title { font-size: 1.05rem; font-weight: 600; color: var(--ink); }
+.card-sub   { font-size: 0.84rem; color: var(--ink-3); }
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 10px;
+  font-family: inherit; font-size: 0.92rem; font-weight: 600;
+  border: 1px solid transparent; cursor: pointer;
+  transition: filter .15s, transform .05s;
+  text-decoration: none;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--mor);  color: #fff; }
+.btn-primary:hover  { filter: brightness(.93); text-decoration: none; }
+.btn-secondary { background: var(--white); color: var(--ink); border-color: var(--border-2); }
+.btn-secondary:hover { background: var(--paper); text-decoration: none; }
+.btn-ghost { background: transparent; color: var(--ink-2); }
+.btn-ghost:hover { background: var(--mor-2); color: var(--mor); text-decoration: none; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-block  { display: flex; width: 100%; justify-content: center; }
+.btn-lg { padding: 14px 22px; font-size: 1rem; border-radius: 12px; }
+
+/* ─── Form fields ────────────────────────────────────────────── */
+.field { margin-bottom: 16px; }
+.field-label {
+  display: block; font-size: 0.84rem; font-weight: 500;
+  color: var(--ink-2); margin-bottom: 6px;
+}
+.input, .select, .textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font-family: inherit; font-size: 0.95rem;
+  border: 1px solid var(--border-2); border-radius: 10px;
+  background: var(--white); color: var(--ink);
+  outline: none;
+}
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--mor);
+  box-shadow: 0 0 0 3px rgba(108,92,231,.18);
+}
+
+/* ─── Badges + chips ─────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 0.74rem; font-weight: 600; line-height: 1.4;
+  background: var(--paper); color: var(--ink-2); border: 1px solid var(--border);
+}
+.badge-mor    { background: var(--mor-2);   color: var(--mor);   border-color: #d6d1f5; }
+.badge-cyan   { background: var(--cyan-2);  color: var(--cyan);  border-color: #b8e8f0; }
+.badge-ok     { background: var(--ok-bg);   color: var(--ok);    border-color: #a7f3c4; }
+.badge-warn   { background: var(--warn-bg); color: var(--warn);  border-color: #fcd34d; }
+.badge-danger { background: var(--danger-bg); color: var(--danger); border-color: #fca5a5; }
+
+/* ─── Modal ──────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(16,24,40,.55);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+}
+.modal-overlay.is-open { display: flex; }
+.modal {
+  background: var(--white); border-radius: var(--radius-lg);
+  width: min(520px, 100%); max-height: 90vh; overflow: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+}
+
+/* ─── Empty + status states ──────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 48px 20px; color: var(--ink-3);
+}
+.empty-title { font-size: 1.05rem; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+
+/* ─── Test-taking surface (test.html only) ───────────────────── */
+/* Stripped-down body — no topbar, no distractions.
+ * Wrap all test content in <body class="test-mode">.
+ */
+body.test-mode { background: #fafbff; }
+body.test-mode .topbar { display: none; }
+
+.test-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 20px 80px;
+}
+.test-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.test-progress {
+  height: 4px; background: var(--border); border-radius: 2px;
+  margin: 12px 0 24px; overflow: hidden;
+}
+.test-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--mor) 0%, var(--cyan) 100%);
+  transition: width .25s;
+}
+.qstem {
+  font-size: 1.08rem; line-height: 1.55;
+  color: var(--ink); margin-bottom: 20px;
+}
+.qopt {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border: 1.5px solid var(--border);
+  border-radius: 12px; margin-bottom: 10px;
+  cursor: pointer; background: var(--white);
+  transition: all .15s;
+}
+.qopt:hover     { border-color: var(--mor); background: var(--mor-2); }
+.qopt.selected  { border-color: var(--mor); background: var(--mor-2); }
+.qopt-letter {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--paper); color: var(--ink-2);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.84rem; flex-shrink: 0;
+}
+.qopt.selected .qopt-letter {
+  background: var(--mor); color: #fff;
+}
+.qopt-text { flex: 1; font-size: 0.96rem; line-height: 1.5; }
+
+.test-nav {
+  display: flex; gap: 12px; margin-top: 24px;
+}
+
+/* ─── Mobile tweaks ──────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .topbar { padding: 12px 16px; }
+  .topbar-nav a { padding: 6px 10px; font-size: 0.84rem; }
+  .topbar-brand { font-size: 0.95rem; }
+  .page, .page-narrow { padding: 20px 16px 60px; }
+  h1 { font-size: 1.5rem; }
+  .card { padding: 16px; }
+}
