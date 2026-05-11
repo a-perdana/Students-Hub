@@ -7,89 +7,438 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
   <style>
+    html, body { height: 100%; }
     body {
+      margin: 0;
       min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
+      background: #0b0d1a;
+      color: var(--ink);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ─── Animated background ─────────────────────────────────────── */
+    .bg-layer {
+      position: fixed; inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
       background:
-        radial-gradient(circle at 80% 20%, rgba(8,145,178,.18) 0%, transparent 50%),
-        radial-gradient(circle at 15% 80%, rgba(108,92,231,.18) 0%, transparent 55%),
-        var(--paper);
-      padding: 20px;
+        radial-gradient(ellipse at top right, rgba(108,92,231,.22) 0%, transparent 55%),
+        radial-gradient(ellipse at bottom left, rgba(8,145,178,.22) 0%, transparent 55%),
+        linear-gradient(135deg, #0b0d1a 0%, #161a2e 50%, #0e1124 100%);
     }
-    .login-card {
-      background: var(--white);
-      border-radius: 18px;
-      padding: 44px 36px;
-      width: min(440px, 100%);
-      box-shadow: var(--shadow-lg);
-      text-align: center;
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: .55;
+      animation: orbFloat 18s ease-in-out infinite;
     }
-    .brand-stack {
-      width: 64px; height: 64px; margin: 0 auto 18px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
+    .orb.o1 { width: 480px; height: 480px; top: -120px; right: -120px; background: radial-gradient(circle, #6c5ce7 0%, transparent 70%); }
+    .orb.o2 { width: 560px; height: 560px; bottom: -160px; left: -160px; background: radial-gradient(circle, #0891b2 0%, transparent 70%); animation-delay: -6s; }
+    .orb.o3 { width: 340px; height: 340px; top: 40%; left: 50%; background: radial-gradient(circle, #a78bfa 0%, transparent 70%); animation-delay: -12s; opacity: .35; }
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(40px, -30px) scale(1.08); }
+      66%      { transform: translate(-30px, 40px) scale(.94); }
+    }
+
+    .grid-overlay {
+      position: fixed; inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+    }
+
+    /* ─── Shell ───────────────────────────────────────────────────── */
+    .shell {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 0;
+    }
+    @media (max-width: 960px) {
+      .shell { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Left pane (hero) ────────────────────────────────────────── */
+    .hero {
+      padding: 64px 56px;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      color: #f4f5fb;
+    }
+    @media (max-width: 960px) {
+      .hero { padding: 40px 28px 0; text-align: center; align-items: center; }
+    }
+
+    .brand-row {
+      display: flex; align-items: center; gap: 12px;
+      font-family: 'Lora', serif; font-weight: 600; font-size: 1.05rem;
+      color: #e9eaf5;
+      letter-spacing: .2px;
+    }
+    .brand-mark-lg {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6c5ce7 0%, #0891b2 100%);
       display: inline-flex; align-items: center; justify-content: center;
-      color: #fff; font-family: 'Lora', serif; font-size: 1.8rem; font-weight: 700;
+      color: #fff; font-family: 'Lora', serif; font-size: 1.35rem; font-weight: 700;
+      box-shadow: 0 8px 24px rgba(108,92,231,.45);
     }
-    .login-title { margin-bottom: 6px; }
-    .login-sub   { color: var(--ink-3); font-size: 0.92rem; margin-bottom: 28px; }
+    .brand-row .sub {
+      display: block; font-size: .76rem; font-family: 'DM Sans', sans-serif;
+      font-weight: 500; color: #a8acc4; letter-spacing: 1.2px; text-transform: uppercase;
+    }
+
+    .hero-copy { margin: 56px 0; max-width: 520px; }
+    @media (max-width: 960px) { .hero-copy { margin: 40px auto; } }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 999px;
+      background: rgba(108,92,231,.18);
+      border: 1px solid rgba(108,92,231,.35);
+      color: #c8bdfb;
+      font-size: .78rem; font-weight: 600; letter-spacing: .4px;
+      margin-bottom: 22px;
+    }
+    .eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #a78bfa; box-shadow: 0 0 0 4px rgba(167,139,250,.18);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(167,139,250,.18); }
+      50%      { box-shadow: 0 0 0 8px rgba(167,139,250,.08); }
+    }
+
+    .hero h1 {
+      font-family: 'Lora', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -.5px;
+      color: #fff;
+      margin: 0 0 18px;
+    }
+    .hero h1 .accent {
+      background: linear-gradient(90deg, #a78bfa 0%, #22d3ee 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p.lead {
+      font-size: 1.05rem; line-height: 1.6;
+      color: #c2c5da;
+      margin: 0;
+    }
+
+    .feature-list {
+      list-style: none; padding: 0; margin: 32px 0 0;
+      display: grid; gap: 14px;
+    }
+    .feature-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      color: #d8dbed; font-size: .94rem;
+    }
+    @media (max-width: 960px) { .feature-list li { text-align: left; } }
+    .feature-list .check {
+      flex: 0 0 26px; width: 26px; height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(108,92,231,.35), rgba(8,145,178,.35));
+      border: 1px solid rgba(167,139,250,.4);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #c8bdfb;
+    }
+    .feature-list .check svg { width: 14px; height: 14px; }
+    .feature-list .label { font-weight: 600; color: #fff; }
+    .feature-list .desc  { color: #a8acc4; font-size: .85rem; display: block; margin-top: 2px; }
+
+    .hero-foot {
+      font-size: .8rem; color: #7d829e;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .hero-foot .sep { opacity: .4; }
+    .hero-foot a { color: #c2c5da; text-decoration: none; }
+    .hero-foot a:hover { color: #fff; text-decoration: underline; }
+    @media (max-width: 960px) {
+      .hero-foot { justify-content: center; padding-bottom: 16px; }
+    }
+
+    /* ─── Right pane (card) ───────────────────────────────────────── */
+    .auth-pane {
+      display: flex; align-items: center; justify-content: center;
+      padding: 64px 40px;
+    }
+    @media (max-width: 960px) { .auth-pane { padding: 24px 20px 56px; } }
+
+    .login-card {
+      position: relative;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.6);
+      border-radius: 24px;
+      padding: 44px 40px;
+      width: min(440px, 100%);
+      box-shadow:
+        0 30px 70px -20px rgba(8,12,40,.55),
+        0 0 0 1px rgba(108,92,231,.06);
+      animation: cardIn .6s cubic-bezier(.2,.8,.2,1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .login-card::before {
+      content: '';
+      position: absolute; inset: -1px;
+      border-radius: 24px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(108,92,231,.55), rgba(8,145,178,.55));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+              mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+      opacity: .5;
+    }
+
+    .card-head {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .card-head .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 999px;
+      background: linear-gradient(135deg, rgba(108,92,231,.12), rgba(8,145,178,.12));
+      color: var(--mor-dk);
+      border: 1px solid rgba(108,92,231,.25);
+      font-size: .72rem; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .card-head h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0 0 8px;
+      letter-spacing: -.2px;
+    }
+    .card-head p {
+      color: var(--ink-2); font-size: .92rem; margin: 0;
+    }
+
     .google-btn {
-      width: 100%; padding: 13px 16px; border-radius: 12px;
-      border: 1px solid var(--border-2); background: var(--white);
-      font-family: inherit; font-size: 0.96rem; font-weight: 600;
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--border-2);
+      background: linear-gradient(180deg, #fff 0%, #fafbff 100%);
+      font-family: inherit; font-size: 0.98rem; font-weight: 600;
       color: var(--ink); cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center; gap: 12px;
-      transition: background .15s, border-color .15s;
+      transition: transform .15s ease, box-shadow .2s ease, border-color .15s ease;
+      box-shadow: 0 1px 2px rgba(16,24,40,.05);
+      position: relative; overflow: hidden;
     }
-    .google-btn:hover { background: var(--paper); border-color: var(--mor); }
-    .google-btn svg { width: 20px; height: 20px; }
-    .login-help {
-      margin-top: 22px; font-size: 0.82rem; color: var(--ink-3);
-      line-height: 1.55;
+    .google-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 0%, rgba(108,92,231,.08) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform .6s ease;
     }
+    .google-btn:hover {
+      border-color: var(--mor);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px -8px rgba(108,92,231,.35);
+    }
+    .google-btn:hover::after { transform: translateX(100%); }
+    .google-btn:active { transform: translateY(0); }
+    .google-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .google-btn.is-loading { color: transparent; pointer-events: none; }
+    .google-btn.is-loading::before {
+      content: '';
+      position: absolute; top: 50%; left: 50%;
+      width: 18px; height: 18px;
+      margin: -9px 0 0 -9px;
+      border: 2px solid var(--mor-2);
+      border-top-color: var(--mor);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 22px 0 18px;
+      color: var(--ink-3); font-size: .76rem; font-weight: 500; letter-spacing: .6px; text-transform: uppercase;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .help-block {
+      background: linear-gradient(135deg, rgba(108,92,231,.06), rgba(8,145,178,.06));
+      border: 1px solid rgba(108,92,231,.18);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: .85rem; line-height: 1.55;
+      color: var(--ink-2);
+    }
+    .help-block strong { color: var(--mor-dk); font-weight: 600; }
+    .help-block .row { display: flex; align-items: flex-start; gap: 10px; }
+    .help-block .row + .row { margin-top: 8px; }
+    .help-block svg { width: 16px; height: 16px; color: var(--mor); flex-shrink: 0; margin-top: 2px; }
+
     .err {
-      margin-top: 16px;
-      padding: 10px 14px; border-radius: 10px;
+      margin-top: 18px;
+      padding: 12px 14px; border-radius: 12px;
       background: var(--danger-bg); color: var(--danger);
-      font-size: 0.86rem; line-height: 1.45; text-align: left;
+      font-size: .88rem; line-height: 1.45; text-align: left;
       border: 1px solid #fca5a5;
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .err svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+
+    .card-foot {
+      margin-top: 26px;
+      text-align: center;
+      font-size: .78rem; color: var(--ink-3);
+    }
+    .card-foot a { color: var(--mor); font-weight: 500; }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      .orb, .eyebrow .dot, .login-card { animation: none; }
+      .google-btn::after { display: none; }
     }
   </style>
 </head>
 <body>
   <!-- FIREBASE_ENV -->
 
-  <main class="login-card">
-    <div class="brand-stack">E</div>
-    <h1 class="login-title">Students Hub</h1>
-    <p class="login-sub">Sign in with your school Google account.</p>
+  <div class="bg-layer" aria-hidden="true">
+    <div class="orb o1"></div>
+    <div class="orb o2"></div>
+    <div class="orb o3"></div>
+  </div>
+  <div class="grid-overlay" aria-hidden="true"></div>
 
-    <button id="googleBtn" class="google-btn" type="button">
-      <svg viewBox="0 0 48 48" aria-hidden="true">
-        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.7 4.7-6.2 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
-        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
-        <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.1 0-9.5-3.3-11.2-8l-6.5 5C9.5 39.6 16.1 44 24 44z"/>
-        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l6.2 5.2C40.9 35.7 44 30.3 44 24c0-1.3-.1-2.4-.4-3.5z"/>
-      </svg>
-      Sign in with Google
-    </button>
+  <div class="shell">
+    <!-- LEFT: hero / brand pane -->
+    <section class="hero">
+      <div class="brand-row">
+        <span class="brand-mark-lg">E</span>
+        <span>
+          Eduversal
+          <span class="sub">Students Hub</span>
+        </span>
+      </div>
 
-    <div id="errBox" class="err" hidden></div>
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="dot"></span> Cambridge growth platform</span>
+        <h1>Your learning, <span class="accent">measured for growth.</span></h1>
+        <p class="lead">
+          Take chapter mastery checks, see how far you've come on the EASE growth scale,
+          and share your wins with your family — all in one place.
+        </p>
 
-    <p class="login-help">
-      Use the email your school gave you (e.g. <strong>name@yourschool.sch.id</strong>).<br>
-      Personal Gmail accounts won't work.
-    </p>
-  </main>
+        <ul class="feature-list">
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span>
+              <span class="label">Chapter Tests</span>
+              <span class="desc">Per-unit mastery check — see exactly where you stand.</span>
+            </span>
+          </li>
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span>
+              <span class="label">EASE Growth</span>
+              <span class="desc">Math, English &amp; Science — track your progress across the year.</span>
+            </span>
+          </li>
+          <li>
+            <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <span>
+              <span class="label">Share with parents</span>
+              <span class="desc">One tap to send a private link of your latest result.</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="hero-foot">
+        <span>© Eduversal Education</span>
+        <span class="sep">·</span>
+        <span>Partner-school students only</span>
+      </div>
+    </section>
+
+    <!-- RIGHT: sign-in card -->
+    <section class="auth-pane">
+      <main class="login-card" aria-labelledby="signInTitle">
+        <div class="card-head">
+          <span class="badge">Secure school sign-in</span>
+          <h2 id="signInTitle">Welcome back</h2>
+          <p>Sign in with your school Google account to continue.</p>
+        </div>
+
+        <button id="googleBtn" class="google-btn" type="button">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.7 4.7-6.2 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.1 0-9.5-3.3-11.2-8l-6.5 5C9.5 39.6 16.1 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.6l6.2 5.2C40.9 35.7 44 30.3 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="divider">School account required</div>
+
+        <div class="help-block">
+          <div class="row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <div>Use the email your school gave you<br><strong>e.g. name@yourschool.sch.id</strong></div>
+          </div>
+          <div class="row">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>Personal Gmail accounts won't work — only partner-school domains are allowed.</div>
+          </div>
+        </div>
+
+        <div id="errBox" class="err" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="errMsg"></span>
+        </div>
+
+        <div class="card-foot">
+          Trouble signing in? Ask your class teacher or school admin.
+        </div>
+      </main>
+    </section>
+  </div>
 
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     // Surface ?error=... messages from auth-guard redirects
     const params = new URLSearchParams(window.location.search);
     const err = params.get('error');
+    const box = document.getElementById('errBox');
+    const errMsg = document.getElementById('errMsg');
     if (err) {
       const map = {
         'invalid-domain': "That email isn't from a partner school. Use your school account.",
@@ -97,20 +446,21 @@
         'graduated':      "Your account is marked as graduated. Contact your school if this is wrong.",
         'rejected':       "Your account access was declined. Contact your teacher or school.",
       };
-      const box = document.getElementById('errBox');
-      box.textContent = map[err] || ('Sign-in error: ' + err);
+      errMsg.textContent = map[err] || ('Sign-in error: ' + err);
       box.hidden = false;
     }
 
-    document.getElementById('googleBtn').addEventListener('click', async () => {
-      const box = document.getElementById('errBox');
+    const btn = document.getElementById('googleBtn');
+    btn.addEventListener('click', async () => {
       box.hidden = true;
+      btn.classList.add('is-loading');
       try {
         await window.signInWithGoogle();
         // onAuthStateChanged in auth-guard.js handles redirects.
       } catch (e) {
-        box.textContent = 'Sign-in failed: ' + (e.message || e.code || 'unknown error');
+        errMsg.textContent = 'Sign-in failed: ' + (e.message || e.code || 'unknown error');
         box.hidden = false;
+        btn.classList.remove('is-loading');
       }
     });
   </script>
