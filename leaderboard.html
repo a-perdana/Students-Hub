@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard — Students Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .lb-hero h1 { font-size: clamp(1.6rem, 3vw, 2.1rem); margin-bottom: 6px; }
+    .lb-hero p  { margin: 0; }
+    .lb-hero-meta {
+      margin-top: 14px;
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+
+    .period-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .period-btn {
+      padding: 8px 14px; border-radius: 999px;
+      font-size: .82rem; font-weight: 600;
+      background: var(--white); border: 1px solid var(--border);
+      color: var(--ink-2); cursor: pointer;
+      transition: all .15s;
+    }
+    .period-btn:hover  { border-color: var(--stage-primary); color: var(--stage-primary-dk); }
+    .period-btn.active { background: var(--stage-primary); color: #fff; border-color: var(--stage-primary); box-shadow: var(--stage-glow); }
+
+    .scope-meta {
+      font-size: .85rem;
+      color: var(--ink-3);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .scope-meta strong { color: var(--ink-2); font-weight: 600; }
+
+    /* "My rank" sticky banner — surfaces user's own position even when off-screen */
+    .my-rank {
+      position: sticky; bottom: 8px;
+      z-index: 20;
+      background: var(--stage-gradient);
+      color: #fff;
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: var(--stage-glow);
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 18px;
+    }
+    .my-rank .badge {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; flex-shrink: 0;
+      backdrop-filter: blur(8px);
+    }
+    .my-rank .meta { flex: 1; min-width: 0; }
+    .my-rank .meta strong { display: block; font-size: .95rem; }
+    .my-rank .meta span   { font-size: .78rem; opacity: .9; }
+    .my-rank .pts { font-family: 'Lora', serif; font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
+
+    .info-line {
+      font-size: .76rem; color: var(--ink-3);
+      margin-top: 12px; text-align: center;
+      padding: 8px 12px;
+      background: var(--paper); border-radius: 8px;
+    }
+
+    .empty-board {
+      text-align: center;
+      padding: 56px 24px;
+      background: var(--white);
+      border: 1px dashed var(--border-2);
+      border-radius: var(--radius-lg);
+    }
+    .empty-board .glyph {
+      font-size: 3rem; margin-bottom: 12px; opacity: .6;
+    }
+    .empty-board h3 { font-family: 'Lora', serif; margin: 0 0 8px; }
+    .empty-board p  { color: var(--ink-3); font-size: .9rem; margin: 0 0 16px; }
+    .empty-board a  {
+      display: inline-block;
+      padding: 10px 18px; border-radius: 10px;
+      background: var(--stage-gradient); color: #fff;
+      font-weight: 700; font-size: .88rem; text-decoration: none;
+      box-shadow: var(--stage-glow);
+    }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page">
+    <section class="stage-hero lb-hero">
+      <span class="stage-chip"><span class="dot"></span> <span id="stageLabel">Leaderboard</span></span>
+      <h1 style="margin-top:10px">🏆 Leaderboard</h1>
+      <p>Earn points by completing chapter tests &amp; EASE sessions. Top performers climb the ranks each week.</p>
+    </section>
+
+    <!-- Scope tabs: Class / Grade / School / Network -->
+    <div class="lb-tabs" id="scopeTabs" role="tablist">
+      <button class="lb-tab active" data-scope="class" role="tab" aria-selected="true">👫 Class</button>
+      <button class="lb-tab" data-scope="grade" role="tab" aria-selected="false">📚 Year</button>
+      <button class="lb-tab" data-scope="school" role="tab" aria-selected="false">🏫 School</button>
+      <button class="lb-tab" data-scope="network" role="tab" aria-selected="false">🌐 Network</button>
+    </div>
+
+    <!-- Period buttons: weekly / monthly / alltime -->
+    <div class="period-row" id="periodRow">
+      <button class="period-btn active" data-period="weekly">This week</button>
+      <button class="period-btn" data-period="monthly">This month</button>
+      <button class="period-btn" data-period="alltime">All time</button>
+    </div>
+
+    <div class="scope-meta" id="scopeMeta">
+      <strong id="scopeLabel">Loading…</strong>
+    </div>
+
+    <!-- Podium for top 3 -->
+    <div class="podium" id="podium" aria-label="Top 3"></div>
+
+    <!-- Rows 4+ -->
+    <div id="lbBody"></div>
+
+    <!-- Sticky self-rank -->
+    <div class="my-rank" id="myRank" style="display:none">
+      <span class="badge" id="myRankNum">—</span>
+      <div class="meta">
+        <strong id="myRankName">You</strong>
+        <span id="myRankScope">—</span>
+      </div>
+      <span class="pts" id="myRankPts">0</span>
+    </div>
+
+    <p class="info-line" id="infoLine">Boards refresh hourly.</p>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      doc, getDoc, collection, query, where, orderBy, limit, getDocs
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    let CURRENT_SCOPE  = 'class';
+    let CURRENT_PERIOD = 'weekly';
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) return;
+      const stageMap = {
+        checkpoint: 'Checkpoint · Grade 7–8',
+        igcse:      'IGCSE · Grade 9–10',
+        alevel:     'A-Level · Grade 11–12',
+      };
+      document.getElementById('stageLabel').textContent = stageMap[ev.detail.stage] || 'Eduversal';
+      wireControls();
+      renderBoard();
+    });
+
+    function wireControls() {
+      document.getElementById('scopeTabs').addEventListener('click', e => {
+        const btn = e.target.closest('.lb-tab');
+        if (!btn) return;
+        document.querySelectorAll('#scopeTabs .lb-tab').forEach(b => {
+          b.classList.toggle('active', b === btn);
+          b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+        });
+        CURRENT_SCOPE = btn.dataset.scope;
+        renderBoard();
+      });
+      document.getElementById('periodRow').addEventListener('click', e => {
+        const btn = e.target.closest('.period-btn');
+        if (!btn) return;
+        document.querySelectorAll('#periodRow .period-btn').forEach(b => b.classList.toggle('active', b === btn));
+        CURRENT_PERIOD = btn.dataset.period;
+        renderBoard();
+      });
+    }
+
+    // ─── Render board ──────────────────────────────────────────
+    // Strategy:
+    //   1. Try `school_leaderboards/{scope}_{scopeId}_{period}` aggregate doc
+    //      (Cloud-Function-maintained, top 100 inline).
+    //   2. If aggregate missing, fall back to a live query on student_points
+    //      filtered by scope (classId / gradeLevel / schoolId / network=all)
+    //      and ordered by the matching points field.
+    // The fallback makes the page functional even before the Cloud Function
+    // is deployed — useful during Phase 1 of gamification rollout.
+    async function renderBoard() {
+      const p = window.studentProfile;
+      const me = window.currentUser.uid;
+
+      const scopeId = scopeIdFor(CURRENT_SCOPE, p);
+      const scopeLabel = scopeLabelFor(CURRENT_SCOPE, p);
+      document.getElementById('scopeLabel').textContent = scopeLabel;
+
+      // Reset UI
+      document.getElementById('podium').innerHTML = '';
+      document.getElementById('lbBody').innerHTML = renderSkeleton();
+      document.getElementById('myRank').style.display = 'none';
+
+      if (CURRENT_SCOPE !== 'network' && !scopeId) {
+        renderEmpty(missingScopeMsg(CURRENT_SCOPE));
+        return;
+      }
+
+      let entries = await fetchAggregate(CURRENT_SCOPE, scopeId, CURRENT_PERIOD);
+      let source = 'aggregate';
+      if (!entries) {
+        entries = await fetchLive(CURRENT_SCOPE, scopeId, CURRENT_PERIOD, p);
+        source = 'live';
+      }
+
+      if (!entries || entries.length === 0) {
+        renderEmpty(emptyScopeMsg(CURRENT_SCOPE));
+        document.getElementById('infoLine').textContent =
+          source === 'aggregate' ? 'Boards refresh hourly.' : 'Building leaderboard from latest submissions…';
+        return;
+      }
+
+      // Render podium (top 3) + rows (4+) + self-rank
+      const top3   = entries.slice(0, 3);
+      const rest   = entries.slice(3, 50);
+      renderPodium(top3, me);
+      renderRows(rest, me);
+
+      // Self-rank: find me in entries or query separately
+      const myEntry = entries.find(e => e.studentUid === me);
+      if (myEntry) {
+        document.getElementById('myRank').style.display = 'flex';
+        document.getElementById('myRankNum').textContent  = '#' + (myEntry.rank || (entries.indexOf(myEntry) + 1));
+        document.getElementById('myRankName').textContent = myEntry.displayName || 'You';
+        document.getElementById('myRankScope').textContent =
+          scopeLabel + ' · ' + periodLabel(CURRENT_PERIOD);
+        document.getElementById('myRankPts').textContent =
+          (pointsFieldOf(myEntry, CURRENT_PERIOD) || 0).toLocaleString('en-GB') + ' pts';
+      }
+
+      document.getElementById('infoLine').textContent =
+        source === 'aggregate'
+          ? 'Board last refreshed ' + (entries.computedAt ? formatTs(entries.computedAt) : 'recently') + '.'
+          : 'Live preview — official ranks update hourly.';
+    }
+
+    function scopeIdFor(scope, p) {
+      if (scope === 'class')   return p.classId;
+      if (scope === 'grade')   return p.gradeLevel ? String(p.gradeLevel) : null;
+      if (scope === 'school')  return p.schoolId;
+      if (scope === 'network') return 'all';
+      return null;
+    }
+    function scopeLabelFor(scope, p) {
+      if (scope === 'class')   return p.className ? p.className + ' · class' : 'Your class';
+      if (scope === 'grade')   return p.gradeLevel ? 'Grade ' + p.gradeLevel : 'Your year';
+      if (scope === 'school')  return p.school || 'Your school';
+      if (scope === 'network') return 'Eduversal network';
+      return '';
+    }
+    function missingScopeMsg(scope) {
+      if (scope === 'class')  return 'Join a class to see your class leaderboard.';
+      if (scope === 'grade')  return 'Your grade isn\'t set yet. Ask your teacher to confirm your enrolment.';
+      if (scope === 'school') return 'Your school isn\'t linked yet.';
+      return '';
+    }
+    function emptyScopeMsg(scope) {
+      return 'No points scored in this scope yet. Be the first!';
+    }
+    function periodLabel(period) {
+      return period === 'weekly' ? 'This week' : period === 'monthly' ? 'This month' : 'All time';
+    }
+    function pointsFieldOf(entry, period) {
+      if (period === 'weekly')  return entry.weeklyPoints  ?? entry.totalPoints ?? 0;
+      if (period === 'monthly') return entry.monthlyPoints ?? entry.totalPoints ?? 0;
+      return entry.totalPoints ?? 0;
+    }
+
+    // ─── Aggregate doc fetch ───────────────────────────────────
+    async function fetchAggregate(scope, scopeId, period) {
+      const boardId = scope + '_' + scopeId + '_' + period;
+      try {
+        const snap = await getDoc(doc(window.db, 'school_leaderboards', boardId));
+        if (!snap.exists()) return null;
+        const d = snap.data();
+        const entries = d.entries || [];
+        entries.computedAt = d.computedAt;
+        return entries;
+      } catch (e) {
+        console.warn('[leaderboard] aggregate fetch failed', e.message);
+        return null;
+      }
+    }
+
+    // ─── Live query fallback (no aggregate yet) ────────────────
+    async function fetchLive(scope, scopeId, period, p) {
+      const field =
+        period === 'weekly'  ? 'weeklyPoints'  :
+        period === 'monthly' ? 'monthlyPoints' :
+                               'totalPoints';
+      try {
+        let q;
+        if (scope === 'class')        q = query(collection(window.db, 'student_points'), where('classId', '==', scopeId), orderBy(field, 'desc'), limit(50));
+        else if (scope === 'grade')   q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), where('gradeLevel', '==', Number(scopeId)), orderBy(field, 'desc'), limit(50));
+        else if (scope === 'school')  q = query(collection(window.db, 'student_points'), where('schoolId', '==', scopeId), orderBy(field, 'desc'), limit(50));
+        else if (scope === 'network') q = query(collection(window.db, 'student_points'), orderBy(field, 'desc'), limit(50));
+        else return [];
+        const snap = await getDocs(q);
+        const out = snap.docs.map((d, i) => ({ rank: i + 1, studentUid: d.id, ...d.data() }));
+        return out;
+      } catch (e) {
+        console.warn('[leaderboard] live fetch failed', e.message);
+        return [];
+      }
+    }
+
+    // ─── Renderers ────────────────────────────────────────────
+    function renderSkeleton() {
+      return Array.from({ length: 6 }).map(() =>
+        '<div class="lb-row" style="background:transparent;border:none;">'
+        + '<span class="skel skel-avatar" style="width:28px;height:28px"></span>'
+        + '<span class="skel skel-avatar"></span>'
+        + '<span class="skel skel-line" style="margin:0"></span>'
+        + '<span class="skel skel-chip"></span>'
+        + '</div>'
+      ).join('');
+    }
+    function renderEmpty(msg) {
+      document.getElementById('podium').innerHTML = '';
+      document.getElementById('lbBody').innerHTML =
+        '<div class="empty-board">'
+        + '<div class="glyph">🏆</div>'
+        + '<h3>No ranks yet</h3>'
+        + '<p>' + escHtml(msg) + '</p>'
+        + '<a href="/tests">Take a test →</a>'
+        + '</div>';
+    }
+    function renderPodium(top3, me) {
+      const box = document.getElementById('podium');
+      if (top3.length === 0) { box.innerHTML = ''; return; }
+      const order = [1, 0, 2]; // index in array = silver, gold, bronze (CSS order swaps)
+      const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
+      box.innerHTML = order.map(i => {
+        const e = top3[i];
+        if (!e) return '<div class="podium-step ' + rankClasses[i] + '" style="visibility:hidden"></div>';
+        const initial = (e.displayName || '?')[0].toUpperCase();
+        const isMe = e.studentUid === me;
+        return '<div class="podium-step ' + rankClasses[i] + '">'
+          + '<div class="podium-avatar">'
+          + (e.photoURL ? '<img src="' + escAttr(e.photoURL) + '" alt="">' : escHtml(initial))
+          + '</div>'
+          + '<div class="podium-name">' + escHtml(e.displayName || 'Student') + (isMe ? ' <span style="color:var(--stage-primary)">(You)</span>' : '') + '</div>'
+          + '<div class="podium-meta">' + escHtml(e.schoolName || e.school || '') + '</div>'
+          + '<div class="podium-pts">' + (pointsFieldOf(e, CURRENT_PERIOD) || 0).toLocaleString('en-GB') + '</div>'
+          + '</div>';
+      }).join('');
+    }
+    function renderRows(rest, me) {
+      const box = document.getElementById('lbBody');
+      if (rest.length === 0) { box.innerHTML = ''; return; }
+      box.innerHTML = rest.map((e, idx) => {
+        const rank = e.rank || (idx + 4);
+        const initial = (e.displayName || '?')[0].toUpperCase();
+        const isMe = e.studentUid === me;
+        const medal = rank === 1 ? 'medal-gold' : rank === 2 ? 'medal-silver' : rank === 3 ? 'medal-bronze' : 'medal-num';
+        const delta = e.delta != null
+          ? '<span class="delta ' + (e.delta >= 0 ? 'up' : 'down') + '">' + (e.delta >= 0 ? '▲' : '▼') + ' ' + Math.abs(e.delta) + '</span>'
+          : '<span class="delta">—</span>';
+        return '<div class="lb-row ' + (isMe ? 'is-me' : '') + '">'
+          + '<span class="medal ' + medal + '">' + rank + '</span>'
+          + '<span class="avatar">' + (e.photoURL ? '<img src="' + escAttr(e.photoURL) + '" alt="">' : escHtml(initial)) + '</span>'
+          + '<span class="name">' + escHtml(e.displayName || 'Student') + (isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700"> YOU</span>' : '') + '</span>'
+          + '<span class="pts">' + (pointsFieldOf(e, CURRENT_PERIOD) || 0).toLocaleString('en-GB') + '</span>'
+          + delta
+          + '</div>';
+      }).join('');
+    }
+
+    function formatTs(ts) {
+      try {
+        const d = ts?.toDate?.() || (ts ? new Date(ts) : null);
+        if (!d) return '';
+        return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      } catch { return ''; }
+    }
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+    function escAttr(s) { return escHtml(s); }
+  </script>
+</body>
+</html>

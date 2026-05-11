@@ -90,6 +90,26 @@ window.signOutStudent = async function () {
   window.location.href = '/login';
 };
 
+// ─── Stage theme helper ──────────────────────────────────────────
+// Maps gradeLevel to a stage band — sets body[data-stage] so base.css
+// can recolour the whole hub per grade. Used by every page; safe to
+// call with null/undefined (defaults to 'igcse').
+//   Grade 7-8   → checkpoint (emerald + amber)
+//   Grade 9-10  → igcse      (mor + cyan — brand default)
+//   Grade 11-12 → alevel     (navy + crimson)
+window.stageForGrade = function (gradeLevel) {
+  const g = Number(gradeLevel);
+  if (g >= 7  && g <= 8)  return 'checkpoint';
+  if (g >= 9  && g <= 10) return 'igcse';
+  if (g >= 11 && g <= 12) return 'alevel';
+  return 'igcse';
+};
+window.applyStageTheme = function (gradeLevel) {
+  const stage = window.stageForGrade(gradeLevel);
+  document.body.setAttribute('data-stage', stage);
+  return stage;
+};
+
 // ─── Bypass: pages that don't need a logged-in active student ────
 const PATH       = window.location.pathname.replace(/\/$/, '') || '/';
 // /login and /shared can render without an authed student.
@@ -203,9 +223,12 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // 5. Reveal page + emit authReady
+  // 5. Apply stage theme (recolours whole hub via base.css var swaps)
+  const stage = window.applyStageTheme(profile.gradeLevel);
+
+  // 6. Reveal page + emit authReady
   document.body.style.display = '';
   window.dispatchEvent(new CustomEvent('authReady', {
-    detail: { signedIn: true, status, schoolId: profile.schoolId }
+    detail: { signedIn: true, status, schoolId: profile.schoolId, gradeLevel: profile.gradeLevel || null, stage }
   }));
 });

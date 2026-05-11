@@ -42,6 +42,7 @@ const ROUTES = {
   'profile.html':      'profile',       // read-only profile + sign out
   'shared.html':       'shared',        // parent share link landing
   'ease-test.html':    'ease-test',     // EASE Growth adaptive runner
+  'leaderboard.html':  'leaderboard',   // Mathletics-style 4-tab leaderboard
 };
 
 // Internal href rewrites — same pattern as TH/AH/CH builds.
@@ -57,6 +58,7 @@ const LINK_REWRITES = [
   [/href="profile\.html"/g,      'href="/profile"'],
   [/href="shared\.html(\?[^"]*)?"/g, (m, q) => `href="/shared${q || ''}"`],
   [/href="ease-test\.html(\?[^"]*)?"/g, (m, q) => `href="/ease-test${q || ''}"`],
+  [/href="leaderboard\.html"/g, 'href="/leaderboard"'],
 ];
 
 // Read partials/firebase-env.html once (injected via comment placeholder).

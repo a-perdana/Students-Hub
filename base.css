@@ -32,12 +32,75 @@
   --danger:     #b91c1c;
   --danger-bg:  #fee2e2;
 
+  --gold:       #f59e0b;
+  --gold-2:     #fef3c7;
+  --silver:     #94a3b8;
+  --silver-2:   #f1f5f9;
+  --bronze:     #b45309;
+  --bronze-2:   #fef3c7;
+
   --radius:     12px;
   --radius-sm:  8px;
   --radius-lg:  16px;
+  --radius-xl:  20px;
   --shadow-sm:  0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
   --shadow:     0 4px 12px rgba(16,24,40,.08);
   --shadow-lg:  0 12px 32px rgba(16,24,40,.12);
+
+  /* Default stage theme = IGCSE (matches brand) — overridden per body[data-stage] below. */
+  --stage:        'igcse';
+  --stage-name:   'IGCSE';
+  --stage-primary:    #6c5ce7;
+  --stage-primary-dk: #5a4ed1;
+  --stage-primary-2:  #efedfb;
+  --stage-accent:     #0891b2;
+  --stage-accent-dk:  #0e7490;
+  --stage-accent-2:   #ecfeff;
+  --stage-gradient:   linear-gradient(135deg, #6c5ce7 0%, #0891b2 100%);
+  --stage-glow:       0 18px 40px -16px rgba(108,92,231,.55);
+}
+
+/* ─── Stage themes (per-grade-band) ───────────────────────────────
+ * Auth-guard sets body[data-stage] from students/{uid}.gradeLevel:
+ *   7-8   → checkpoint   (emerald + amber, friendly)
+ *   9-10  → igcse        (mor + cyan, focused — matches brand)
+ *   11-12 → alevel       (navy + crimson, prestigious)
+ */
+body[data-stage="checkpoint"] {
+  --stage:        'checkpoint';
+  --stage-name:   'Checkpoint';
+  --stage-primary:    #10b981;
+  --stage-primary-dk: #047857;
+  --stage-primary-2:  #d1fae5;
+  --stage-accent:     #fbbf24;
+  --stage-accent-dk:  #d97706;
+  --stage-accent-2:   #fef3c7;
+  --stage-gradient:   linear-gradient(135deg, #10b981 0%, #fbbf24 100%);
+  --stage-glow:       0 18px 40px -16px rgba(16,185,129,.55);
+}
+body[data-stage="igcse"] {
+  --stage:        'igcse';
+  --stage-name:   'IGCSE';
+  --stage-primary:    #6c5ce7;
+  --stage-primary-dk: #5a4ed1;
+  --stage-primary-2:  #efedfb;
+  --stage-accent:     #0891b2;
+  --stage-accent-dk:  #0e7490;
+  --stage-accent-2:   #ecfeff;
+  --stage-gradient:   linear-gradient(135deg, #6c5ce7 0%, #0891b2 100%);
+  --stage-glow:       0 18px 40px -16px rgba(108,92,231,.55);
+}
+body[data-stage="alevel"] {
+  --stage:        'alevel';
+  --stage-name:   'A-Level';
+  --stage-primary:    #1e293b;
+  --stage-primary-dk: #0f172a;
+  --stage-primary-2:  #e2e8f0;
+  --stage-accent:     #dc2626;
+  --stage-accent-dk:  #991b1b;
+  --stage-accent-2:   #fee2e2;
+  --stage-gradient:   linear-gradient(135deg, #1e293b 0%, #dc2626 100%);
+  --stage-glow:       0 18px 40px -16px rgba(30,41,59,.55);
 }
 
 * { box-sizing: border-box; }
@@ -258,6 +321,366 @@ body.test-mode .topbar { display: none; }
   display: flex; gap: 12px; margin-top: 24px;
 }
 
+/* ─── Stage-themed components ────────────────────────────────────
+ * These hook into --stage-* vars so they auto-recolour per grade band.
+ */
+
+/* Stage hero — big gradient panel used on dashboard / report */
+.stage-hero {
+  position: relative;
+  border-radius: var(--radius-lg);
+  padding: 28px 28px 24px;
+  color: #fff;
+  background: var(--stage-gradient);
+  box-shadow: var(--stage-glow);
+  overflow: hidden;
+}
+.stage-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.18) 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(255,255,255,.12) 0%, transparent 50%);
+  pointer-events: none;
+}
+.stage-hero > * { position: relative; z-index: 1; }
+.stage-hero h1 { color: #fff; font-family: 'Lora', serif; letter-spacing: -.3px; }
+.stage-hero p  { color: rgba(255,255,255,.92); margin: 6px 0 0; line-height: 1.55; }
+
+/* Stage chip — small label showing current band */
+.stage-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.3);
+  color: #fff;
+  font-size: .72rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+.stage-chip-light {
+  background: var(--stage-primary-2);
+  border: 1px solid var(--stage-primary);
+  color: var(--stage-primary-dk);
+}
+.stage-chip .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #fff; opacity: .9;
+}
+.stage-chip-light .dot { background: var(--stage-primary); opacity: 1; }
+
+/* Stage-themed button override */
+.btn-stage {
+  background: var(--stage-gradient);
+  color: #fff;
+  box-shadow: var(--stage-glow);
+  border: none;
+  transition: transform .15s ease, box-shadow .2s ease, filter .15s ease;
+}
+.btn-stage:hover {
+  filter: brightness(1.05); text-decoration: none;
+  transform: translateY(-1px);
+}
+
+/* Stage-themed card border accent */
+.card-stage {
+  border: 1px solid var(--stage-primary-2);
+  position: relative;
+  overflow: hidden;
+}
+.card-stage::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: var(--stage-gradient);
+}
+
+/* Override .topbar-brand .brand-mark to use stage gradient */
+.topbar-brand .brand-mark { background: var(--stage-gradient); }
+.topbar-nav a.active { background: var(--stage-primary); }
+.topbar-nav a:hover  { background: var(--stage-primary-2); color: var(--stage-primary-dk); }
+.topbar-avatar { background: var(--stage-primary-2); color: var(--stage-primary-dk); }
+
+.test-progress-bar { background: var(--stage-gradient); }
+.qopt:hover, .qopt.selected { border-color: var(--stage-primary); background: var(--stage-primary-2); }
+.qopt.selected .qopt-letter { background: var(--stage-primary); }
+.input:focus, .select:focus, .textarea:focus {
+  border-color: var(--stage-primary);
+  box-shadow: 0 0 0 3px var(--stage-primary-2);
+}
+
+/* ─── Gamification — Points / Level / Streak / Badges ────────── */
+
+.points-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold-2) 0%, #fef9c3 100%);
+  border: 1px solid var(--gold);
+  color: var(--bronze);
+  font-weight: 700; font-size: .85rem;
+  box-shadow: 0 4px 10px -4px rgba(245,158,11,.45);
+}
+.points-chip .icon {
+  width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+.streak-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  border: 1px solid #fb923c;
+  color: #9a3412;
+  font-weight: 700; font-size: .85rem;
+}
+
+/* Level badge — circular with progress ring */
+.level-badge {
+  position: relative;
+  width: 56px; height: 56px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.level-badge svg.ring {
+  position: absolute; inset: 0;
+  transform: rotate(-90deg);
+  width: 100%; height: 100%;
+}
+.level-badge .ring-track { stroke: var(--stage-primary-2); fill: none; stroke-width: 5; }
+.level-badge .ring-fill  { stroke: var(--stage-primary); fill: none; stroke-width: 5; stroke-linecap: round;
+  transition: stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1); }
+.level-badge .level-num {
+  position: relative;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--stage-gradient);
+  color: #fff; font-weight: 800; font-size: 1rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: var(--stage-glow);
+}
+.level-badge-lg { width: 80px; height: 80px; }
+.level-badge-lg .level-num { width: 60px; height: 60px; font-size: 1.35rem; }
+
+/* Stat tile — gamification dashboard cell */
+.stat-tile {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex; align-items: center; gap: 14px;
+  transition: transform .15s ease, box-shadow .2s ease, border-color .15s ease;
+}
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: var(--stage-primary-2);
+}
+.stat-tile-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.stat-tile-icon.icon-mor    { background: var(--stage-primary-2); color: var(--stage-primary-dk); }
+.stat-tile-icon.icon-gold   { background: var(--gold-2); color: var(--bronze); }
+.stat-tile-icon.icon-flame  { background: #ffedd5; color: #c2410c; }
+.stat-tile-icon.icon-cyan   { background: var(--cyan-2); color: var(--cyan-dk); }
+.stat-tile-icon svg { width: 22px; height: 22px; }
+.stat-tile-meta { flex: 1; min-width: 0; }
+.stat-tile-val  { font-size: 1.35rem; font-weight: 800; color: var(--ink); line-height: 1.1; font-family: 'Lora', serif; }
+.stat-tile-lbl  { font-size: .78rem; color: var(--ink-3); margin-top: 2px; font-weight: 500; }
+
+/* Medal (podium ranks) */
+.medal {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .82rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  flex-shrink: 0;
+}
+.medal-gold   { background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%); color: #78350f; }
+.medal-silver { background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%); color: #1e293b; }
+.medal-bronze { background: linear-gradient(135deg, #fdba74 0%, #b45309 100%); color: #fff; }
+.medal-num    { background: var(--paper); color: var(--ink-2); border-color: var(--border); box-shadow: none; font-size: .75rem; }
+
+/* Achievement badge tile */
+.badge-tile {
+  position: relative;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 12px;
+  text-align: center;
+  transition: transform .15s ease;
+}
+.badge-tile.earned {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, var(--gold-2) 0%, #fff 100%);
+}
+.badge-tile.locked { opacity: .55; filter: grayscale(.6); }
+.badge-tile:hover { transform: translateY(-2px); }
+.badge-tile .glyph {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--stage-gradient);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.4rem; margin-bottom: 8px;
+}
+.badge-tile.earned .glyph {
+  background: linear-gradient(135deg, var(--gold) 0%, #ea580c 100%);
+}
+.badge-tile .name { font-size: .82rem; font-weight: 600; color: var(--ink); line-height: 1.25; }
+.badge-tile .when { font-size: .7rem; color: var(--ink-3); margin-top: 2px; }
+
+/* Points-earned pop animation (after submitting attempt) */
+@keyframes pointsPop {
+  0%   { transform: translateY(0) scale(.6); opacity: 0; }
+  20%  { transform: translateY(-6px) scale(1.2); opacity: 1; }
+  60%  { transform: translateY(-30px) scale(1); opacity: 1; }
+  100% { transform: translateY(-60px) scale(.95); opacity: 0; }
+}
+.points-pop {
+  position: absolute;
+  font-weight: 800; font-size: 1.2rem;
+  color: var(--gold); text-shadow: 0 2px 6px rgba(245,158,11,.4);
+  pointer-events: none;
+  animation: pointsPop 1.6s ease-out forwards;
+}
+
+/* ─── Skeleton loaders ───────────────────────────────────────────
+ * Use <div class="skel skel-line"></div>, <div class="skel skel-card"></div> etc.
+ * Replace "Loading..." text with concrete skeleton shapes.
+ */
+@keyframes skelShimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skel {
+  background:
+    linear-gradient(90deg,
+      rgba(227,229,237,.6) 0%,
+      rgba(243,244,250,.95) 50%,
+      rgba(227,229,237,.6) 100%);
+  background-size: 200% 100%;
+  animation: skelShimmer 1.8s linear infinite;
+  border-radius: 8px;
+  display: block;
+}
+.skel-line     { height: 14px; margin: 6px 0; }
+.skel-line-sm  { height: 10px; margin: 4px 0; width: 60%; }
+.skel-title    { height: 22px; width: 50%; margin-bottom: 12px; }
+.skel-card     { height: 120px; border-radius: var(--radius); }
+.skel-tile     { height: 78px; border-radius: var(--radius); }
+.skel-chip     { display: inline-block; height: 24px; width: 80px; border-radius: 999px; vertical-align: middle; }
+.skel-avatar   { width: 44px; height: 44px; border-radius: 50%; }
+
+/* ─── Leaderboard primitives ─────────────────────────────────── */
+.lb-tabs {
+  display: flex; gap: 4px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 20px;
+  width: 100%; overflow-x: auto;
+}
+.lb-tab {
+  flex: 1; min-width: max-content;
+  padding: 10px 16px; border-radius: 10px;
+  font-size: .88rem; font-weight: 600;
+  color: var(--ink-2); cursor: pointer;
+  background: transparent; border: none;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.lb-tab:hover  { background: var(--stage-primary-2); color: var(--stage-primary-dk); }
+.lb-tab.active {
+  background: var(--stage-gradient); color: #fff;
+  box-shadow: var(--stage-glow);
+}
+
+/* Podium for top 3 */
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+.podium-step {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 12px 18px;
+  text-align: center;
+  position: relative;
+  transition: transform .15s ease;
+}
+.podium-step:hover { transform: translateY(-2px); }
+.podium-step.rank-1 {
+  order: 2;
+  background: linear-gradient(180deg, var(--gold-2) 0%, #fff 100%);
+  border: 2px solid var(--gold);
+  padding-top: 22px; padding-bottom: 26px;
+  box-shadow: 0 12px 28px -8px rgba(245,158,11,.5);
+}
+.podium-step.rank-2 {
+  order: 1;
+  background: linear-gradient(180deg, var(--silver-2) 0%, #fff 100%);
+  border: 1.5px solid var(--silver);
+}
+.podium-step.rank-3 {
+  order: 3;
+  background: linear-gradient(180deg, var(--bronze-2) 0%, #fff 100%);
+  border: 1.5px solid var(--bronze);
+}
+.podium-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--stage-primary-2); color: var(--stage-primary-dk);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.2rem;
+  margin: 0 auto 8px;
+  border: 3px solid #fff; box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.podium-step.rank-1 .podium-avatar { width: 72px; height: 72px; font-size: 1.5rem; }
+.podium-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.podium-name { font-weight: 700; font-size: .9rem; color: var(--ink); line-height: 1.25; }
+.podium-meta { font-size: .76rem; color: var(--ink-3); margin-top: 2px; }
+.podium-pts  { font-family: 'Lora', serif; font-weight: 700; font-size: 1.15rem; margin-top: 6px; color: var(--stage-primary-dk); }
+.podium-step.rank-1 .podium-pts { color: var(--bronze); font-size: 1.35rem; }
+
+/* Leaderboard row (rank 4+) */
+.lb-row {
+  display: grid;
+  grid-template-columns: 36px 44px 1fr auto auto;
+  gap: 12px; align-items: center;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--white);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  transition: all .15s;
+}
+.lb-row:hover { border-color: var(--stage-primary-2); box-shadow: var(--shadow-sm); }
+.lb-row.is-me {
+  border: 2px solid var(--stage-primary);
+  background: var(--stage-primary-2);
+}
+.lb-row .rank {
+  text-align: center; font-weight: 700; color: var(--ink-3); font-size: .9rem;
+}
+.lb-row .avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--stage-primary-2); color: var(--stage-primary-dk);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .9rem;
+  overflow: hidden;
+}
+.lb-row .avatar img { width: 100%; height: 100%; object-fit: cover; }
+.lb-row .name   { font-weight: 600; color: var(--ink); font-size: .94rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-row .meta   { font-size: .76rem; color: var(--ink-3); }
+.lb-row .pts    { font-family: 'Lora', serif; font-weight: 700; color: var(--ink); font-size: 1rem; }
+.lb-row .delta  { font-size: .76rem; font-weight: 600; }
+.lb-row .delta.up    { color: var(--ok); }
+.lb-row .delta.down  { color: var(--danger); }
+
 /* ─── Mobile tweaks ──────────────────────────────────────────── */
 @media (max-width: 600px) {
   .topbar { padding: 12px 16px; }
@@ -266,4 +689,17 @@ body.test-mode .topbar { display: none; }
   .page, .page-narrow { padding: 20px 16px 60px; }
   h1 { font-size: 1.5rem; }
   .card { padding: 16px; }
+  .stage-hero { padding: 20px 18px; }
+  .podium { gap: 8px; }
+  .podium-step { padding: 12px 8px 14px; }
+  .podium-step.rank-1 .podium-avatar { width: 56px; height: 56px; }
+  .podium-avatar { width: 44px; height: 44px; font-size: 1rem; }
+  .lb-row { grid-template-columns: 28px 36px 1fr auto; gap: 8px; padding: 10px; }
+  .lb-row .delta { display: none; }
+}
+
+/* Reduced-motion safety */
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; background: rgba(227,229,237,.6); }
+  .points-pop { animation: none; }
 }

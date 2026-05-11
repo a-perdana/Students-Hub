@@ -7,44 +7,181 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
   <style>
-    .hello-banner {
-      background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
-      color: #fff;
-      border-radius: 16px;
-      padding: 28px 28px 24px;
-      margin-bottom: 24px;
+    /* Hero — stage-themed gradient with level / streak / points */
+    .hero {
+      position: relative;
+      margin-bottom: 22px;
     }
-    .hello-banner h1 {
-      color: #fff; font-size: 1.6rem; margin-bottom: 4px;
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px; align-items: center;
     }
-    .hello-banner p { color: rgba(255,255,255,.85); font-size: .94rem; }
+    @media (max-width: 720px) {
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+    .hero-title { font-size: clamp(1.5rem, 3vw, 2rem); }
+    .hero-name  { font-weight: 700; }
+    .hero-meta-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 14px;
+    }
+    .hero-right {
+      display: flex; align-items: center; gap: 16px;
+    }
+    @media (max-width: 720px) {
+      .hero-right { justify-content: flex-start; flex-wrap: wrap; }
+    }
+
+    /* Stat tiles row */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 880px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Main grid */
     .grid-2 { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
-    @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card-h {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 14px;
+    }
+    .card-h h3 { font-family: 'Lora', serif; font-size: 1.05rem; margin: 0; }
+    .card-h .more { font-size: .82rem; color: var(--stage-primary-dk); font-weight: 600; }
 
     .test-row {
       display: flex; align-items: center; justify-content: space-between;
       gap: 12px; padding: 12px 0;
       border-bottom: 1px solid var(--border);
       text-decoration: none; color: inherit;
+      transition: all .12s;
     }
     .test-row:last-child { border-bottom: none; }
-    .test-row:hover { background: var(--paper); margin: 0 -12px; padding: 12px; border-radius: 8px; text-decoration: none; }
+    .test-row:hover { background: var(--paper); margin: 0 -10px; padding: 12px 10px; border-radius: 8px; text-decoration: none; }
     .test-row-info { flex: 1; min-width: 0; }
-    .test-row-title { font-weight: 500; color: var(--ink); }
-    .test-row-meta  { font-size: .82rem; color: var(--ink-3); margin-top: 2px; }
+    .test-row-title { font-weight: 600; color: var(--ink); font-size: .95rem; }
+    .test-row-meta  { font-size: .8rem; color: var(--ink-3); margin-top: 2px; }
     .test-row-cta {
-      padding: 6px 14px; border-radius: 8px; font-size: .84rem; font-weight: 600;
-      background: var(--mor); color: #fff;
+      padding: 7px 14px; border-radius: 8px; font-size: .82rem; font-weight: 700;
+      background: var(--stage-gradient); color: #fff;
+      box-shadow: var(--stage-glow);
     }
     .test-row-score {
-      padding: 4px 10px; border-radius: 99px;
-      font-size: .82rem; font-weight: 600;
+      padding: 5px 12px; border-radius: 99px;
+      font-size: .82rem; font-weight: 700;
+      font-family: 'Lora', serif;
     }
     .test-row-score.pass { background: var(--ok-bg); color: var(--ok); }
     .test-row-score.fail { background: var(--danger-bg); color: var(--danger); }
+
+    /* Growth row */
+    .grow-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .grow-row:last-child { border-bottom: none; }
+    .grow-glyph {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: var(--stage-primary-2); color: var(--stage-primary-dk);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .grow-meta { flex: 1; min-width: 0; }
+    .grow-name { font-weight: 600; color: var(--ink); font-size: .94rem; }
+    .grow-sub  { font-size: .76rem; color: var(--ink-3); }
+    .grow-score {
+      font-family: 'Lora', serif; font-weight: 700; font-size: 1.15rem; color: var(--ink);
+    }
+    .grow-delta {
+      display: inline-block; margin-left: 6px;
+      padding: 2px 8px; border-radius: 99px;
+      font-size: .74rem; font-weight: 700;
+    }
+    .grow-delta.up   { background: var(--ok-bg); color: var(--ok); }
+    .grow-delta.down { background: var(--danger-bg); color: var(--danger); }
+
+    /* EASE window CTA */
+    .ease-cta {
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      color: #fff;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--stage-glow);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .ease-cta-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: rgba(255,255,255,.22); backdrop-filter: blur(8px);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .ease-cta-meta { flex: 1; min-width: 0; }
+    .ease-cta-meta strong { display: block; font-size: .95rem; }
+    .ease-cta-meta span   { font-size: .78rem; opacity: .9; }
+    .ease-cta a.btn {
+      background: #fff; color: var(--stage-primary-dk);
+      padding: 8px 14px; border-radius: 8px;
+      font-weight: 700; font-size: .84rem; text-decoration: none;
+      white-space: nowrap;
+    }
+
+    /* Leaderboard preview */
+    .lb-preview .lb-row { background: var(--paper); border: none; padding: 8px 12px; }
+    .lb-preview .lb-row.is-me { background: var(--stage-primary-2); border: 1.5px solid var(--stage-primary); }
+
+    /* Mini-badges strip */
+    .badge-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 480px) { .badge-strip { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Footer band — links to growth + leaderboard */
+    .cta-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-top: 22px;
+    }
+    @media (max-width: 700px) { .cta-row { grid-template-columns: 1fr; } }
+    .cta-tile {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      display: flex; align-items: center; gap: 16px;
+      text-decoration: none; color: inherit;
+      transition: all .15s;
+      position: relative; overflow: hidden;
+    }
+    .cta-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--stage-primary-2);
+      text-decoration: none;
+    }
+    .cta-tile::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--stage-gradient);
+    }
+    .cta-tile .icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--stage-gradient); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .cta-tile .icon svg { width: 24px; height: 24px; }
+    .cta-tile .meta strong { display: block; font-weight: 700; color: var(--ink); font-size: 1rem; }
+    .cta-tile .meta span   { font-size: .82rem; color: var(--ink-3); }
   </style>
 </head>
 <body style="display:none">
@@ -53,47 +190,153 @@
   <div id="navbar-container"></div>
 
   <main class="page">
-    <section class="hello-banner">
-      <h1 id="helloName">Welcome back</h1>
-      <p id="helloMeta">Loading your class…</p>
+    <!-- HERO -->
+    <section class="hero stage-hero">
+      <div class="hero-grid">
+        <div>
+          <span class="stage-chip" id="stageChip"><span class="dot"></span> <span id="stageLabel">Loading…</span></span>
+          <h1 class="hero-title" style="margin-top:10px">
+            <span id="helloGreeting">Welcome back</span>,
+            <span class="hero-name" id="helloName">…</span>
+          </h1>
+          <p id="helloMeta">Loading your class…</p>
+        </div>
+        <div class="hero-right">
+          <div class="level-badge level-badge-lg" id="levelBadge" title="Your level">
+            <svg class="ring" viewBox="0 0 56 56">
+              <circle class="ring-track" cx="28" cy="28" r="24"/>
+              <circle class="ring-fill" id="ringFill" cx="28" cy="28" r="24"
+                stroke-dasharray="150.8" stroke-dashoffset="150.8"/>
+            </svg>
+            <span class="level-num" id="levelNum">1</span>
+          </div>
+        </div>
+      </div>
     </section>
 
+    <!-- STAT TILES -->
+    <section class="stat-row" id="statRow">
+      <div class="stat-tile">
+        <div class="stat-tile-icon icon-gold">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.39 7.36H22l-6.18 4.5L18.21 21 12 16.5 5.79 21l2.39-7.14L2 9.36h7.61L12 2z"/></svg>
+        </div>
+        <div class="stat-tile-meta">
+          <div class="stat-tile-val" id="totalPts">—</div>
+          <div class="stat-tile-lbl">Total points</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon icon-flame">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
+        </div>
+        <div class="stat-tile-meta">
+          <div class="stat-tile-val" id="streakDays">—</div>
+          <div class="stat-tile-lbl">Day streak</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon icon-mor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-tile-meta">
+          <div class="stat-tile-val" id="testsCompleted">—</div>
+          <div class="stat-tile-lbl">Tests done</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-tile-icon icon-cyan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="stat-tile-meta">
+          <div class="stat-tile-val" id="growthDelta">—</div>
+          <div class="stat-tile-lbl">EASE growth</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAIN GRID -->
     <section class="grid-2">
+      <!-- Upcoming tests -->
       <div class="card">
-        <div class="card-head">
-          <div class="card-title">Tests available now</div>
+        <div class="card-h">
+          <h3>Tests available now</h3>
+          <a href="/tests" class="more">View all →</a>
         </div>
         <div id="upcomingList">
-          <div class="empty" style="padding:18px 0">Loading…</div>
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line-sm"></span>
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line-sm"></span>
         </div>
       </div>
 
+      <!-- Recent results -->
       <div class="card">
-        <div class="card-head">
-          <div class="card-title">Recent results</div>
-          <a href="/tests" class="card-sub">View all →</a>
+        <div class="card-h">
+          <h3>Recent results</h3>
+          <a href="/tests" class="more">View all →</a>
         </div>
         <div id="recentList">
-          <div class="empty" style="padding:18px 0">Loading…</div>
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line-sm"></span>
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line-sm"></span>
         </div>
       </div>
     </section>
 
-    <section class="card" style="margin-top:16px">
-      <div class="card-head">
-        <div class="card-title">Your growth journey</div>
-        <a href="/growth" class="card-sub">See chart →</a>
+    <!-- GROWTH + LEADERBOARD ROW -->
+    <section class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-h">
+          <h3>Your growth journey</h3>
+          <a href="/growth" class="more">See chart →</a>
+        </div>
+        <div id="growthSummary">
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line-sm"></span>
+          <span class="skel skel-line"></span>
+        </div>
       </div>
-      <div id="growthSummary" class="empty" style="padding:18px 0">
-        Loading…
+
+      <div class="card lb-preview">
+        <div class="card-h">
+          <h3>Class leaderboard</h3>
+          <a href="/leaderboard" class="more">Full board →</a>
+        </div>
+        <div id="lbPreview">
+          <span class="skel skel-tile"></span>
+        </div>
       </div>
+    </section>
+
+    <!-- CTA tiles to leaderboard + growth -->
+    <section class="cta-row">
+      <a href="/leaderboard" class="cta-tile">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        </span>
+        <div class="meta">
+          <strong>Climb the leaderboard</strong>
+          <span>Compare yourself with classmates, your year, school &amp; network.</span>
+        </div>
+      </a>
+      <a href="/growth" class="cta-tile">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </span>
+        <div class="meta">
+          <strong>Track your growth</strong>
+          <span>See your EASE score climb across Fall, Winter &amp; Spring windows.</span>
+        </div>
+      </a>
     </section>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      collection, query, where, onSnapshot, orderBy, limit, getDocs
+      collection, query, where, onSnapshot, orderBy, limit, getDocs, doc, getDoc
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -105,22 +348,114 @@
       });
     });
 
+    const SUBJ_LABEL = { math: 'Math', english: 'English', science: 'Science' };
+    const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
+
     window.addEventListener('authReady', (ev) => {
       if (!ev.detail.signedIn) return;
       const p = window.studentProfile;
       const first = (p.displayName || '').split(' ')[0] || '';
-      document.getElementById('helloName').textContent = 'Hi ' + (first || 'there') + ' 👋';
+      const hr = new Date().getHours();
+      const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+
+      document.getElementById('helloGreeting').textContent = greet;
+      document.getElementById('helloName').textContent = first || 'there';
       document.getElementById('helloMeta').textContent =
         [p.school, p.className, p.gradeLevel ? 'Grade ' + p.gradeLevel : null]
           .filter(Boolean).join(' · ');
 
+      // Stage chip
+      const stage = ev.detail.stage || 'igcse';
+      const stageMap = {
+        checkpoint: 'Checkpoint · Grade 7–8',
+        igcse:      'IGCSE · Grade 9–10',
+        alevel:     'A-Level · Grade 11–12',
+      };
+      document.getElementById('stageLabel').textContent = stageMap[stage] || 'Eduversal';
+
       subscribeAttempts(window.currentUser.uid);
       loadGrowthSummary(window.currentUser.uid);
+      loadPoints(window.currentUser.uid);
+      loadLeaderboardPreview(p.classId);
     });
 
+    // ─── Points / Level / Streak ──────────────────────────────────
+    // Backed by student_points/{uid}. Doc may not exist yet (Cloud
+    // Function will create on first attempt submit). Render zero-state
+    // gracefully — the new student should still see the dashboard.
+    async function loadPoints(uid) {
+      try {
+        const snap = await getDoc(doc(window.db, 'student_points', uid));
+        const d = snap.exists() ? snap.data() : {};
+        const pts    = d.totalPoints || 0;
+        const lvl    = d.level || 1;
+        const prog   = Math.max(0, Math.min(100, d.levelProgress || 0));
+        const streak = d.streak?.current || 0;
+
+        document.getElementById('totalPts').textContent = pts.toLocaleString('en-GB');
+        document.getElementById('streakDays').textContent = streak;
+        document.getElementById('levelNum').textContent = lvl;
+
+        // Animate progress ring: circumference = 2πr = 150.8 for r=24
+        const ring = document.getElementById('ringFill');
+        const C = 150.8;
+        ring.setAttribute('stroke-dasharray', C);
+        ring.setAttribute('stroke-dashoffset', C * (1 - prog/100));
+      } catch (e) {
+        console.warn('[dashboard] points load failed (collection may not exist yet)', e.message);
+        document.getElementById('totalPts').textContent = '0';
+        document.getElementById('streakDays').textContent = '0';
+      }
+    }
+
+    // ─── Leaderboard preview ──────────────────────────────────────
+    // Top 5 in the student's class. Reads student_points where classId
+    // matches. Falls back to "starting soon" message if collection empty.
+    async function loadLeaderboardPreview(classId) {
+      const box = document.getElementById('lbPreview');
+      if (!classId) {
+        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Join a class to see your leaderboard.</div>';
+        return;
+      }
+      try {
+        const q = query(
+          collection(window.db, 'student_points'),
+          where('classId', '==', classId),
+          orderBy('totalPoints', 'desc'),
+          limit(5)
+        );
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          box.innerHTML =
+            '<div class="empty" style="padding:14px 0; font-size:.88rem">'
+            + 'The class leaderboard kicks in after the first test.<br>'
+            + '<a href="/tests" style="color:var(--stage-primary-dk); font-weight:600; font-size:.85rem">Take a test →</a>'
+            + '</div>';
+          return;
+        }
+        const me = window.currentUser.uid;
+        const rows = snap.docs.map((d, i) => {
+          const v = d.data();
+          const isMe = d.id === me;
+          const medal = i === 0 ? 'medal-gold' : i === 1 ? 'medal-silver' : i === 2 ? 'medal-bronze' : 'medal-num';
+          const initial = (v.displayName || '?')[0].toUpperCase();
+          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
+            <span class="medal ${medal}">${i + 1}</span>
+            <span class="avatar">${escHtml(initial)}</span>
+            <span class="name">${escHtml(v.displayName || 'Student')}${isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700">YOU</span>' : ''}</span>
+            <span class="pts">${(v.totalPoints||0).toLocaleString('en-GB')}</span>
+          </div>`;
+        });
+        box.innerHTML = rows.join('');
+      } catch (e) {
+        console.warn('[dashboard] leaderboard preview failed', e.message);
+        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Leaderboard starting soon.</div>';
+      }
+    }
+
+    // ─── Growth summary + EASE CTA ────────────────────────────────
     async function loadGrowthSummary(uid) {
       try {
-        // Open EASE window?
         const wsnap = await getDocs(query(
           collection(window.db, 'ease_test_windows'),
           where('status', '==', 'open')
@@ -136,28 +471,22 @@
           collection(window.db, 'ease_growth'),
           where('studentUid', '==', uid)
         ));
-        const SUBJ_LABEL = { math: 'Math', english: 'English', science: 'Science' };
-        const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
         const have = {};
         gsnap.forEach(d => { have[d.data().subjectId] = d.data(); });
 
-        const box = document.getElementById('growthSummary');
-        const lines = [];
-
-        // Latest scores
-        Object.entries(have).forEach(([s, g]) => {
+        // Compute overall growth delta for stat tile
+        let totalDelta = 0, deltaCount = 0;
+        Object.values(have).forEach(g => {
           const w = (g.windows || []).slice(-1)[0];
-          if (!w) return;
-          const growth = w.growthVsPrev != null
-            ? `<span style="margin-left:6px; padding:2px 8px; border-radius:99px; font-size:.78rem; font-weight:600; background:${w.growthVsPrev >= 0 ? 'var(--ok-bg)' : 'var(--danger-bg)'}; color:${w.growthVsPrev >= 0 ? 'var(--ok)' : 'var(--danger)'}">${w.growthVsPrev >= 0 ? '+' : ''}${w.growthVsPrev}</span>`
-            : '';
-          lines.push(`<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0;">
-            <span>${SUBJ_GLYPH[s]} ${SUBJ_LABEL[s]}</span>
-            <span><strong>${w.ritScore}</strong>${growth}</span>
-          </div>`);
+          if (w && w.growthVsPrev != null) { totalDelta += w.growthVsPrev; deltaCount++; }
         });
+        const avgDelta = deltaCount ? Math.round(totalDelta / deltaCount) : 0;
+        document.getElementById('growthDelta').textContent =
+          deltaCount === 0 ? '—' : (avgDelta >= 0 ? '+' : '') + avgDelta;
 
-        // CTA if open window
+        const box = document.getElementById('growthSummary');
+        const parts = [];
+
         if (openWin) {
           const submitted = new Set();
           (openWin.subjects || []).forEach(s => {
@@ -167,20 +496,46 @@
           });
           const pending = (openWin.subjects || []).filter(s => !submitted.has(s));
           if (pending.length > 0) {
-            lines.unshift(`<div style="background:linear-gradient(135deg,var(--mor),var(--cyan)); color:#fff; padding:14px 16px; border-radius:12px; margin-bottom:10px;">
-              <div style="font-weight:600; margin-bottom:2px">EASE ${openWin.window} window is open</div>
-              <div style="font-size:.84rem; opacity:.85; margin-bottom:10px">${pending.map(s => SUBJ_LABEL[s] || s).join(', ')} pending</div>
-              <a href="/ease-test" style="display:inline-block; background:#fff; color:var(--mor); padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; font-size:.86rem">Take EASE →</a>
+            parts.push(`<div class="ease-cta">
+              <span class="ease-cta-icon">⚡</span>
+              <div class="ease-cta-meta">
+                <strong>EASE ${escHtml(openWin.window || 'window')} is open</strong>
+                <span>${pending.map(s => SUBJ_LABEL[s] || s).join(', ')} pending</span>
+              </div>
+              <a class="btn" href="/ease-test">Take it →</a>
             </div>`);
           }
         }
 
-        box.innerHTML = lines.length ? lines.join('') : 'EASE growth assessments will start when a window opens. Stay tuned!';
+        Object.entries(have).forEach(([s, g]) => {
+          const w = (g.windows || []).slice(-1)[0];
+          if (!w) return;
+          const delta = w.growthVsPrev != null
+            ? `<span class="grow-delta ${w.growthVsPrev >= 0 ? 'up' : 'down'}">${w.growthVsPrev >= 0 ? '+' : ''}${w.growthVsPrev}</span>`
+            : '';
+          parts.push(`<div class="grow-row">
+            <span class="grow-glyph">${SUBJ_GLYPH[s] || '📊'}</span>
+            <div class="grow-meta">
+              <div class="grow-name">${escHtml(SUBJ_LABEL[s] || s)}</div>
+              <div class="grow-sub">${escHtml(w.window || '')} window</div>
+            </div>
+            <div><span class="grow-score">${w.ritScore}</span>${delta}</div>
+          </div>`);
+        });
+
+        if (parts.length === 0) {
+          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">EASE growth assessments will start when a window opens. Stay tuned!</div>';
+        } else {
+          box.innerHTML = parts.join('');
+        }
       } catch (e) {
         console.error('[dashboard] growth summary error', e);
+        document.getElementById('growthSummary').innerHTML =
+          '<div class="empty" style="padding:14px 0; font-size:.88rem">Couldn\'t load growth right now.</div>';
       }
     }
 
+    // ─── Chapter attempts (upcoming + recent) ─────────────────────
     function subscribeAttempts(uid) {
       const q = query(
         collection(window.db, 'chapter_test_attempts'),
@@ -192,23 +547,29 @@
         const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         const now = Date.now();
         const upcoming = all.filter(a => {
-          if (a.status === 'submitted' || a.status === 'scored' || a.status === 'flagged' || a.status === 'cancelled') return false;
-          const opens = a.opensAt && a.opensAt.toDate ? a.opensAt.toDate().getTime() : 0;
-          const closes = a.closesAt && a.closesAt.toDate ? a.closesAt.toDate().getTime() : Infinity;
+          if (['submitted','scored','flagged','cancelled'].includes(a.status)) return false;
+          const opens = a.opensAt?.toDate?.()?.getTime() || 0;
+          const closes = a.closesAt?.toDate?.()?.getTime() || Infinity;
           return now >= opens && now <= closes;
         });
-        const recent = all.filter(a => a.status === 'scored' || a.status === 'flagged' || a.status === 'submitted').slice(0, 5);
+        const recent = all.filter(a => ['scored','flagged','submitted'].includes(a.status)).slice(0, 5);
+
+        // Stat tile: tests completed
+        const done = all.filter(a => ['scored','flagged','submitted'].includes(a.status)).length;
+        document.getElementById('testsCompleted').textContent = done;
+
         renderUpcoming(upcoming);
         renderRecent(recent);
       }, err => {
-        document.getElementById('upcomingList').innerHTML = '<div class="empty" style="padding:18px 0">Could not load tests: ' + escHtml(err.message || err.code) + '</div>';
+        document.getElementById('upcomingList').innerHTML =
+          '<div class="empty" style="padding:14px 0; font-size:.88rem">Could not load tests: ' + escHtml(err.message || err.code) + '</div>';
       });
     }
 
     function renderUpcoming(list) {
       const box = document.getElementById('upcomingList');
       if (list.length === 0) {
-        box.innerHTML = '<div class="empty" style="padding:18px 0">No tests available right now.</div>';
+        box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">No tests available right now.<br><span style="font-size:.8rem">Your teacher will schedule the next one.</span></div>';
         return;
       }
       box.innerHTML = list.map(a => `
@@ -217,7 +578,7 @@
             <div class="test-row-title">${escHtml(a.testTitle || a.testId)}</div>
             <div class="test-row-meta">Closes ${formatTs(a.closesAt)}</div>
           </div>
-          <span class="test-row-cta">${a.status === 'in_progress' ? 'Continue' : 'Start'}</span>
+          <span class="test-row-cta">${a.status === 'in_progress' ? 'Continue' : 'Start →'}</span>
         </a>
       `).join('');
     }
@@ -225,7 +586,7 @@
     function renderRecent(list) {
       const box = document.getElementById('recentList');
       if (list.length === 0) {
-        box.innerHTML = '<div class="empty" style="padding:18px 0">No results yet.</div>';
+        box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">No results yet.<br><span style="font-size:.8rem">Take a test to see your first result here.</span></div>';
         return;
       }
       box.innerHTML = list.map(a => {
