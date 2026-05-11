@@ -10,7 +10,8 @@
   <link rel="stylesheet" href="base.css">
   <script>
     window.MathJax = {
-      tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+      // No `$…$` — math word problems use $ as currency / variable.
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
       svg: { fontCache: 'global' },
       options: { renderActions: { addMenu: [] } },
     };
