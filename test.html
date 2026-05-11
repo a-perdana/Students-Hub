@@ -84,8 +84,9 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      doc, getDoc, getDocs, collection, updateDoc, serverTimestamp, query, orderBy
+      doc, getDoc, getDocs, collection, updateDoc, serverTimestamp, query, orderBy, arrayUnion
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { createKioskLockdown } from './partials/kiosk-lockdown.js';
 
     // ─── State ──────────────────────────────────────────────────
     let attempt = null;       // chapter_test_attempts/{id} doc data
@@ -97,10 +98,33 @@
     let endsAt = null;        // earlier of session.closesAt and start+durationMin
     let tabSwitches = 0;
 
-    // Lockdown signals
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) tabSwitches++;
-    });
+    // Lockdown signals — Phase 3 (2026-05-11). Light kiosk: forced
+    // fullscreen + copy/paste/right-click block + devtools-keyguess
+    // warning + tab-switch counter. Events persist to the attempt doc
+    // as an audit trail (lockdownEvents[]) so teachers can spot patterns.
+    let kiosk = null;
+    let pendingLockdownEvents = [];
+    let lockdownFlushHandle = null;
+    function recordLockdownEvent(kind, meta) {
+      tabSwitches += (kind === 'tab_hidden' ? 1 : 0);
+      pendingLockdownEvents.push({ kind, ...meta });
+      // Batch persist every 5s so a tab-jiggling student doesn't write a
+      // doc per second. Each flush is arrayUnion — append-only.
+      if (lockdownFlushHandle) return;
+      lockdownFlushHandle = setTimeout(async () => {
+        const batch = pendingLockdownEvents.splice(0);
+        lockdownFlushHandle = null;
+        if (!attempt) return;
+        try {
+          await updateDoc(doc(window.db, 'chapter_test_attempts', attempt.id), {
+            lockdownEvents: arrayUnion(...batch),
+            tabSwitches,
+          });
+        } catch (e) {
+          console.warn('[lockdown] persist failed', e?.message);
+        }
+      }, 5000);
+    }
     window.addEventListener('beforeunload', (e) => {
       if (window.__submitted) return;
       e.preventDefault(); e.returnValue = '';
@@ -164,6 +188,19 @@
             startedAt: serverTimestamp(),
           });
         }
+
+        // 7.1 Engage light kiosk lockdown — forced fullscreen + copy/paste
+        // block + devtools key warning. Fires events into lockdownEvents[]
+        // on the attempt doc as an audit trail. Phase 3 (2026-05-11).
+        kiosk = createKioskLockdown({ onEvent: recordLockdownEvent });
+        // Defer fullscreen request to a user gesture — Chrome refuses
+        // the call if it didn't originate from a click. Wire it to the
+        // first interaction with the test body.
+        const startKioskOnGesture = () => {
+          kiosk.enter().catch(() => null);
+          document.removeEventListener('click', startKioskOnGesture, true);
+        };
+        document.addEventListener('click', startKioskOnGesture, true);
 
         // 8. Load any saved answers (resume)
         if (attempt.responses && Array.isArray(attempt.responses)) {
@@ -367,8 +404,13 @@
       const hasUnGradable = false;
       const finalStatus = hasUnGradable ? 'flagged' : 'scored';
 
+      // Flush any pending lockdown events before submitting, so they make
+      // it into the immutable post-submit doc.
+      const trailingLockdown = pendingLockdownEvents.splice(0);
+      if (lockdownFlushHandle) { clearTimeout(lockdownFlushHandle); lockdownFlushHandle = null; }
+
       try {
-        await updateDoc(doc(window.db, 'chapter_test_attempts', attempt.id), {
+        const submitPayload = {
           responses,
           rawScorePct,
           earnedMarks, totalMarks,
@@ -376,8 +418,11 @@
           submittedAt: serverTimestamp(),
           autoSubmit: !!isAuto,
           tabSwitches,
-        });
+        };
+        if (trailingLockdown.length > 0) submitPayload.lockdownEvents = arrayUnion(...trailingLockdown);
+        await updateDoc(doc(window.db, 'chapter_test_attempts', attempt.id), submitPayload);
         window.__submitted = true;
+        if (kiosk) kiosk.exit();
         if (timerHandle) clearInterval(timerHandle);
         document.getElementById('testBody').hidden = true;
         document.getElementById('reviewState').hidden = true;

@@ -100,8 +100,9 @@
   <script type="module">
     import {
       collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, setDoc,
-      serverTimestamp, Timestamp, orderBy, limit
+      serverTimestamp, Timestamp, orderBy, limit, arrayUnion
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { createKioskLockdown } from './partials/kiosk-lockdown.js';
 
     const SUBJ_LABEL = { math: 'Mathematics', english: 'English', science: 'Science' };
     const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
@@ -123,9 +124,32 @@
     let currentItem = null;
     let currentChoice = null;
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && session) { /* tab switch flag — could persist */ }
-    });
+    // Lockdown signals — Phase 3 (2026-05-11). Same light-kiosk pattern
+    // as test.html. Events batched into ease_sessions.lockdownEvents[]
+    // every 5s; final batch flushed at submit so they're inside the
+    // immutable post-submit doc.
+    let kiosk = null;
+    let pendingLockdownEvents = [];
+    let lockdownFlushHandle = null;
+    let tabSwitches = 0;
+    function recordLockdownEvent(kind, meta) {
+      if (kind === 'tab_hidden') tabSwitches++;
+      pendingLockdownEvents.push({ kind, ...meta });
+      if (lockdownFlushHandle) return;
+      lockdownFlushHandle = setTimeout(async () => {
+        const batch = pendingLockdownEvents.splice(0);
+        lockdownFlushHandle = null;
+        if (!sessionId) return;
+        try {
+          await updateDoc(doc(window.db, 'ease_sessions', sessionId), {
+            lockdownEvents: arrayUnion(...batch),
+            tabSwitches,
+          });
+        } catch (e) {
+          console.warn('[lockdown] persist failed', e?.message);
+        }
+      }, 5000);
+    }
     window.addEventListener('beforeunload', e => {
       if (window.__submitted) return;
       e.preventDefault(); e.returnValue = '';
@@ -297,6 +321,16 @@
       document.getElementById('loadState').hidden = true;
       document.getElementById('testBody').hidden = false;
       document.getElementById('testTitle').textContent = `EASE ${SUBJ_LABEL[subjectId] || subjectId}`;
+      // Engage kiosk on first click gesture (fullscreen API requires
+      // user activation). Phase 3 light lockdown (2026-05-11).
+      if (!kiosk) {
+        kiosk = createKioskLockdown({ onEvent: recordLockdownEvent });
+        const startKioskOnGesture = () => {
+          kiosk.enter().catch(() => null);
+          document.removeEventListener('click', startKioskOnGesture, true);
+        };
+        document.addEventListener('click', startKioskOnGesture, true);
+      }
     }
 
     function showError(title, msg) {
@@ -317,12 +351,31 @@
       if (answered >= target || (answered >= 10 && se < seStop)) {
         return finalize();
       }
-      // Pick item closest to current theta in difficulty logit
+      // Pick item closest to current theta, weighted against over-exposure.
+      // Phase 3 (2026-05-11): pure |Δθ| sort would let a popular medium item
+      // dominate the bank — every adaptive run starts near θ=0 and the same
+      // ~5 mediums get picked first. Compose a score = informationDistance +
+      // exposurePenalty where exposurePenalty grows logarithmically with
+      // seenCount. Tunable EXPOSURE_WEIGHT (default 0.15) — large enough to
+      // tie-break between two similarly-fitting items, small enough that
+      // a far-off-difficulty item never beats a closer one on a fresh bank.
+      //
+      // Logit source preference: once the weekly calibrateEaseItems Cloud
+      // Function flips `pilotPhase: false` and writes `calibratedLogit`,
+      // prefer that. Until then, fall back to the 3-band bootstrap.
+      const EXPOSURE_WEIGHT = 0.15;
       const candidates = bank.filter(it => !usedItemIds.has(it.id));
       if (candidates.length === 0) return finalize(); // exhausted
-      candidates.sort((a, b) =>
-        Math.abs((DIFF_LOGIT[a.difficulty] ?? 0) - theta) -
-        Math.abs((DIFF_LOGIT[b.difficulty] ?? 0) - theta));
+      const logitOf = (it) => (typeof it.calibratedLogit === 'number' && it.pilotPhase === false)
+        ? it.calibratedLogit
+        : (DIFF_LOGIT[it.difficulty] ?? 0);
+      candidates.sort((a, b) => {
+        const aDist = Math.abs(logitOf(a) - theta);
+        const bDist = Math.abs(logitOf(b) - theta);
+        const aExp  = EXPOSURE_WEIGHT * Math.log1p(a.seenCount || 0);
+        const bExp  = EXPOSURE_WEIGHT * Math.log1p(b.seenCount || 0);
+        return (aDist + aExp) - (bDist + bExp);
+      });
       currentItem = candidates[0];
       currentChoice = null;
       paintItem();
@@ -413,7 +466,10 @@
       }
 
       // Rasch-lite update — naive Bayesian: theta moves toward item difficulty if correct above expected, away if not.
-      const itLogit = DIFF_LOGIT[it.difficulty] ?? 0;
+      // Phase 3: prefer calibratedLogit when the weekly batch has flipped pilotPhase=false; otherwise bootstrap band.
+      const itLogit = (typeof it.calibratedLogit === 'number' && it.pilotPhase === false)
+        ? it.calibratedLogit
+        : (DIFF_LOGIT[it.difficulty] ?? 0);
       const pCorrect = 1 / (1 + Math.exp(-(theta - itLogit)));
       const learningRate = se;  // larger SE → bigger update
       theta = theta + learningRate * (isCorrect ? (1 - pCorrect) : -pCorrect);
@@ -450,13 +506,22 @@
       // Map theta to RIT-equivalent 100-300 scale: 100 = theta -3, 300 = theta +3
       const ritScore = Math.round(200 + (theta * 33));
       const clamped = Math.max(100, Math.min(300, ritScore));
+
+      // Flush any pending lockdown events into the immutable post-submit doc.
+      const trailingLockdown = pendingLockdownEvents.splice(0);
+      if (lockdownFlushHandle) { clearTimeout(lockdownFlushHandle); lockdownFlushHandle = null; }
+
       try {
-        await updateDoc(doc(window.db, 'ease_sessions', sessionId), {
+        const submitPayload = {
           status: 'submitted',
           submittedAt: serverTimestamp(),
           ritScore: clamped,
           standardError: se,
-        });
+          tabSwitches,
+        };
+        if (trailingLockdown.length > 0) submitPayload.lockdownEvents = arrayUnion(...trailingLockdown);
+        await updateDoc(doc(window.db, 'ease_sessions', sessionId), submitPayload);
+        if (kiosk) kiosk.exit();
         // Update growth aggregate
         const growthId = `${window.currentUser.uid}_${subjectId}`;
         const gSnap = await getDoc(doc(window.db, 'ease_growth', growthId));

@@ -23,6 +23,11 @@
     .growth-up   { background: var(--ok-bg); color: var(--ok); }
     .growth-down { background: var(--danger-bg); color: var(--danger); }
     .growth-flat { background: var(--paper); color: var(--ink-3); }
+    .norm-badge {
+      display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 99px;
+      font-size: .7rem; font-weight: 500; letter-spacing: .02em;
+      background: #fef3c7; color: #92400e; cursor: help;
+    }
     .chart-wrap { margin-top: 14px; }
     .cta-row {
       display: flex; gap: 10px; margin-top: 18px;
@@ -150,11 +155,22 @@
         dots = `<circle cx="${x}" cy="${y}" r="5" fill="var(--mor)"/>`;
       }
 
+      // Phase 3 (2026-05-11) cross-window comparability notice. Item bank
+      // calibration runs in a server-side batch (Phase 3 backlog). Until
+      // window 4 lands per subject, growth deltas reflect the bootstrap
+      // logit bands (easy=−1.2, medium=0, hard=+1.2) — accurate within a
+      // window, NOT across windows. UI should not claim "you grew X
+      // points" with confidence yet.
+      const isPilotNorm = ws.length < 4;
+      const normBadge = isPilotNorm
+        ? `<span class="norm-badge" title="EASE items are still being calibrated. Cross-window growth comparisons stabilise from window 4 onward.">Window-specific norm</span>`
+        : '';
+
       return `
         <div class="subject-card">
           <h3>${SUBJ_GLYPH[subj]} ${SUBJ_LABEL[subj]}</h3>
-          <div class="subject-meta">${ws.length} window${ws.length === 1 ? '' : 's'} completed${submittedNow ? ' · just submitted ✓' : ''}</div>
-          ${latestRit != null ? `<div><span class="latest-rit">${latestRit}</span> ${growthChip}</div>` : '<div style="color:var(--ink-3)">No EASE submissions yet.</div>'}
+          <div class="subject-meta">${ws.length} window${ws.length === 1 ? '' : 's'} completed${submittedNow ? ' · just submitted ✓' : ''} ${normBadge}</div>
+          ${latestRit != null ? `<div><span class="latest-rit">${latestRit}</span> ${isPilotNorm ? '' : growthChip}</div>` : '<div style="color:var(--ink-3)">No EASE submissions yet.</div>'}
           ${ws.length > 0 ? `
             <div class="chart-wrap">
               <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" style="max-width:100%">
