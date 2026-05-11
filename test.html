@@ -8,6 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+      svg: { fontCache: 'global' },
+      options: { renderActions: { addMenu: [] } },
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body class="test-mode" style="display:none">
   <!-- FIREBASE_ENV -->
@@ -216,7 +224,12 @@
 
     function renderItem() {
       const it = items[cur];
-      document.getElementById('qstem').textContent = `Q${cur+1}. ${it.stem}`;
+      const qstem = document.getElementById('qstem');
+      if (it.stemHtml) {
+        qstem.innerHTML = `<span style="font-weight:600">Q${cur+1}.</span> ${sanitiseQuestionHtml(it.stemHtml)}`;
+      } else {
+        qstem.textContent = `Q${cur+1}. ${it.stem || ''}`;
+      }
       const optsBox = document.getElementById('qopts');
       const numBox  = document.getElementById('qNumeric');
       const shortBox= document.getElementById('qShort');
@@ -225,12 +238,16 @@
       const saved = answers[it.id];
       if (it.type === 'mcq') {
         optsBox.hidden = false;
-        optsBox.innerHTML = (it.options || []).map((o, i) => `
+        optsBox.innerHTML = (it.options || []).map((o, i) => {
+          const oHtml = (it.optionsHtml && it.optionsHtml[i])
+            ? sanitiseQuestionHtml(it.optionsHtml[i])
+            : escHtml(o);
+          return `
           <div class="qopt ${saved && saved.answer === i ? 'selected' : ''}" data-i="${i}">
             <span class="qopt-letter">${String.fromCharCode(65+i)}</span>
-            <span class="qopt-text">${escHtml(o)}</span>
-          </div>
-        `).join('');
+            <span class="qopt-text">${oHtml}</span>
+          </div>`;
+        }).join('');
         optsBox.querySelectorAll('.qopt').forEach(el => {
           el.addEventListener('click', () => {
             optsBox.querySelectorAll('.qopt').forEach(x => x.classList.remove('selected'));
@@ -254,6 +271,8 @@
         Math.round(((cur + 1) / items.length) * 100) + '%';
       document.getElementById('prevBtn').disabled = cur === 0;
       document.getElementById('nextBtn').textContent = cur === items.length - 1 ? 'Review' : 'Next';
+      typesetMath(document.getElementById('qstem'));
+      typesetMath(document.getElementById('qopts'));
     }
 
     function saveAnswer(it, ans) {
@@ -364,6 +383,41 @@
         document.getElementById('doneState').hidden = false;
       } catch (e) {
         alert('Submit failed: ' + (e.message || e.code) + '\nTry again.');
+      }
+    }
+
+    // Allowlist HTML sanitiser for imported question content.
+    const _SANITISE_ALLOWED = new Set(['P','SPAN','IMG','BR','STRONG','EM','B','I','U','UL','OL','LI','TABLE','TR','TD','TH','TBODY','THEAD','SUP','SUB','DIV']);
+    const _SANITISE_ATTRS = { IMG: new Set(['src','alt','width','height','loading']), '*': new Set([]) };
+    function sanitiseQuestionHtml(html) {
+      if (!html) return '';
+      const tpl = document.createElement('template');
+      tpl.innerHTML = String(html);
+      function walk(node) {
+        for (const child of [...node.childNodes]) {
+          if (child.nodeType !== 1) continue;
+          if (!_SANITISE_ALLOWED.has(child.tagName)) {
+            child.replaceWith(document.createTextNode(child.textContent || ''));
+            continue;
+          }
+          const ok = _SANITISE_ATTRS[child.tagName] || _SANITISE_ATTRS['*'];
+          for (const attr of [...child.attributes]) {
+            if (!ok.has(attr.name)) child.removeAttribute(attr.name);
+          }
+          if (child.tagName === 'IMG') {
+            const src = child.getAttribute('src') || '';
+            if (!/^https?:\/\//i.test(src)) child.removeAttribute('src');
+            child.setAttribute('loading', 'lazy');
+          }
+          walk(child);
+        }
+      }
+      walk(tpl.content);
+      return tpl.innerHTML;
+    }
+    function typesetMath(el) {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([el]).catch(() => {});
       }
     }
 
