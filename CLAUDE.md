@@ -198,6 +198,15 @@ Live and production-ready as of 2026-05-10 — Phase 2. Distinct from `test.html
 - **RIT-equivalent submit.** `200 + theta * 33` clamped to [100, 300]. Updates `ease_growth/{uid}_{subjectId}` aggregate with `growthVsPrev = clamped - lastWindow.ritScore`.
 - **Resume.** If a session is `in_progress` for the same (student, window, subject), resume from `currentTheta` / `currentSE` / `itemsAnswered` and reload already-used itemIds from `ease_responses where sessionId == X`.
 
+### Rendering imported items (both runners, 2026-05-11)
+
+Items imported from latihan.id carry rich content in `stemHtml` + `optionsHtml[]` (HTML with inline `\(…\)` LaTeX, optional `<img>` to `latihan.id/storage/…`) alongside the plain `stem` + `options[]`. HQ-authored items only carry the plain fields.
+
+- **Both runners load MathJax 3 (tex-svg)** lazily in `<head>`, with `inlineMath: [['\(', '\)']]` ONLY — never `$…$` (math word problems use `$` as literal currency / variable name `$a`, `$b`). Past incident 2026-05-11: registering `$…$` ate the run between two dollars as one matheified italic blob.
+- **Stem render path** prefers `stemHtml` via `sanitiseQuestionHtml()` → `innerHTML`; falls back to plain `stem` via `textContent`. After paint, call `typesetMath()` on the stem + options containers so any inline math renders.
+- **Option render path** prefers `optionsHtml[i]` per index via the same sanitiser; falls back to escaped `options[i]`.
+- **Sanitiser** (allowlist: `P/SPAN/IMG/BR/STRONG/EM/B/I/U/UL/OL/LI/TABLE/TR/TD/TH/TBODY/THEAD/SUP/SUB/DIV`) — replaces non-allowed elements with their `textContent`. `<img>` keeps only `src/alt/width/height/loading` and only `https://` scheme. Relative `/storage/…` URLs from upstream are rebased to `https://latihan.id/storage/…`.
+
 ### Parent share
 
 Student clicks "Generate share link" on `report.html` → writes `parent_share_tokens/{token}` (random URL-safe ≥24 chars) with `studentUid`, `attemptId` (or `sessionId`), `expiresAt: now + 30 days`, `createdAt`. Token IS the credential. Rule allows `get` by id (lint allow-listed under `PUBLIC_COLLECTIONS`); `list` blocked even for admin (Charter NN5 spirit). `/shared?token=X` resolves the token doc, then loads the chapter attempt OR EASE session and renders read-only.
@@ -277,6 +286,8 @@ Owner (student) can revoke by deleting the token doc — owner-delete path in ru
 - **Cambridge crossref runtime is NOT injected.** Build.js does not load `cambridge-crossref.js`. Students don't need CTS chip popovers.
 - **No mail.** Students Hub never calls the mail-service. Parent share is token-based, not email.
 - **`shared.html` skips the Auth-required path.** It is in the `SIGNED_OUT_OK` set in auth-guard. New parent-facing pages (if any) need the same flag.
+- **MathJax inline delimiter is `\(…\)` ONLY — never `$…$`.** Math word problems use literal `$` for currency / variable name. If MathJax sees `$…$`, it greedily eats the run between two dollar signs as math and drops the spaces. Both runners (`test.html` + `ease-test.html`) register only `\(…\)` and `\[…\]` / `$$…$$` (display). Past incident 2026-05-11.
+- **Stem + options use `stemHtml` / `optionsHtml[i]` if present, else `stem` / `options[i]`.** Imported items ship rich HTML in the `*Html` fields; HQ-authored items only have plain text. Prefer rich source via `sanitiseQuestionHtml()` → `innerHTML`; never assume one or the other.
 - **Reserved Firestore doc IDs.** `__name__`-style (double-underscore start AND end) is reserved by Firestore. If you add an `_uncategorized_settings_`-style meta doc, use single underscores.
 
 ---
