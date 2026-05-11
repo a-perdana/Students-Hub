@@ -132,14 +132,13 @@
         if (now > closes) return showError('Test closed', 'This test closed at ' + new Date(closes).toLocaleString('en-GB'));
 
         // 5. Load test definition + items
+        // Post-2026-05-11 Question Bank refactor: chapter_tests.itemIds[] points
+        // at top-level chapter_test_items. Fall back to legacy subcollection for
+        // any pre-migration tests that still ship items under chapter_tests/{id}/items/.
         const tSnap = await getDoc(doc(window.db, 'chapter_tests', attempt.testId));
         if (!tSnap.exists()) return showError('Test definition missing', 'The author may have removed it.');
         test = { id: tSnap.id, ...tSnap.data() };
-        const iSnap = await getDocs(query(
-          collection(window.db, 'chapter_tests', attempt.testId, 'items'),
-          orderBy('seq', 'asc')
-        ));
-        items = iSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        items = await loadChapterTestItems(test);
         if (items.length === 0) return showError('No items', 'This test has no questions yet.');
 
         // 6. Set timer end: earlier of session close OR start+durationMin
@@ -172,6 +171,23 @@
         showError('Could not load test', e.message || e.code);
       }
     });
+
+    // Loads ordered chapter test items, preferring the post-2026-05-11
+    // top-level chapter_test_items (referenced by parent test.itemIds[]).
+    // Falls back to the legacy items/ subcollection for pre-migration tests.
+    async function loadChapterTestItems(testDoc) {
+      if (Array.isArray(testDoc.itemIds) && testDoc.itemIds.length > 0) {
+        const fetched = await Promise.all(
+          testDoc.itemIds.map(id => getDoc(doc(window.db, 'chapter_test_items', id)))
+        );
+        return fetched.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+      }
+      const iSnap = await getDocs(query(
+        collection(window.db, 'chapter_tests', testDoc.id, 'items'),
+        orderBy('seq', 'asc')
+      ));
+      return iSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
 
     function showError(title, msg) {
       document.getElementById('loadState').hidden = true;

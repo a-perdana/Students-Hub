@@ -117,11 +117,23 @@
           return showErr('Test not submitted yet');
         }
 
-        // Fetch items so we can show stems (rules allow active students to read)
-        const items = (await getDocs(query(
-          collection(window.db, 'chapter_tests', a.testId, 'items'),
-          orderBy('seq', 'asc')
-        ))).docs.map(d => ({ id: d.id, ...d.data() }));
+        // Fetch items so we can show stems (rules allow active students to read).
+        // Post-2026-05-11: items live in top-level chapter_test_items, referenced
+        // via parent_test.itemIds[]. Fallback path for pre-migration tests.
+        const parentTestSnap = await getDoc(doc(window.db, 'chapter_tests', a.testId));
+        const parentTest = parentTestSnap.exists() ? { id: parentTestSnap.id, ...parentTestSnap.data() } : null;
+        let items = [];
+        if (parentTest && Array.isArray(parentTest.itemIds) && parentTest.itemIds.length > 0) {
+          const fetched = await Promise.all(
+            parentTest.itemIds.map(id => getDoc(doc(window.db, 'chapter_test_items', id)))
+          );
+          items = fetched.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() }));
+        } else {
+          items = (await getDocs(query(
+            collection(window.db, 'chapter_tests', a.testId, 'items'),
+            orderBy('seq', 'asc')
+          ))).docs.map(d => ({ id: d.id, ...d.data() }));
+        }
 
         document.getElementById('testTitle').textContent = (a.testTitle || a.testId) + ' · Submitted ' + formatTs(a.submittedAt);
         const score = typeof a.rawScorePct === 'number' ? a.rawScorePct : 0;
