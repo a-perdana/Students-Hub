@@ -190,11 +190,18 @@
       showSubjectPicker();
     });
 
+    // Map stored window key to a student-facing label.
+    // Term 1/2/3 are canonical; legacy fall/winter/spring still render readably.
+    function windowLabel(w) {
+      const m = { term1: 'Term 1', term2: 'Term 2', term3: 'Term 3', fall: 'Fall', winter: 'Winter', spring: 'Spring' };
+      return m[w] || w || 'window';
+    }
+
     function showSubjectPicker() {
       document.getElementById('preShell').hidden = false;
       document.getElementById('mainShell').hidden = true;
       document.getElementById('windowMeta').textContent =
-        `${openWindow.academicYear} · ${openWindow.window} · closes ${formatTs(openWindow.closesAt)}`;
+        `${openWindow.academicYear} · ${windowLabel(openWindow.window)} · closes ${formatTs(openWindow.closesAt)}`;
       const list = document.getElementById('subjPick');
       list.innerHTML = (openWindow.subjects || []).map(s => `
         <div class="subj-row" data-subj="${escAttr(s)}">

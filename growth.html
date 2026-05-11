@@ -123,7 +123,7 @@
       if (openWin && pendingSubjects.length > 0) {
         const cta = document.getElementById('ctaBox');
         cta.hidden = false;
-        document.getElementById('ctaTitle').textContent = `${openWin.window} window is open`;
+        document.getElementById('ctaTitle').textContent = `${windowLabel(openWin.window)} window is open`;
         document.getElementById('ctaSub').textContent = `Closes ${formatTs(openWin.closesAt)} · Pending: ${pendingSubjects.map(s => SUBJ_LABEL[s] || s).join(', ')}`;
       }
     });
@@ -203,6 +203,10 @@
       return ts.toDate().toLocaleString('en-GB', { day: '2-digit', month: 'short' });
     }
     function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function windowLabel(w) {
+      const m = { term1: 'Term 1', term2: 'Term 2', term3: 'Term 3', fall: 'Fall', winter: 'Winter', spring: 'Spring' };
+      return m[w] || w || 'window';
+    }
   </script>
 </body>
 </html>

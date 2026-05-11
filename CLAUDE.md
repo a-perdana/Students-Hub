@@ -11,7 +11,7 @@ Two assessment modes flow through this hub:
 | Mode | Purpose | Frequency |
 |---|---|---|
 | **Chapter Tests** | "Did the student master this Cambridge unit?" — per-chapter mastery check, network-uniform, authored by HQ Subject Specialists | Per pacing-collection unit (≈8–12/year/subject) |
-| **EASE Growth** | "How much has the student grown in Math/English/Science across the year?" — adaptive, cross-grade scale score | 3 windows/year (Fall / Winter / Spring) |
+| **EASE Growth** | "How much has the student grown in Math/English/Science across the year?" — adaptive, cross-grade scale score | 3 windows/year (Term 1 / Term 2 / Term 3) |
 
 **Vanilla HTML/CSS/JS** (no React, no bundler). Pages load Firebase via CDN.
 

@@ -327,7 +327,7 @@
         </span>
         <div class="meta">
           <strong>Track your growth</strong>
-          <span>See your EASE score climb across Fall, Winter &amp; Spring windows.</span>
+          <span>See your EASE score climb across Term 1, Term 2 &amp; Term 3 windows.</span>
         </div>
       </a>
     </section>
@@ -499,7 +499,7 @@
             parts.push(`<div class="ease-cta">
               <span class="ease-cta-icon">⚡</span>
               <div class="ease-cta-meta">
-                <strong>EASE ${escHtml(openWin.window || 'window')} is open</strong>
+                <strong>EASE ${escHtml(windowLabel(openWin.window))} is open</strong>
                 <span>${pending.map(s => SUBJ_LABEL[s] || s).join(', ')} pending</span>
               </div>
               <a class="btn" href="/ease-test">Take it →</a>
@@ -517,7 +517,7 @@
             <span class="grow-glyph">${SUBJ_GLYPH[s] || '📊'}</span>
             <div class="grow-meta">
               <div class="grow-name">${escHtml(SUBJ_LABEL[s] || s)}</div>
-              <div class="grow-sub">${escHtml(w.window || '')} window</div>
+              <div class="grow-sub">${escHtml(windowLabel(w.window))} window</div>
             </div>
             <div><span class="grow-score">${w.ritScore}</span>${delta}</div>
           </div>`);
@@ -612,6 +612,10 @@
       return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
         '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
       })[c]);
+    }
+    function windowLabel(w) {
+      const m = { term1: 'Term 1', term2: 'Term 2', term3: 'Term 3', fall: 'Fall', winter: 'Winter', spring: 'Spring' };
+      return m[w] || w || 'window';
     }
     function escAttr(s) { return escHtml(s); }
   </script>
