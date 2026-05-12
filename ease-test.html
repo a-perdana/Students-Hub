@@ -111,6 +111,25 @@
     // Difficulty band → logit equivalent (Rasch-lite; calibration replaces this in Phase 3)
     const DIFF_LOGIT = { easy: -1.2, medium: 0, hard: 1.2 };
     const SE_INIT = 1.5;
+    const BANK_CACHE_TTL_MS = 15 * 60 * 1000;
+
+    function bankCacheKey(s, g) { return `easeBank:v1:${s}:${g == null ? 'any' : g}`; }
+    function readBankCache(s, g) {
+      try {
+        const raw = sessionStorage.getItem(bankCacheKey(s, g));
+        if (!raw) return null;
+        const { ts, items } = JSON.parse(raw);
+        if (!Array.isArray(items) || (Date.now() - ts) > BANK_CACHE_TTL_MS) return null;
+        return items;
+      } catch { return null; }
+    }
+    function writeBankCache(s, g, items) {
+      try {
+        sessionStorage.setItem(bankCacheKey(s, g), JSON.stringify({ ts: Date.now(), items }));
+      } catch {
+        // Quota / serialization failure — silently skip; cache is best-effort.
+      }
+    }
 
     let openWindow = null;
     let session = null;          // ease_sessions doc
@@ -215,6 +234,46 @@
       });
       // Mark already-taken
       checkExistingSessions();
+      // Pre-warm banks in the background — student usually picks within
+      // a few seconds, so Firestore fetches run in parallel with the UI
+      // they're staring at. Results cached in sessionStorage keyed by
+      // (subject, grade); startSession's loadBank() reads it.
+      prewarmBanks();
+    }
+
+    function prewarmBanks() {
+      const g = Number(window.studentProfile?.gradeLevel) || null;
+      (openWindow.subjects || []).forEach(s => {
+        if (readBankCache(s, g)) return;
+        // Fire-and-forget; loadBank will refetch if this somehow fails.
+        (async () => {
+          try {
+            let snap;
+            if (g != null) {
+              snap = await getDocs(query(
+                collection(window.db, 'ease_items'),
+                where('subjectId', '==', s),
+                where('stage_min', '<=', g + 1)
+              ));
+            } else {
+              snap = await getDocs(query(
+                collection(window.db, 'ease_items'),
+                where('subjectId', '==', s)
+              ));
+            }
+            const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const filtered = (g != null)
+              ? raw.filter(it => {
+                  const smax = (typeof it.stage_max === 'number') ? it.stage_max : it.stage_min;
+                  return smax >= g - 1;
+                })
+              : raw;
+            writeBankCache(s, g, filtered);
+          } catch (e) {
+            console.warn('[ease] prewarm failed', s, e?.message);
+          }
+        })();
+      });
     }
 
     function showPreError(msg) {
@@ -312,13 +371,45 @@
     }
 
     async function loadBank() {
-      const q = await getDocs(query(
-        collection(window.db, 'ease_items'),
-        where('subjectId', '==', subjectId)
-      ));
-      bank = q.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Stage-windowed load: keep items whose grade range overlaps the
+      // student's [grade-1, grade+1] band. Firestore allows a single
+      // field inequality, so push stage_min upper bound to the server
+      // and filter stage_max lower bound client-side. For a Y7 student
+      // on math (4.5k bank) this collapses to ~1.5-2k docs.
+      const g = Number(window.studentProfile?.gradeLevel) || null;
+      const cached = readBankCache(subjectId, g);
+      if (cached) {
+        bank = cached;
+        if (bank.length === 0) {
+          return showError('No items', 'No EASE items have been authored for this subject and grade band yet.');
+        }
+        return;
+      }
+      let snap;
+      if (g != null) {
+        snap = await getDocs(query(
+          collection(window.db, 'ease_items'),
+          where('subjectId', '==', subjectId),
+          where('stage_min', '<=', g + 1)
+        ));
+      } else {
+        // No grade on profile — fall back to the original full-bank load
+        // rather than locking the student out.
+        snap = await getDocs(query(
+          collection(window.db, 'ease_items'),
+          where('subjectId', '==', subjectId)
+        ));
+      }
+      const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      bank = (g != null)
+        ? raw.filter(it => {
+            const smax = (typeof it.stage_max === 'number') ? it.stage_max : it.stage_min;
+            return smax >= g - 1;
+          })
+        : raw;
+      writeBankCache(subjectId, g, bank);
       if (bank.length === 0) {
-        return showError('No items', 'No EASE items have been authored for this subject yet.');
+        return showError('No items', 'No EASE items have been authored for this subject and grade band yet.');
       }
     }
 
@@ -383,7 +474,14 @@
         const bExp  = EXPOSURE_WEIGHT * Math.log1p(b.seenCount || 0);
         return (aDist + aExp) - (bDist + bExp);
       });
-      currentItem = candidates[0];
+      // Randomesque pick from the top-K best-fitting items. K shrinks
+      // as the session progresses: early items diversify (different
+      // students don't all see the same first 5 mediums), later items
+      // hone in on theta. K = ceil(5 * (1 - answered/target)), min 1.
+      const progress = Math.min(1, answered / target);
+      const k = Math.max(1, Math.ceil(5 * (1 - progress)));
+      const pool = candidates.slice(0, Math.min(k, candidates.length));
+      currentItem = pool[Math.floor(Math.random() * pool.length)];
       currentChoice = null;
       paintItem();
     }
@@ -394,7 +492,7 @@
       // Prefer the sanitised stemHtml (imported items carry rich
       // content + inline LaTeX). Fall back to plain stem.
       if (it.stemHtml) {
-        qstem.innerHTML = sanitiseQuestionHtml(it.stemHtml);
+        qstem.innerHTML = sanitiseCached(it.id + ':stem', it.stemHtml);
       } else {
         qstem.textContent = `${it.stem || ''}`;
       }
@@ -418,7 +516,7 @@
         // Pick per-index — fall back to escaped text otherwise.
         const html = (it.options || []).map((o, i) => {
           const oHtml = (it.optionsHtml && it.optionsHtml[i])
-            ? sanitiseQuestionHtml(it.optionsHtml[i])
+            ? sanitiseCached(it.id + ':opt:' + i, it.optionsHtml[i])
             : escHtml(o);
           return `
           <div class="qopt" data-i="${i}">
@@ -452,9 +550,8 @@
           document.getElementById('nextBtn').disabled = !inp.value.trim();
         };
       }
-      // Render math after content lands.
-      typesetMath(document.getElementById('qstem'));
-      typesetMath(document.getElementById('qopts'));
+      // Single typeset over the question container — MathJax batches internally.
+      typesetMath(document.getElementById('testBody'));
     }
 
     document.getElementById('nextBtn').addEventListener('click', submitAnswer);
@@ -472,16 +569,24 @@
         isCorrect = String(currentChoice || '').trim().toLowerCase() === String(it.correctAnswer || '').trim().toLowerCase();
       }
 
-      // Rasch-lite update — naive Bayesian: theta moves toward item difficulty if correct above expected, away if not.
+      // Rasch (1PL) MLE update — Newton-Raphson step + Fisher-information SE shrink.
       // Phase 3: prefer calibratedLogit when the weekly batch has flipped pilotPhase=false; otherwise bootstrap band.
       const itLogit = (typeof it.calibratedLogit === 'number' && it.pilotPhase === false)
         ? it.calibratedLogit
         : (DIFF_LOGIT[it.difficulty] ?? 0);
-      const pCorrect = 1 / (1 + Math.exp(-(theta - itLogit)));
-      const learningRate = se;  // larger SE → bigger update
-      theta = theta + learningRate * (isCorrect ? (1 - pCorrect) : -pCorrect);
-      // SE shrinks each item — Fisher information increases
-      se = se * 0.92;
+      const pRaw = 1 / (1 + Math.exp(-(theta - itLogit)));
+      // Clamp p away from 0/1 so info doesn't collapse to 0 at the extremes
+      // (would NaN the SE update and stall theta forever).
+      const p = Math.max(0.02, Math.min(0.98, pRaw));
+      const info = p * (1 - p);                       // Rasch item info
+      // Newton step: dθ = (y - p) / info. Bound to ±1 logit per item so a
+      // single misclick on a far-off item can't catapult theta off-scale.
+      const rawStep = ((isCorrect ? 1 : 0) - p) / info;
+      const step = Math.max(-1, Math.min(1, rawStep));
+      theta = theta + step;
+      // Variance accumulation: 1/SE² ← 1/SE² + info, then SE = 1/sqrt(...).
+      const invVar = 1 / (se * se) + info;
+      se = 1 / Math.sqrt(invVar);
 
       // Persist response (immutable)
       try {
@@ -571,6 +676,14 @@
     // delimiters \(…\)) passes through untouched for MathJax to render.
     const _SANITISE_ALLOWED = new Set(['P','SPAN','IMG','BR','STRONG','EM','B','I','U','UL','OL','LI','TABLE','TR','TD','TH','TBODY','THEAD','SUP','SUB','DIV']);
     const _SANITISE_ATTRS = { IMG: new Set(['src','alt','width','height','loading']), '*': new Set([]) };
+    const _sanitiseCache = new Map();
+    function sanitiseCached(key, html) {
+      const hit = _sanitiseCache.get(key);
+      if (hit !== undefined) return hit;
+      const out = sanitiseQuestionHtml(html);
+      _sanitiseCache.set(key, out);
+      return out;
+    }
     function sanitiseQuestionHtml(html) {
       if (!html) return '';
       const tpl = document.createElement('template');
