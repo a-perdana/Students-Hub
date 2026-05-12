@@ -347,6 +347,21 @@
         + '<a href="/tests">Take a test →</a>'
         + '</div>';
     }
+    // Cosmetic tier derived from student_points.level. Mirrored from
+     // index.html — keep in sync.
+    function tierFor(level) {
+      const lvl = Number(level) || 1;
+      if (lvl >= 35) return { id: 'fellow',     label: 'Fellow' };
+      if (lvl >= 20) return { id: 'master',     label: 'Master' };
+      if (lvl >= 10) return { id: 'mentor',     label: 'Mentor' };
+      if (lvl >=  5) return { id: 'scholar',    label: 'Scholar' };
+      return                  { id: 'apprentice', label: 'Apprentice' };
+    }
+    function tierChipHtml(level) {
+      const t = tierFor(level);
+      return '<span class="tier-chip" data-tier="' + t.id + '" style="margin-left:8px"><span class="tier-dot"></span>' + escHtml(t.label) + '</span>';
+    }
+
     function renderPodium(top3, me) {
       const box = document.getElementById('podium');
       if (top3.length === 0) { box.innerHTML = ''; return; }
@@ -355,14 +370,14 @@
       box.innerHTML = order.map(i => {
         const e = top3[i];
         if (!e) return '<div class="podium-step ' + rankClasses[i] + '" style="visibility:hidden"></div>';
-        const initial = (e.displayName || '?')[0].toUpperCase();
         const isMe = e.studentUid === me;
+        const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(e.studentUid, { size: 128 }) : '';
         return '<div class="podium-step ' + rankClasses[i] + '">'
           + '<div class="podium-avatar">'
-          + (e.photoURL ? '<img src="' + escAttr(e.photoURL) + '" alt="">' : escHtml(initial))
+          + '<img src="' + escAttr(avatarUrl) + '" alt="" loading="lazy">'
           + '</div>'
           + '<div class="podium-name">' + escHtml(e.displayName || 'Student') + (isMe ? ' <span style="color:var(--stage-primary)">(You)</span>' : '') + '</div>'
-          + '<div class="podium-meta">' + escHtml(e.schoolName || e.school || '') + '</div>'
+          + '<div class="podium-meta">' + tierChipHtml(e.level) + '</div>'
           + '<div class="podium-pts">' + (pointsFieldOf(e, CURRENT_PERIOD) || 0).toLocaleString('en-GB') + '</div>'
           + '</div>';
       }).join('');
@@ -372,16 +387,16 @@
       if (rest.length === 0) { box.innerHTML = ''; return; }
       box.innerHTML = rest.map((e, idx) => {
         const rank = e.rank || (idx + 4);
-        const initial = (e.displayName || '?')[0].toUpperCase();
         const isMe = e.studentUid === me;
         const medal = rank === 1 ? 'medal-gold' : rank === 2 ? 'medal-silver' : rank === 3 ? 'medal-bronze' : 'medal-num';
+        const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(e.studentUid, { size: 64 }) : '';
         const delta = e.delta != null
           ? '<span class="delta ' + (e.delta >= 0 ? 'up' : 'down') + '">' + (e.delta >= 0 ? '▲' : '▼') + ' ' + Math.abs(e.delta) + '</span>'
           : '<span class="delta">—</span>';
         return '<div class="lb-row ' + (isMe ? 'is-me' : '') + '">'
           + '<span class="medal ' + medal + '">' + rank + '</span>'
-          + '<span class="avatar">' + (e.photoURL ? '<img src="' + escAttr(e.photoURL) + '" alt="">' : escHtml(initial)) + '</span>'
-          + '<span class="name">' + escHtml(e.displayName || 'Student') + (isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700"> YOU</span>' : '') + '</span>'
+          + '<span class="avatar"><img src="' + escAttr(avatarUrl) + '" alt="" loading="lazy"></span>'
+          + '<span class="name">' + escHtml(e.displayName || 'Student') + tierChipHtml(e.level) + (isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700"> YOU</span>' : '') + '</span>'
           + '<span class="pts">' + (pointsFieldOf(e, CURRENT_PERIOD) || 0).toLocaleString('en-GB') + '</span>'
           + delta
           + '</div>';

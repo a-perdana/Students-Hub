@@ -47,9 +47,11 @@
       const av = document.getElementById('topbarAvatar');
       if (!av) return;
       const p = window.studentProfile;
-      if (!p) return;
-      if (p.photoURL) {
-        av.innerHTML = '<img src="' + p.photoURL + '" alt="">';
+      const uid = window.currentUser && window.currentUser.uid;
+      if (!p || !uid) return;
+      const url = window.studentAvatarUrl ? window.studentAvatarUrl(uid, { size: 64 }) : '';
+      if (url) {
+        av.innerHTML = '<img src="' + url + '" alt="" loading="lazy">';
       } else {
         av.textContent = (p.displayName || p.email || '?').charAt(0).toUpperCase();
       }

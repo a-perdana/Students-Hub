@@ -187,6 +187,15 @@
 <body style="display:none">
   <!-- FIREBASE_ENV -->
 
+  <svg class="tier-svg-defs" aria-hidden="true">
+    <defs>
+      <linearGradient id="tierMasterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#6c5ce7"/>
+        <stop offset="100%" stop-color="#0891b2"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
   <div id="navbar-container"></div>
 
   <main class="page">
@@ -195,6 +204,9 @@
       <div class="hero-grid">
         <div>
           <span class="stage-chip" id="stageChip"><span class="dot"></span> <span id="stageLabel">Loading…</span></span>
+          <span class="tier-chip" id="tierChip" data-tier="apprentice" style="margin-left:6px; display:none" title="Your rank — climbs as you level up">
+            <span class="tier-dot"></span> <span id="tierLabel">Apprentice</span>
+          </span>
           <h1 class="hero-title" style="margin-top:10px">
             <span id="helloGreeting">Welcome back</span>,
             <span class="hero-name" id="helloName">…</span>
@@ -202,7 +214,7 @@
           <p id="helloMeta">Loading your class…</p>
         </div>
         <div class="hero-right">
-          <div class="level-badge level-badge-lg" id="levelBadge" title="Your level">
+          <div class="level-badge level-badge-lg" id="levelBadge" data-tier="apprentice" title="Your level">
             <svg class="ring" viewBox="0 0 56 56">
               <circle class="ring-track" cx="28" cy="28" r="24"/>
               <circle class="ring-fill" id="ringFill" cx="28" cy="28" r="24"
@@ -401,11 +413,39 @@
         const C = 150.8;
         ring.setAttribute('stroke-dasharray', C);
         ring.setAttribute('stroke-dashoffset', C * (1 - prog/100));
+
+        applyTier(lvl);
       } catch (e) {
         console.warn('[dashboard] points load failed (collection may not exist yet)', e.message);
         document.getElementById('totalPts').textContent = '0';
         document.getElementById('streakDays').textContent = '0';
+        applyTier(1);
       }
+    }
+
+    // ─── Tier derivation (cosmetic-only) ──────────────────────────
+    // Maps student_points.level → visible rank. NEVER feeds assessment.
+    function tierFor(level) {
+      if (level >= 35) return { id: 'fellow',     label: 'Cambridge Fellow' };
+      if (level >= 20) return { id: 'master',     label: 'Master' };
+      if (level >= 10) return { id: 'mentor',     label: 'Mentor' };
+      if (level >=  5) return { id: 'scholar',    label: 'Scholar' };
+      return                  { id: 'apprentice', label: 'Apprentice' };
+    }
+    function applyTier(level) {
+      const t = tierFor(level);
+      const badge = document.getElementById('levelBadge');
+      const chip  = document.getElementById('tierChip');
+      const lbl   = document.getElementById('tierLabel');
+      if (badge) {
+        badge.setAttribute('data-tier', t.id);
+        badge.title = t.label + ' · Level ' + level;
+      }
+      if (chip) {
+        chip.setAttribute('data-tier', t.id);
+        chip.style.display = '';
+      }
+      if (lbl) lbl.textContent = t.label;
     }
 
     // ─── Leaderboard preview ──────────────────────────────────────
@@ -438,10 +478,10 @@
           const v = d.data();
           const isMe = d.id === me;
           const medal = i === 0 ? 'medal-gold' : i === 1 ? 'medal-silver' : i === 2 ? 'medal-bronze' : 'medal-num';
-          const initial = (v.displayName || '?')[0].toUpperCase();
+          const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(d.id, { size: 64 }) : '';
           return `<div class="lb-row ${isMe ? 'is-me' : ''}">
             <span class="medal ${medal}">${i + 1}</span>
-            <span class="avatar">${escHtml(initial)}</span>
+            <span class="avatar"><img src="${escAttr(avatarUrl)}" alt="" loading="lazy"></span>
             <span class="name">${escHtml(v.displayName || 'Student')}${isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700">YOU</span>' : ''}</span>
             <span class="pts">${(v.totalPoints||0).toLocaleString('en-GB')}</span>
           </div>`;

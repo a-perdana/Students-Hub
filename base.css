@@ -458,6 +458,92 @@ body.test-mode .topbar { display: none; }
 .level-badge-lg { width: 80px; height: 80px; }
 .level-badge-lg .level-num { width: 60px; height: 60px; font-size: 1.35rem; }
 
+/* ── Tier system ──────────────────────────────────────────────────
+ * Cosmetic-only rank derived from student_points.level:
+ *   1–4   apprentice (grey)
+ *   5–9   scholar    (cyan)
+ *   10–19 mentor     (mor brand)
+ *   20–34 master     (mor→cyan gradient + shimmer)
+ *   35+   fellow     (gold halo + pulse)
+ * Applied via data-tier on .level-badge. Background gradient of the
+ * inner pill also swaps so apprentice doesn't look "advanced" by
+ * inheriting the stage gradient.
+ */
+.level-badge[data-tier="apprentice"] .ring-track { stroke: #e3e5ed; }
+.level-badge[data-tier="apprentice"] .ring-fill  { stroke: #94a3b8; }
+.level-badge[data-tier="apprentice"] .level-num  {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  box-shadow: 0 6px 16px -8px rgba(100,116,139,.5);
+}
+.level-badge[data-tier="scholar"] .ring-track { stroke: var(--cyan-2); }
+.level-badge[data-tier="scholar"] .ring-fill  { stroke: var(--cyan); }
+.level-badge[data-tier="scholar"] .level-num  {
+  background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dk) 100%);
+  box-shadow: 0 10px 24px -10px rgba(8,145,178,.55);
+}
+.level-badge[data-tier="mentor"] .ring-track { stroke: var(--mor-2); }
+.level-badge[data-tier="mentor"] .ring-fill  { stroke: var(--mor); }
+.level-badge[data-tier="mentor"] .level-num  {
+  background: linear-gradient(135deg, var(--mor) 0%, var(--mor-dk) 100%);
+  box-shadow: 0 12px 28px -10px rgba(108,92,231,.6);
+}
+.level-badge[data-tier="master"] .ring-track { stroke: var(--mor-2); }
+.level-badge[data-tier="master"] .ring-fill  {
+  stroke: url(#tierMasterGrad);
+}
+.level-badge[data-tier="master"] .level-num  {
+  background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
+  background-size: 200% 200%;
+  animation: tierMasterShimmer 4s ease-in-out infinite;
+  box-shadow: 0 14px 32px -10px rgba(108,92,231,.65);
+}
+@keyframes tierMasterShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.level-badge[data-tier="fellow"] { filter: drop-shadow(0 0 12px rgba(245,158,11,.55)); }
+.level-badge[data-tier="fellow"] .ring-track { stroke: var(--gold-2); }
+.level-badge[data-tier="fellow"] .ring-fill  { stroke: var(--gold); }
+.level-badge[data-tier="fellow"] .level-num  {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--gold), 0 14px 32px -10px rgba(245,158,11,.7);
+  animation: tierFellowPulse 2.4s ease-in-out infinite;
+}
+@keyframes tierFellowPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* Tier chip — small badge shown next to greeting */
+.tier-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  vertical-align: middle;
+}
+.tier-chip .tier-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.tier-chip[data-tier="apprentice"] { background: #f1f5f9;          color: #475569;          border-color: #cbd5e1; }
+.tier-chip[data-tier="scholar"]    { background: var(--cyan-2);    color: var(--cyan-dk);   border-color: #a5f3fc; }
+.tier-chip[data-tier="mentor"]     { background: var(--mor-2);     color: var(--mor-dk);    border-color: #c4b5fd; }
+.tier-chip[data-tier="master"]     {
+  background: linear-gradient(135deg, var(--mor-2) 0%, var(--cyan-2) 100%);
+  color: var(--mor-dk); border-color: #c4b5fd;
+}
+.tier-chip[data-tier="fellow"]     {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e; border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(245,158,11,.2);
+}
+
+/* Reusable SVG <defs> sprite — drop once per page to enable master gradient */
+.tier-svg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
 /* Stat tile — gamification dashboard cell */
 .stat-tile {
   background: var(--white);
