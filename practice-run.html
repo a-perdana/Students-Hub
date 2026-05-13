@@ -267,6 +267,12 @@
       documentId
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+    // Optimistic estimate while waiting for Cloud Function's
+    // pointsAwarded writeback (canonical value lives on the attempt
+    // doc once the trigger fires, usually within 1-3s of submit).
+    // Mirrors the awardPracticeAttemptPoints formula in CH functions.
+    const POINTS_PER_CORRECT_HINT = 5;
+
     // ─── State ───────────────────────────────────────────────────
     const params = new URLSearchParams(window.location.search);
     const CHALLENGE_ID = params.get('challenge');   // e.g. '2026-05-13_math'
@@ -570,9 +576,13 @@
       document.getElementById('doneCorrect').textContent =
         state.correctCount + ' / ' + state.items.length;
       document.getElementById('doneStreak').textContent = state.bestStreak;
-      // Rough estimate — Cloud Function will award real points
-      const estPts = state.correctCount * 10 + state.bestStreak * 5;
-      document.getElementById('donePoints').textContent = '+' + estPts;
+      // Optimistic placeholder until Cloud Function's pointsAwarded
+      // writeback lands (usually 1-3s). pollForPoints() flips the chip
+      // to the canonical value when the trigger has fired.
+      const estPts = state.correctCount * POINTS_PER_CORRECT_HINT
+        + (state.bestStreak >= 5 ? 20 : state.bestStreak >= 3 ? 10 : 0);
+      document.getElementById('donePoints').textContent = '+' + estPts + '…';
+      pollForPoints(state.attemptId);
 
       const verdict = document.getElementById('doneVerdict');
       const sub = document.getElementById('doneSub');
@@ -604,6 +614,29 @@
       document.getElementById('qcard').hidden = true;
       document.getElementById('errorState').hidden = false;
       document.getElementById('errorMsg').textContent = msg;
+    }
+
+    // Poll the attempt doc for pointsAwarded after submit. The Cloud
+    // Function (awardPracticeAttemptPoints) writes the canonical value
+    // back within 1-3s. 6 retries × 800ms = ~5s window, then give up
+    // and leave the optimistic estimate in place.
+    async function pollForPoints(attemptId) {
+      if (!attemptId) return;
+      const el = document.getElementById('donePoints');
+      for (let i = 0; i < 6; i++) {
+        await new Promise(r => setTimeout(r, 800));
+        try {
+          const snap = await getDoc(doc(window.db, 'practice_attempts', attemptId));
+          if (!snap.exists()) continue;
+          const pts = snap.data().pointsAwarded;
+          if (typeof pts === 'number') {
+            el.textContent = '+' + pts;
+            return;
+          }
+        } catch { /* network blip — retry */ }
+      }
+      // Strip trailing ellipsis if poll didn't land
+      el.textContent = el.textContent.replace(/…$/, '');
     }
 
     // ─── Helpers ────────────────────────────────────────────────
