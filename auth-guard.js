@@ -44,6 +44,9 @@ import {
   getFirestore, doc, getDoc, setDoc, serverTimestamp,
   collection, query, where, getDocs, limit
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import {
+  getStorage, ref as storageRef, getDownloadURL
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
 // ─── Hide body until auth completes ───────────────────────────────
 document.body.style.display = 'none';
@@ -71,13 +74,36 @@ const cfg = {
   messagingSenderId: window.ENV.FIREBASE_MESSAGING_SENDER_ID,
   appId:             window.ENV.FIREBASE_APP_ID,
 };
-const app  = getApps().length ? getApps()[0] : initializeApp(cfg);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const app     = getApps().length ? getApps()[0] : initializeApp(cfg);
+const auth    = getAuth(app);
+const db      = getFirestore(app);
+const storage = getStorage(app);
 
 window.firebaseApp = app;
 window.auth        = auth;
 window.db          = db;
+window.storage     = storage;
+
+// ─── Resolve a diagramStoragePath to a download URL ──────────────
+// Practice runner + chapter test runner call this to render diagrams
+// from practice_questions / chapter_test_items. The bucket isn't
+// public, so we ask Firebase Storage for an authenticated download
+// URL. Cached client-side via a Map so repeat lookups on the same
+// item are free. Returns null on failure (caller renders placeholder).
+const _diagramCache = new Map();
+window.resolveDiagramUrl = async function (path) {
+  if (!path) return null;
+  if (_diagramCache.has(path)) return _diagramCache.get(path);
+  try {
+    const url = await getDownloadURL(storageRef(storage, path));
+    _diagramCache.set(path, url);
+    return url;
+  } catch (e) {
+    console.warn('[resolveDiagramUrl] failed for', path, e.code || e.message);
+    _diagramCache.set(path, null);
+    return null;
+  }
+};
 
 // ─── Public helpers (used by login.html, class-picker.html, etc.) ─
 window.signInWithGoogle = async function () {

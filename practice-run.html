@@ -463,15 +463,33 @@
       } else {
         stem.textContent = it.stem || '';
       }
-      // Diagram fallback (if not in stemHtml as <img>)
-      if (it.diagramUrl && !/<img/i.test(it.stemHtml || '')) {
+      // Diagram render. Three legacy fields can carry the image:
+      //   diagramUrl         — old (pre-2026-05-12) full URL; usually
+      //                        null on fresh imports
+      //   diagramStoragePath — current canonical (e.g.
+      //                        'practice-diagrams/math/mc063-1.jpg').
+      //                        Needs auth via window.resolveDiagramUrl().
+      //   <img> already embedded in stemHtml — skip both above paths.
+      const stemHasImg = /<img/i.test(it.stemHtml || '');
+      if (!stemHasImg && (it.diagramUrl || it.diagramStoragePath)) {
         const img = document.createElement('img');
-        img.src = it.diagramUrl;
         img.alt = '';
         img.loading = 'lazy';
         img.style.maxWidth = '100%';
         img.style.marginTop = '10px';
+        img.style.borderRadius = '8px';
         stem.appendChild(img);
+        if (it.diagramUrl) {
+          img.src = it.diagramUrl;
+        } else {
+          // Async resolve via Storage SDK (cached). Caller doesn't
+          // need to await — the <img> is already in the DOM, src is
+          // patched in once the SDK returns.
+          window.resolveDiagramUrl(it.diagramStoragePath).then(url => {
+            if (url) img.src = url;
+            else img.remove();
+          });
+        }
       }
 
       // Options

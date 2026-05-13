@@ -125,8 +125,13 @@
   }
 
   // ─── Confetti ───────────────────────────────────────────────────
-  // Canvas overlay, ~150 particles, brand palette. Particles fall
-  // with gravity + drift, fade after ~1.5s. Self-cleans the canvas.
+  // DOM-based: each particle is an absolutely-positioned <span> with
+  // a CSS keyframe animation driving its full lifecycle (translate +
+  // rotate + opacity). The previous canvas + requestAnimationFrame
+  // implementation rendered one stale frame on some browsers and
+  // never advanced — switching to CSS keyframes is more reliable
+  // and looks just as snappy. Self-cleans after the longest
+  // animation duration via a single setTimeout.
   const CONFETTI_COLORS = [
     '#6c5ce7', // mor
     '#0891b2', // cyan
@@ -135,81 +140,70 @@
     '#ec4899', // pink (kid-friendly accent)
   ];
 
+  // Inject the keyframes + base class once, lazily.
+  function ensureConfettiStyles() {
+    if (document.getElementById('fx-confetti-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'fx-confetti-styles';
+    s.textContent = `
+      .fx-confetti-layer {
+        position: fixed; inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+      }
+      .fx-confetti-piece {
+        position: absolute;
+        will-change: transform, opacity;
+        animation: fx-confetti-fly 1.8s cubic-bezier(.15,.6,.4,1) forwards;
+      }
+      @keyframes fx-confetti-fly {
+        0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+        60%  { opacity: 1; }
+        100% { transform: translate3d(var(--tx,0px), var(--ty,400px), 0) rotate(var(--tr,360deg));
+               opacity: 0; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
   function confetti(opts) {
+    ensureConfettiStyles();
     const o = opts || {};
-    const count = o.count || 140;
+    const count = o.count || 80;
     const originX = o.x != null ? o.x : window.innerWidth / 2;
     const originY = o.y != null ? o.y : window.innerHeight / 3;
     const burst = o.burst != null ? o.burst : 12;
 
-    const canvas = document.createElement('canvas');
-    canvas.style.cssText =
-      'position:fixed;inset:0;width:100vw;height:100vh;' +
-      'pointer-events:none;z-index:9999';
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    document.body.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
+    const layer = document.createElement('div');
+    layer.className = 'fx-confetti-layer';
+    document.body.appendChild(layer);
 
-    const parts = [];
+    const spread = burst * 22;       // horizontal spread in px
+    const dropMin = 280;             // baseline fall in px
+    const dropVar = 280;             // extra random fall
     for (let i = 0; i < count; i++) {
-      const angle = (Math.PI * 2) * Math.random();
-      const speed = burst + Math.random() * burst;
-      parts.push({
-        x: originX,
-        y: originY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - burst * 0.6,
-        rot: Math.random() * Math.PI * 2,
-        vr: (Math.random() - 0.5) * 0.4,
-        size: 6 + Math.random() * 6,
-        color: CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0],
-        life: 1,
-        // square vs rect for variety
-        shape: Math.random() < 0.5 ? 'rect' : 'circle',
-      });
+      const piece = document.createElement('span');
+      piece.className = 'fx-confetti-piece';
+      const size = 6 + Math.random() * 8;
+      const isRound = Math.random() < 0.4;
+      const tx = (Math.random() - 0.5) * spread * 2;
+      const ty = dropMin + Math.random() * dropVar;
+      const tr = (Math.random() - 0.5) * 720;     // up to ±360deg
+      const delay = Math.random() * 0.12;          // stagger 0..120ms
+      const color = CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0];
+      piece.style.cssText =
+        `left:${originX - size/2}px;top:${originY - size/2}px;` +
+        `width:${isRound ? size : size}px;height:${isRound ? size : size/2}px;` +
+        `background:${color};` +
+        `border-radius:${isRound ? '50%' : '2px'};` +
+        `--tx:${tx}px;--ty:${ty}px;--tr:${tr}deg;` +
+        `animation-delay:${delay}s;`;
+      layer.appendChild(piece);
     }
 
-    const start = performance.now();
-    const TOTAL_MS = 1800;
-
-    function frame(now) {
-      const elapsed = now - start;
-      const t = elapsed / TOTAL_MS;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let alive = false;
-      for (const p of parts) {
-        // physics
-        p.vy += 0.35; // gravity
-        p.vx *= 0.992; // air drag
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.vr;
-        p.life = 1 - t;
-        if (p.life <= 0) continue;
-        alive = true;
-        // draw
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.globalAlpha = Math.max(0, p.life);
-        ctx.fillStyle = p.color;
-        if (p.shape === 'rect') {
-          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
-        } else {
-          ctx.beginPath();
-          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-      if (alive && elapsed < TOTAL_MS) {
-        requestAnimationFrame(frame);
-      } else {
-        canvas.remove();
-      }
-    }
-    requestAnimationFrame(frame);
+    // Clean up after longest piece finishes (1.8s anim + 0.12s delay)
+    setTimeout(() => layer.remove(), 2200);
   }
 
   // ─── Animated counter ──────────────────────────────────────────
