@@ -695,30 +695,47 @@
           window.fx.countUp(document.getElementById('donePoints'), 0, estPts, 1000, { prefix: '+', suffix: '…' });
         }, 200);
 
-        // Confetti + sound tier based on score
+        // Confetti + sound tier based on score.
+        // Every run now gets a small celebration — even a poor
+        // score is a step forward. Volume + intensity scale with
+        // pct so a perfect run still feels distinctly bigger.
+        // Origin is set to roughly where the doneCard sits (top
+        // half of the viewport) so the burst feels anchored to
+        // the result, not the page.
+        const cardEl = document.getElementById('doneCard');
+        const rect = cardEl ? cardEl.getBoundingClientRect() : null;
+        const burstX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+        const burstY = rect ? rect.top + rect.height * 0.25 : window.innerHeight / 3;
+
         if (pct === 100) {
-          // Perfect run — big celebration
           window.fx.play('levelUp');
           window.fx.haptic([60, 50, 60, 50, 80]);
-          window.fx.confetti({ count: 240, burst: 18 });
-          // Second burst from a different origin for drama
+          window.fx.confetti({ count: 200, burst: 18, x: burstX, y: burstY });
           setTimeout(() => window.fx.confetti({
             count: 100, burst: 12,
-            x: window.innerWidth * 0.25, y: window.innerHeight * 0.4
+            x: rect ? rect.left + rect.width * 0.2 : window.innerWidth * 0.3,
+            y: burstY
           }), 350);
           setTimeout(() => window.fx.confetti({
             count: 100, burst: 12,
-            x: window.innerWidth * 0.75, y: window.innerHeight * 0.4
+            x: rect ? rect.left + rect.width * 0.8 : window.innerWidth * 0.7,
+            y: burstY
           }), 550);
         } else if (pct >= 80) {
           window.fx.play('submit');
           window.fx.haptic([40, 40, 40]);
-          window.fx.confetti({ count: 120, burst: 13 });
+          window.fx.confetti({ count: 120, burst: 14, x: burstX, y: burstY });
         } else if (pct >= 50) {
           window.fx.play('submit');
           window.fx.haptic(50);
+          window.fx.confetti({ count: 60, burst: 11, x: burstX, y: burstY });
+        } else {
+          // Below 50 still gets a tiny encouragement burst — small
+          // and subdued, but enough to feel rewarded for trying.
+          window.fx.play('submit');
+          window.fx.haptic(30);
+          window.fx.confetti({ count: 30, burst: 9, x: burstX, y: burstY });
         }
-        // < 50 — silent encouragement, no celebration sound
       } else {
         // No fx available (script not loaded) — just paint final values
         pctEl.textContent = pct + '%';
