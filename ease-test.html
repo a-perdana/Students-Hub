@@ -82,18 +82,19 @@
         <span class="obs-meta" id="obsMeta"></span>
         <button type="button" class="obs-btn" id="obsCopyBtn">📋 Copy</button>
         <a class="obs-btn" id="obsOpenLink" target="_blank" rel="noopener">↗ Open in CH</a>
+        <button type="button" class="obs-btn" id="obsStarBtn">☆ Star</button>
         <button type="button" class="obs-btn is-primary" id="obsFlagBtn">⚑ Flag</button>
       </div>
     </div>
 
     <!-- HQ flag modal -->
-    <div class="obs-modal-back" id="obsModal" role="dialog" aria-modal="true">
+    <div class="obs-modal-back" id="obsFlagModal" role="dialog" aria-modal="true">
       <div class="obs-modal">
         <h3>Flag question for HQ review</h3>
         <p class="sub">Routes to <code>practice_question_flags</code>. Specialists triage from CH /practice-bank-flags.</p>
-        <div class="obs-modal-id" id="obsModalId">—</div>
-        <label class="obs-reason" for="obsReason">Reason</label>
-        <select id="obsReason">
+        <div class="obs-modal-id" id="obsFlagModalId">—</div>
+        <label class="obs-reason" for="obsFlagReason">Reason</label>
+        <select id="obsFlagReason">
           <option value="formatting">Formatting / rendering broken</option>
           <option value="ambiguous">Ambiguous wording</option>
           <option value="wrong_answer">Marked answer is wrong</option>
@@ -102,12 +103,35 @@
           <option value="duplicate">Duplicate of another item</option>
           <option value="other">Other</option>
         </select>
-        <label class="obs-reason" for="obsNote">Note (optional, max 280)</label>
-        <textarea id="obsNote" maxlength="280"></textarea>
-        <p class="obs-modal-err" id="obsModalErr"></p>
+        <label class="obs-reason" for="obsFlagNote">Note (optional, max 280)</label>
+        <textarea id="obsFlagNote" maxlength="280"></textarea>
+        <p class="obs-modal-err" id="obsFlagModalErr"></p>
         <div class="obs-modal-actions">
-          <button type="button" class="btn btn-secondary" id="obsCancelBtn">Cancel</button>
-          <button type="button" class="btn btn-primary" id="obsSubmitBtn">Submit flag</button>
+          <button type="button" class="btn btn-secondary" id="obsFlagCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="obsFlagSubmitBtn">Submit flag</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HQ endorse (star) modal -->
+    <div class="obs-modal-back" id="obsStarModal" role="dialog" aria-modal="true">
+      <div class="obs-modal">
+        <h3>Endorse this question</h3>
+        <p class="sub">Adds it to <code>practice_question_endorsements</code>. HQ browses top-starred items in CH /practice-bank-endorsements.</p>
+        <div class="obs-modal-id" id="obsStarModalId">—</div>
+        <label class="obs-reason">Tags <span style="font-weight:400;color:var(--ink-3)">(pick any)</span></label>
+        <div class="obs-tag-row">
+          <label class="obs-tag"><input type="checkbox" id="obsStarTagAligned"> <span>curriculum-aligned</span></label>
+          <label class="obs-tag"><input type="checkbox" id="obsStarTagExam"> <span>exam-style</span></label>
+          <label class="obs-tag"><input type="checkbox" id="obsStarTagConcept"> <span>conceptual</span></label>
+        </div>
+        <label class="obs-reason" for="obsStarComment">Why is this good? (optional, max 280)</label>
+        <textarea id="obsStarComment" maxlength="280"></textarea>
+        <p class="obs-modal-err" id="obsStarModalErr"></p>
+        <div class="obs-modal-actions">
+          <button type="button" class="btn btn-secondary" id="obsStarRemoveBtn" style="display:none;color:var(--danger);border-color:var(--danger)">Remove</button>
+          <button type="button" class="btn btn-secondary" id="obsStarCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="obsStarSubmitBtn">Save endorsement</button>
         </div>
       </div>
     </div>
@@ -136,8 +160,9 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, setDoc,
-      serverTimestamp, Timestamp, orderBy, limit, arrayUnion
+      collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, setDoc, deleteDoc,
+      runTransaction, increment, arrayUnion, arrayRemove,
+      serverTimestamp, Timestamp, orderBy, limit
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
     import { createKioskLockdown } from './partials/kiosk-lockdown.js';
 
@@ -221,20 +246,37 @@
         chDeeplink: 'ease-item-author?item=',
         stripEl:    document.getElementById('obsStrip'),
         elements: {
-          idEl:       document.getElementById('obsId'),
-          metaEl:     document.getElementById('obsMeta'),
-          copyBtn:    document.getElementById('obsCopyBtn'),
-          openLink:   document.getElementById('obsOpenLink'),
-          flagBtn:    document.getElementById('obsFlagBtn'),
-          modal:      document.getElementById('obsModal'),
-          modalId:    document.getElementById('obsModalId'),
-          reasonSel:  document.getElementById('obsReason'),
-          noteTa:     document.getElementById('obsNote'),
-          errEl:      document.getElementById('obsModalErr'),
-          cancelBtn:  document.getElementById('obsCancelBtn'),
-          submitBtn:  document.getElementById('obsSubmitBtn'),
+          idEl:           document.getElementById('obsId'),
+          metaEl:         document.getElementById('obsMeta'),
+          copyBtn:        document.getElementById('obsCopyBtn'),
+          openLink:       document.getElementById('obsOpenLink'),
+
+          flagBtn:        document.getElementById('obsFlagBtn'),
+          flagModal:      document.getElementById('obsFlagModal'),
+          flagModalId:    document.getElementById('obsFlagModalId'),
+          flagReasonSel:  document.getElementById('obsFlagReason'),
+          flagNoteTa:     document.getElementById('obsFlagNote'),
+          flagErrEl:      document.getElementById('obsFlagModalErr'),
+          flagCancelBtn:  document.getElementById('obsFlagCancelBtn'),
+          flagSubmitBtn:  document.getElementById('obsFlagSubmitBtn'),
+
+          starBtn:        document.getElementById('obsStarBtn'),
+          starModal:      document.getElementById('obsStarModal'),
+          starModalId:    document.getElementById('obsStarModalId'),
+          starCommentTa:  document.getElementById('obsStarComment'),
+          starTagAligned: document.getElementById('obsStarTagAligned'),
+          starTagExam:    document.getElementById('obsStarTagExam'),
+          starTagConcept: document.getElementById('obsStarTagConcept'),
+          starErrEl:      document.getElementById('obsStarModalErr'),
+          starCancelBtn:  document.getElementById('obsStarCancelBtn'),
+          starSubmitBtn:  document.getElementById('obsStarSubmitBtn'),
+          starRemoveBtn:  document.getElementById('obsStarRemoveBtn'),
         },
-        firestore: { addDoc, collection, serverTimestamp },
+        firestore: {
+          addDoc, collection, serverTimestamp,
+          doc, getDoc, setDoc, deleteDoc, runTransaction,
+          increment, arrayUnion, arrayRemove,
+        },
       });
       window.__obsStripUpdate = obs.update;
 

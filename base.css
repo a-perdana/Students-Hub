@@ -1272,3 +1272,42 @@ body[data-stage="checkpoint"] .tier-chip {
   display: none;
 }
 .obs-modal .obs-modal-err.is-visible { display: block; }
+
+/* Star (endorse) button — same look as flag button but cyan, not amber.
+   .is-starred state filled in once the specialist has saved an endorsement. */
+.obs-strip .obs-btn.is-starred {
+  background: #d1fae5; color: #065f46;
+  border-color: #6ee7b7;
+}
+.obs-strip .obs-btn.is-starred:hover { background: #a7f3d0; }
+
+/* Endorse modal tag-row — checkbox chips */
+.obs-modal .obs-tag-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.obs-modal .obs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: border-color .12s, background .12s, color .12s;
+  user-select: none;
+}
+.obs-modal .obs-tag:hover { border-color: #f59e0b; }
+.obs-modal .obs-tag input[type="checkbox"] {
+  margin: 0;
+  accent-color: #f59e0b;
+}
+.obs-modal .obs-tag:has(input:checked) {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+  font-weight: 600;
+}
