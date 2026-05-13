@@ -209,6 +209,10 @@
       try {
         const wasAlreadyStarred = !!currentEndorsement;
         const ref = doc(window.db, 'practice_question_endorsements', endorsementDocId(currentItem.id));
+        // Snapshot the stem at endorsement time so the CH browse page
+        // can preview without N+1-fetching the host item doc. Mirrors
+        // the practice_question_flags.stemSnapshot pattern.
+        const stemSnapshot = (currentItem.stemHtml || currentItem.stem || '').slice(0, 500);
         const payload = {
           itemId:           currentItem.id,
           collection:       opts.collection,
@@ -216,6 +220,8 @@
           topicGroup:       currentItem.topicGroup || null,
           difficulty:       currentItem.difficulty || null,
           type:             currentItem.type || null,
+          stemSnapshot,
+          sourceCode:       currentItem.sourceCode || null,
           specialistUid:    window.currentUser.uid,
           specialistName:   window.studentProfile.displayName || '',
           specialistEmail:  window.studentProfile.email || '',
