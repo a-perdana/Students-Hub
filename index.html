@@ -81,11 +81,21 @@
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 10px;
       background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.3);
       border-radius: 99px;
       font-size: .75rem; font-weight: 600;
       backdrop-filter: blur(6px);
     }
-    .hero-pill[data-tier] { background: rgba(255,255,255,.95); color: var(--stage-primary-dk); }
+    /* Tier pill is the same translucent style as the rest — the
+       hero's tier ring around the avatar already signals rank.
+       (Older revision used a stark white pill that out-shouted the
+       neighbouring pills; toned down here for visual hierarchy.) */
+    .hero-pill[data-tier] {
+      background: rgba(255,255,255,.28);
+      border-color: rgba(255,255,255,.45);
+      color: #fff;
+      font-weight: 700;
+    }
 
     /* Hero CTA — primary daily challenge entry */
     .hero-cta {
@@ -223,6 +233,12 @@
     .race-podium .race-spot.rank-1 .avatar { width: 52px; height: 52px; border-color: var(--gold); }
     .race-podium .race-spot.rank-2 .avatar { border-color: var(--silver); }
     .race-podium .race-spot.rank-3 .avatar { border-color: var(--bronze); }
+    .race-podium .race-name {
+      font-size: .68rem; font-weight: 700;
+      color: var(--ink-2);
+      max-width: 56px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
 
     /* ─── Achievements row ────────────────────────────────────── */
     .ach-card {
@@ -777,14 +793,18 @@
         document.getElementById('raceLine').textContent =
           `${studentSet.size} classmate${studentSet.size===1?'':'s'} already did a challenge today.`;
         document.getElementById('raceCount').innerHTML =
-          `${totalSubmissions} <span class="total">submissions</span>`;
+          `${totalSubmissions} <span class="total">${totalSubmissions === 1 ? 'submission' : 'submissions'}</span>`;
         const podium = document.getElementById('racePodium');
         const medals = ['🥇','🥈','🥉'];
+        const meUid = window.currentUser?.uid;
         podium.innerHTML = top.map((r, i) => {
           const url = window.studentAvatarUrl ? window.studentAvatarUrl(r.uid, { size: 80 }) : '';
+          const isMe = r.uid === meUid;
+          const first = (r.name || '').split(' ')[0] || 'Student';
           return `<div class="race-spot rank-${i+1}">
             <span class="medal">${medals[i]}</span>
             <span class="avatar">${url ? `<img src="${url}" alt="" loading="lazy">` : ''}</span>
+            <span class="race-name">${escHtml(isMe ? 'You' : first)}</span>
           </div>`;
         }).join('');
       } catch (e) { console.warn('[dashboard] class race load failed', e.message); }
@@ -867,11 +887,14 @@
           const delta = w.growthVsPrev != null
             ? `<span class="grow-delta ${w.growthVsPrev >= 0 ? 'up' : 'down'}">${w.growthVsPrev >= 0 ? '+' : ''}${w.growthVsPrev}</span>`
             : '';
+          // Build a clean window label, avoiding "window window" when
+          // w.window is missing entirely.
+          const wLbl = w.window ? `${windowLabel(w.window)} window` : 'Latest result';
           parts.push(`<div class="grow-row">
             <span class="grow-glyph">${SUBJ_GLYPH[s] || '📊'}</span>
             <div class="grow-meta">
               <div class="grow-name">${escHtml(SUBJ_LABEL[s] || s)}</div>
-              <div class="grow-sub">${escHtml(windowLabel(w.window))} window</div>
+              <div class="grow-sub">${escHtml(wLbl)}</div>
             </div>
             <div><span class="grow-score">${w.ritScore}</span>${delta}</div>
           </div>`);
