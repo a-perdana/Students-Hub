@@ -507,6 +507,12 @@
         btn.addEventListener('click', () => answer(btn.dataset.letter));
       });
 
+      // Resolve any <img data-storage-path> in the freshly-injected
+      // stem + options markup. Async — patches src once the Storage
+      // SDK returns each URL.
+      hydrateStorageImages(stem);
+      hydrateStorageImages(opts);
+
       document.getElementById('feedback').classList.remove('show');
       document.getElementById('btnNext').disabled = true;
       state.locked = false;
@@ -781,13 +787,20 @@
         }
         if (el.tagName === 'IMG') {
           const src = el.getAttribute('src') || '';
+          // Practice bank import emits <img data-storage-path="..."> (no
+          // src) — the storage path resolves to an authed download URL
+          // at render time via hydrateStorageImages(). Latihan bank
+          // emits <img src="/storage/..."> — rebased to the public CDN.
+          const storagePath = el.getAttribute('data-storage-path') || '';
           const rebased = src.startsWith('/storage/')
             ? 'https://latihan.id' + src
             : src;
           [...el.attributes].forEach(a => el.removeAttribute(a.name));
-          if (/^https:\/\//i.test(rebased)) el.setAttribute('src', rebased);
+          if (storagePath) el.setAttribute('data-storage-path', storagePath);
+          else if (/^https:\/\//i.test(rebased)) el.setAttribute('src', rebased);
           el.setAttribute('alt', '');
           el.setAttribute('loading', 'lazy');
+          el.style.maxWidth = '100%';
         } else {
           // Strip everything except `class` (so math-tex spans still render)
           [...el.attributes].forEach(a => {
@@ -797,6 +810,24 @@
       };
       [...wrap.children].forEach(walk);
       return wrap.innerHTML;
+    }
+
+    // Walk a freshly-rendered container, find <img data-storage-path>
+    // entries, resolve each via the Storage SDK and patch in the src.
+    // Used for practice_questions stems + option choices that ship
+    // <img data-storage-path> after sanitiseQuestionHtml(). Failures
+    // remove the <img> so the option doesn't appear as a broken-image
+    // placeholder.
+    function hydrateStorageImages(container) {
+      if (!container || !window.resolveDiagramUrl) return;
+      container.querySelectorAll('img[data-storage-path]').forEach(img => {
+        const path = img.getAttribute('data-storage-path');
+        if (!path) return;
+        window.resolveDiagramUrl(path).then(url => {
+          if (url) img.src = url;
+          else img.remove();
+        });
+      });
     }
   </script>
 </body>
