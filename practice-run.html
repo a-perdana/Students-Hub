@@ -95,17 +95,22 @@
     /* Loading skeleton for <img data-storage-path> while the Storage
        SDK resolves the auth'd URL. Replaces the broken-image flash
        with a calm shimmer. Auto-removed once `src` is patched in by
-       hydrateStorageImages(). */
+       hydrateStorageImages(); on 5s timeout replaceWithImageToken()
+       swaps the <img> for an inline '🖼️ image' pill instead. */
     .qstem img:not([src]), .qstem img[src=""],
-    .qopt img:not([src]),  .qopt img[src=""] {
+    .qopt  img:not([src]), .qopt  img[src=""] {
       display: inline-block;
-      min-width: 80px;
-      min-height: 40px;
+      width: 60px; height: 24px;
       background: linear-gradient(90deg,
         rgba(0,0,0,.04) 0%, rgba(0,0,0,.10) 50%, rgba(0,0,0,.04) 100%);
       background-size: 200% 100%;
       animation: fx-img-shimmer 1.2s ease-in-out infinite;
       border-radius: 6px;
+      vertical-align: middle;
+    }
+    /* Stem images are usually larger — give them a roomier skeleton */
+    .qstem img:not([src]), .qstem img[src=""] {
+      width: 120px; height: 40px;
     }
     @keyframes fx-img-shimmer {
       0%   { background-position: 200% 0; }
@@ -855,12 +860,44 @@
       if (!container || !window.resolveDiagramUrl) return;
       container.querySelectorAll('img[data-storage-path]').forEach(img => {
         const path = img.getAttribute('data-storage-path');
-        if (!path) return;
+        if (!path) {
+          // Sanitiser preserved data-storage-path but it's empty
+          // (data-storage-missing case from the import). Replace
+          // the placeholder with an inline text token so the
+          // option isn't visually empty.
+          replaceWithImageToken(img);
+          return;
+        }
+        // Race the Storage SDK against a 5s timeout. If the URL
+        // hasn't arrived by then, drop the placeholder so the
+        // option doesn't shimmer indefinitely.
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          replaceWithImageToken(img);
+        }, 5000);
         window.resolveDiagramUrl(path).then(url => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
           if (url) img.src = url;
-          else img.remove();
+          else replaceWithImageToken(img);
         });
       });
+    }
+    function replaceWithImageToken(img) {
+      // Small inline pill so the user knows there WAS an image
+      // here that we couldn't render. Keeps the option clickable
+      // and visually balanced instead of silently empty.
+      if (!img || !img.parentNode) return;
+      const pill = document.createElement('span');
+      pill.textContent = '🖼️ image';
+      pill.style.cssText =
+        'display:inline-block;padding:2px 8px;border-radius:6px;' +
+        'background:#f1f5f9;color:#475569;font-size:.78rem;' +
+        'font-weight:600;vertical-align:middle';
+      img.replaceWith(pill);
     }
   </script>
 </body>
