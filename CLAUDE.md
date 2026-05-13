@@ -73,13 +73,19 @@ For full schema + collection catalogue, see [`docs/FIRESTORE_SCHEMA.md`](../docs
    │   └─ otherwise                   → /login
    └─ user signed in
        ├─ derive emailLower
-       ├─ query partner_schools where domain == emailDomain
-       │   ├─ no match                → signOut + /login?error=invalid-domain
-       │   ├─ 1 school                → schoolId pre-set
-       │   └─ N schools (multi-school)→ schoolId left null (picker resolves)
+       ├─ isObserverDomain = emailLower endsWith '@eduversal.org' ?
+       │   ├─ YES — HQ Specialist fast-path (skip partner_schools query
+       │   │   + class picker + waiting), self-create directly into
+       │   │   status='active' + is_hq_observer=true + school='Eduversal HQ'
+       │   └─ NO  — regular student path:
+       │       query partner_schools where domain == emailDomain
+       │       ├─ no match            → signOut + /login?error=invalid-domain
+       │       ├─ 1 school            → schoolId pre-set
+       │       └─ N schools           → schoolId left null (picker resolves)
        ├─ getDoc students/{uid}
-       │   ├─ doesn't exist           → create with status='needs_class'
-       │   └─ exists                  → touch lastLoginAt
+       │   ├─ doesn't exist           → create with status (per fast-path above)
+       │   └─ exists                  → touch lastLoginAt + back-fill
+       │                                 is_hq_observer if eduversal.org
        └─ status routing
            ├─ needs_class             → /class-picker (unless already there)
            ├─ pending_approval        → /waiting (unless already there)
@@ -88,6 +94,8 @@ For full schema + collection catalogue, see [`docs/FIRESTORE_SCHEMA.md`](../docs
            └─ rejected                → signOut + /login?error=rejected
 3. Reveal body + dispatch authReady event
 ```
+
+**HQ observer fast-path (2026-05-13):** `@eduversal.org` email domain is the only gate — no users/{uid} lookup, no sub-role join. The reasoning: only HQ Workspace accounts carry that domain, so domain match ⇒ trusted observer. Firestore rule mirrors the check on the server side via `request.auth.token.email.lower().matches('.*@eduversal\\.org$')` in the students self-create + back-fill update branches. Real students keep the unchanged needs_class → pending_approval flow. See root CLAUDE.md "HQ Observer Flag System" for the full system.
 
 **Globals after `authReady`:** `window.firebaseApp`, `window.auth`, `window.db`, `window.currentUser`, `window.studentProfile`. Plus helpers `window.signInWithGoogle()` and `window.signOutStudent()`.
 
@@ -164,8 +172,22 @@ Bump this when expanding the pilot to other grades.
 | `growth.html` | `/growth` | active | EASE growth journey — per-subject SVG sparkline reading `ease_growth/{uid}_{subjectId}` aggregate. Open-window CTA. Phase 2. |
 | `profile.html` | `/profile` | active | Read-only profile + sign-out |
 | `shared.html` | `/shared?token=…` | NONE | Parent share link landing. Token-gated `get`; renders chapter attempt OR EASE session report based on which field the token doc carries. Phase 2. |
+| `how-points-work.html` | `/how-points-work` | active | Student-facing gamification guide (formulas, level table, tier ladder, what we DON'T do panel). |
 
-11 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
+12 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
+
+### HQ Observer Strip (2026-05-13) — all 3 runners
+
+Shared helper `partials/observer-strip.js` renders an amber bug-report strip below the question card on `practice-run.html`, `test.html` and `ease-test.html`. The strip is **invisible to regular students** — `.obs-strip[hidden]` CSS rule + `is_hq_observer !== true` JS gate together keep the helper a no-op for non-observers. When observer mode is active:
+
+- Item id + metadata visible (subject / topic / difficulty / type / sourceCode if present)
+- Copy id button → clipboard
+- Open-in-CH deeplink → bank-specific authoring page (`/practice-bank-admin`, `/question-bank`, `/ease-item-author`)
+- Flag button → reason modal → write to `practice_question_flags` (status `'open'`)
+
+Each runner installs the helper with its bank discriminator (`'practice_questions'` / `'chapter_test_items'` / `'ease_items'`) so flags carry the right `collection` field. CSS lives in `base.css` (`.obs-strip`, `.obs-modal-back`, `.obs-modal`) — shared, no duplication.
+
+See root CLAUDE.md "HQ Observer Flag System" for the rule contract + CH triage queue end.
 
 ---
 
@@ -219,7 +241,8 @@ Owner (student) can revoke by deleting the token doc — owner-delete path in ru
 
 | Collection | Purpose | Write |
 |---|---|---|
-| `students/{uid}` | Student profile (separate from `users/{uid}`). Fields: email, emailLower, displayName, photoURL, schoolId, school, classId, className, gradeLevel, status, createdAt, lastLoginAt, classPickedAt | self-create on first login (constrained); self-update during `needs_class → pending_approval` only; teachers/admin flip to `active`/`rejected`/`graduated` |
+| `students/{uid}` | Student profile (separate from `users/{uid}`). Fields: email, emailLower, displayName, photoURL, schoolId, school, classId, className, gradeLevel, status, **is_hq_observer** (HQ Observer Flag System, 2026-05-13), createdAt, lastLoginAt, classPickedAt | self-create on first login (real students pin `status:'needs_class'`; @eduversal.org domain fast-path pins `status:'active'` + `is_hq_observer:true`); self-update during `needs_class → pending_approval` only (real students), or login-touch back-fill of `is_hq_observer` for eduversal docs; teachers/admin flip to `active`/`rejected`/`graduated` |
+| `practice_question_flags` | **HQ Observer Flag System (2026-05-13).** Mid-runner bug-report channel. Active observer students (`students/{uid}.is_hq_observer == true`) create rows with `status:'open'`; CH reviewers (`director` / `coordinator` / `central_admin`) triage from `/practice-bank-flags`. See root CLAUDE.md "HQ Observer Flag System". | observer-student create · CH reviewer read/update |
 | `partner_schools/{schoolId}` | Read-only here. Used to validate the email domain. | central_admin (CH) |
 | `partner_schools/{id}/classes/{classId}` | Read-only here. Class picker source. | TH teachers + central_admin |
 | `chapter_tests/{testId}` (+ `items/`) | Read-only here. Loaded in `test.html` to render the question-by-question runner. Active students can `get` published tests (rule). | CH coordinator (subject specialist) |
@@ -289,6 +312,9 @@ Owner (student) can revoke by deleting the token doc — owner-delete path in ru
 - **MathJax inline delimiter is `\(…\)` ONLY — never `$…$`.** Math word problems use literal `$` for currency / variable name. If MathJax sees `$…$`, it greedily eats the run between two dollar signs as math and drops the spaces. Both runners (`test.html` + `ease-test.html`) register only `\(…\)` and `\[…\]` / `$$…$$` (display). Past incident 2026-05-11.
 - **Stem + options use `stemHtml` / `optionsHtml[i]` if present, else `stem` / `options[i]`.** Imported items ship rich HTML in the `*Html` fields; HQ-authored items only have plain text. Prefer rich source via `sanitiseQuestionHtml()` → `innerHTML`; never assume one or the other.
 - **Reserved Firestore doc IDs.** `__name__`-style (double-underscore start AND end) is reserved by Firestore. If you add an `_uncategorized_settings_`-style meta doc, use single underscores.
+- **`@eduversal.org` email gets the HQ observer fast-path.** Auth-guard skips `partner_schools` resolution + `/class-picker` + `/waiting` for these accounts, self-creates `students/{uid}` with `status:'active'` + `is_hq_observer:true`. Pre-existing eduversal docs get the flag back-filled on next sign-in. Don't add `users/{uid}` lookups in SH auth-guard to gate this further — domain alone is the trust signal (root CLAUDE.md #43). If you need finer-grained observer scoping in future, add a separate `observer_subjects[]` field on `students/{uid}` and have CH write it.
+- **HTML `hidden` attribute is overridden by any explicit CSS `display: flex/grid`.** If you have a toggleable element with a non-`block` default display, add `.<class>[hidden] { display: none }` so the attribute selector wins on specificity. Past incident 2026-05-13: `.obs-strip` rendered for every student because `display:flex` beat the inline `hidden` attribute. Same pattern applies anywhere you have `<div class="… " hidden>` paired with a flex/grid base rule.
+- **`authReady` is dispatched on `window`** in SH (`window.addEventListener('authReady', …)`). CH does the opposite (dispatches on `document`). When porting code between hubs always check the actual auth-guard dispatch target — silent listener-never-fires is the failure mode. See CH CLAUDE.md Common Mistake #13.
 
 ---
 
