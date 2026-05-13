@@ -260,6 +260,7 @@
   </main>
 
   <script type="module" src="auth-guard.js"></script>
+  <script src="./partials/feedback-fx.js"></script>
   <script type="module">
     import {
       collection, query, where, orderBy, limit, getDocs,
@@ -519,14 +520,42 @@
 
       // Paint option states
       const opts = document.getElementById('qopts').querySelectorAll('.qopt');
+      let pickedEl = null;
       opts.forEach(o => {
         o.classList.add('is-locked');
         if (o.dataset.letter === it.correctAnswer) {
           o.classList.add(isCorrect ? 'is-correct' : 'is-correct-untouched');
         } else if (o.dataset.letter === letter) {
           o.classList.add('is-wrong');
+          pickedEl = o;
         }
+        if (o.dataset.letter === letter && isCorrect) pickedEl = o;
       });
+
+      // ── Micro-feedback (FX) ─────────────────────────────────────
+      if (window.fx) {
+        if (isCorrect) {
+          // Streak special-case: stronger sound + flame emoji animation
+          if (state.streak >= 3) {
+            window.fx.play('streak');
+            window.fx.haptic([20, 30, 30]);
+          } else {
+            window.fx.play('correct');
+            window.fx.haptic(25);
+          }
+          if (pickedEl) {
+            pickedEl.classList.add('fx-flash-correct');
+            setTimeout(() => pickedEl.classList.remove('fx-flash-correct'), 700);
+          }
+        } else {
+          window.fx.play('wrong');
+          window.fx.haptic([15, 40, 15]);
+          if (pickedEl) {
+            pickedEl.classList.add('fx-shake');
+            setTimeout(() => pickedEl.classList.remove('fx-shake'), 500);
+          }
+        }
+      }
 
       // Feedback band
       const fb = document.getElementById('feedback');
@@ -534,9 +563,14 @@
       fb.classList.toggle('ok', isCorrect);
       fb.classList.toggle('no', !isCorrect);
       document.getElementById('fbIcon').textContent = isCorrect ? '✓' : '✗';
-      document.getElementById('fbTitle').textContent = isCorrect
-        ? (state.streak >= 3 ? `Correct! ${state.streak} in a row 🔥` : 'Correct!')
-        : 'Not quite';
+      const fbTitle = document.getElementById('fbTitle');
+      if (isCorrect && state.streak >= 3) {
+        fbTitle.innerHTML = `Correct! ${state.streak} in a row <span class="fx-flame">🔥</span>`;
+      } else if (isCorrect) {
+        fbTitle.textContent = 'Correct!';
+      } else {
+        fbTitle.textContent = 'Not quite';
+      }
       document.getElementById('fbBody').textContent = isCorrect
         ? 'Nice work — onto the next.'
         : `The correct answer was ${it.correctAnswer}.`;
@@ -572,22 +606,75 @@
       }
 
       const pct = Math.round((state.correctCount / state.items.length) * 100);
-      document.getElementById('donePct').textContent = pct + '%';
-      document.getElementById('doneCorrect').textContent =
-        state.correctCount + ' / ' + state.items.length;
-      document.getElementById('doneStreak').textContent = state.bestStreak;
+      const pctEl = document.getElementById('donePct');
+      const correctEl = document.getElementById('doneCorrect');
+      const streakEl = document.getElementById('doneStreak');
+      pctEl.textContent = '0%';
+      correctEl.textContent = '0 / ' + state.items.length;
+      streakEl.textContent = '0';
+
       // Optimistic placeholder until Cloud Function's pointsAwarded
       // writeback lands (usually 1-3s). pollForPoints() flips the chip
       // to the canonical value when the trigger has fired.
       const estPts = state.correctCount * POINTS_PER_CORRECT_HINT
         + (state.bestStreak >= 5 ? 20 : state.bestStreak >= 3 ? 10 : 0);
-      document.getElementById('donePoints').textContent = '+' + estPts + '…';
+      document.getElementById('donePoints').textContent = '+0…';
       pollForPoints(state.attemptId);
+
+      // ── Animate stats in + celebrate ───────────────────────────
+      if (window.fx) {
+        // Sequenced count-ups for a satisfying reveal
+        window.fx.countUp(pctEl, 0, pct, 900, { suffix: '%' });
+        setTimeout(() => {
+          correctEl.textContent = state.correctCount + ' / ' + state.items.length;
+          if (window.fx) window.fx.play('tick');
+        }, 600);
+        setTimeout(() => {
+          streakEl.textContent = state.bestStreak;
+          if (window.fx) window.fx.play('tick');
+        }, 800);
+        // Points: animate to the optimistic estimate; pollForPoints
+        // overwrites once Cloud Function lands.
+        setTimeout(() => {
+          window.fx.countUp(document.getElementById('donePoints'), 0, estPts, 1000, { prefix: '+', suffix: '…' });
+        }, 200);
+
+        // Confetti + sound tier based on score
+        if (pct === 100) {
+          // Perfect run — big celebration
+          window.fx.play('levelUp');
+          window.fx.haptic([60, 50, 60, 50, 80]);
+          window.fx.confetti({ count: 240, burst: 18 });
+          // Second burst from a different origin for drama
+          setTimeout(() => window.fx.confetti({
+            count: 100, burst: 12,
+            x: window.innerWidth * 0.25, y: window.innerHeight * 0.4
+          }), 350);
+          setTimeout(() => window.fx.confetti({
+            count: 100, burst: 12,
+            x: window.innerWidth * 0.75, y: window.innerHeight * 0.4
+          }), 550);
+        } else if (pct >= 80) {
+          window.fx.play('submit');
+          window.fx.haptic([40, 40, 40]);
+          window.fx.confetti({ count: 120, burst: 13 });
+        } else if (pct >= 50) {
+          window.fx.play('submit');
+          window.fx.haptic(50);
+        }
+        // < 50 — silent encouragement, no celebration sound
+      } else {
+        // No fx available (script not loaded) — just paint final values
+        pctEl.textContent = pct + '%';
+        correctEl.textContent = state.correctCount + ' / ' + state.items.length;
+        streakEl.textContent = state.bestStreak;
+        document.getElementById('donePoints').textContent = '+' + estPts + '…';
+      }
 
       const verdict = document.getElementById('doneVerdict');
       const sub = document.getElementById('doneSub');
       if (pct === 100) {
-        verdict.textContent = 'Perfect run!';
+        verdict.textContent = '🎉 Perfect run!';
         sub.textContent = 'Every single one. Try a harder level?';
       } else if (pct >= 80) {
         verdict.textContent = 'Strong run';
@@ -630,7 +717,16 @@
           if (!snap.exists()) continue;
           const pts = snap.data().pointsAwarded;
           if (typeof pts === 'number') {
-            el.textContent = '+' + pts;
+            // Parse current displayed value (could still be estimate)
+            const cur = parseInt((el.textContent || '+0').replace(/[^0-9-]/g, ''), 10) || 0;
+            if (window.fx && cur !== pts) {
+              window.fx.countUp(el, cur, pts, 500, { prefix: '+' });
+              window.fx.play('tick');
+              // Subtle gold pulse on the chip to signal "now it's real"
+              window.fx.pulse(el, 'gold');
+            } else {
+              el.textContent = '+' + pts;
+            }
             return;
           }
         } catch { /* network blip — retry */ }

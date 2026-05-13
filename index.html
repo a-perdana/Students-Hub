@@ -365,6 +365,7 @@
   </main>
 
   <script type="module" src="auth-guard.js"></script>
+  <script src="./partials/feedback-fx.js"></script>
   <script type="module">
     import {
       collection, query, where, onSnapshot, orderBy, limit, getDocs, doc, getDoc
@@ -423,7 +424,18 @@
         const prog   = Math.max(0, Math.min(100, d.levelProgress || 0));
         const streak = d.streak?.current || 0;
 
-        document.getElementById('totalPts').textContent = pts.toLocaleString('en-GB');
+        const ptsEl = document.getElementById('totalPts');
+        // Animate from the previous saved value (if any) → current.
+        // Stored in localStorage so we can animate even on first dashboard load.
+        const LAST_PTS_KEY = 'sh-last-total-pts:' + uid;
+        const lastPts = parseInt(localStorage.getItem(LAST_PTS_KEY) || '0', 10);
+        if (window.fx && pts > lastPts && lastPts >= 0) {
+          window.fx.countUp(ptsEl, lastPts, pts, 1100);
+        } else {
+          ptsEl.textContent = pts.toLocaleString('en-GB');
+        }
+        try { localStorage.setItem(LAST_PTS_KEY, String(pts)); } catch {}
+
         document.getElementById('streakDays').textContent = streak;
         document.getElementById('levelNum').textContent = lvl;
 
@@ -434,6 +446,20 @@
         ring.setAttribute('stroke-dashoffset', C * (1 - prog/100));
 
         applyTier(lvl);
+
+        // ── Level up detection ────────────────────────────────────
+        // If the saved level is lower than the current, the student
+        // levelled up since last visit. Show the celebration overlay
+        // and bump the stored value. First-ever load (no stored value)
+        // doesn't trigger — only progression triggers.
+        const LAST_LVL_KEY = 'sh-last-level:' + uid;
+        const lastLvl = parseInt(localStorage.getItem(LAST_LVL_KEY) || '0', 10);
+        if (window.fx && lastLvl > 0 && lvl > lastLvl) {
+          const t = tierFor(lvl);
+          // Slight delay so the page paints first
+          setTimeout(() => window.fx.levelUpOverlay(lvl, t.label), 500);
+        }
+        try { localStorage.setItem(LAST_LVL_KEY, String(lvl)); } catch {}
       } catch (e) {
         console.warn('[dashboard] points load failed (collection may not exist yet)', e.message);
         document.getElementById('totalPts').textContent = '0';

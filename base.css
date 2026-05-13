@@ -797,3 +797,131 @@ body.test-mode .topbar { display: none; }
   .skel { animation: none; background: rgba(227,229,237,.6); }
   .points-pop { animation: none; }
 }
+
+/* ─── Feedback FX — micro-animations (partials/feedback-fx.js) ──── */
+
+/* One-shot pulse — fx.pulse(el, variant) adds these classes for ~700ms */
+@keyframes fx-pulse-success-kf {
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.55); }
+  60%  { box-shadow: 0 0 0 14px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+@keyframes fx-pulse-warn-kf {
+  0%   { box-shadow: 0 0 0 0 rgba(185,28,28,.5); }
+  60%  { box-shadow: 0 0 0 14px rgba(185,28,28,0); }
+  100% { box-shadow: 0 0 0 0 rgba(185,28,28,0); }
+}
+@keyframes fx-pulse-gold-kf {
+  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.6); transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  60%  { box-shadow: 0 0 0 18px rgba(245,158,11,0); }
+  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); transform: scale(1); }
+}
+.fx-pulse-success { animation: fx-pulse-success-kf .65s cubic-bezier(.2,.8,.2,1) both; }
+.fx-pulse-warn    { animation: fx-pulse-warn-kf    .65s cubic-bezier(.2,.8,.2,1) both; }
+.fx-pulse-gold    { animation: fx-pulse-gold-kf    .75s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Streak flame — appended next to .feedback.ok when streak >= 3 */
+@keyframes fx-flame-kf {
+  0%   { transform: scale(.6) rotate(-8deg); opacity: 0; }
+  30%  { transform: scale(1.25) rotate(6deg); opacity: 1; }
+  70%  { transform: scale(1) rotate(-3deg); opacity: 1; }
+  100% { transform: scale(.95) rotate(0); opacity: .85; }
+}
+.fx-flame {
+  display: inline-block;
+  animation: fx-flame-kf .9s cubic-bezier(.2,.8,.2,1) both;
+  filter: drop-shadow(0 0 6px rgba(245,158,11,.55));
+  font-size: 1.4rem;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* Correct option flash — overlay on the chosen option for ~600ms */
+@keyframes fx-flash-correct-kf {
+  0%   { background-color: rgba(16,185,129,.4); transform: scale(1); }
+  40%  { background-color: rgba(16,185,129,.25); transform: scale(1.02); }
+  100% { background-color: rgba(16,185,129,0); transform: scale(1); }
+}
+.fx-flash-correct { animation: fx-flash-correct-kf .6s ease-out both; }
+
+/* Wrong option shake — short horizontal jitter, no scale */
+@keyframes fx-shake-kf {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(3px); }
+}
+.fx-shake { animation: fx-shake-kf .42s cubic-bezier(.3,.8,.3,1) both; }
+
+/* Level-up overlay — full-screen brief celebration */
+.fx-levelup-overlay {
+  position: fixed; inset: 0; z-index: 9998;
+  background: radial-gradient(circle at center, rgba(108,92,231,.35) 0%, rgba(15,23,42,.65) 70%);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+.fx-levelup-overlay.is-shown { opacity: 1; }
+.fx-levelup-card {
+  background: linear-gradient(135deg, #6c5ce7 0%, #0891b2 100%);
+  color: #fff;
+  padding: 36px 48px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 30px 60px -10px rgba(0,0,0,.6), 0 0 0 4px rgba(255,255,255,.18);
+  transform: scale(.7) rotate(-2deg);
+  transition: transform .45s cubic-bezier(.34,1.56,.64,1);
+  min-width: 220px;
+}
+.fx-levelup-overlay.is-shown .fx-levelup-card { transform: scale(1) rotate(0); }
+.fx-levelup-eyebrow {
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: .25em; text-transform: uppercase;
+  opacity: .85; margin-bottom: 8px;
+}
+.fx-levelup-num {
+  font-family: 'Lora', serif;
+  font-size: 4rem; font-weight: 700;
+  line-height: 1;
+  margin: 4px 0 6px;
+  text-shadow: 0 4px 16px rgba(0,0,0,.3);
+}
+.fx-levelup-tier {
+  font-size: 1rem; font-weight: 600;
+  opacity: .95;
+}
+
+/* Mute toggle button in topbar */
+.fx-mute-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--ink-3);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all .12s;
+  padding: 0;
+}
+.fx-mute-btn:hover {
+  border-color: var(--stage-primary);
+  color: var(--stage-primary);
+  background: var(--stage-primary-2);
+}
+.fx-mute-btn.is-muted {
+  color: var(--ink-3);
+  background: var(--paper);
+}
+
+/* Reduced motion: kill anims, keep overlay (no harm) */
+@media (prefers-reduced-motion: reduce) {
+  .fx-pulse-success, .fx-pulse-warn, .fx-pulse-gold,
+  .fx-flame, .fx-flash-correct, .fx-shake { animation: none; }
+  .fx-levelup-overlay { transition: opacity .12s; }
+  .fx-levelup-card { transition: none; transform: none; }
+}

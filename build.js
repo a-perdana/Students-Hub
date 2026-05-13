@@ -95,6 +95,7 @@ function processFile(filename) {
   html = html.replace(/src="auth-guard\.js"/g,            'src="/auth-guard.js"');
   html = html.replace(/href="base\.css"/g,                'href="/base.css"');
   html = html.replace(/fetch\('partials\/navbar\.html'\)/g, "fetch('/partials/navbar.html')");
+  html = html.replace(/src="\.\/partials\/feedback-fx\.js"/g, 'src="/partials/feedback-fx.js"');
 
   // 5. Rewrite internal .html links → clean URLs
   LINK_REWRITES.forEach(([pat, repl]) => { html = html.replace(pat, repl); });

@@ -28,6 +28,7 @@
       </span>
       <span id="topbarPointsVal">0</span>
     </span>
+    <button type="button" class="fx-mute-btn" id="fxMuteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
     <a href="/avatar" class="topbar-avatar" id="topbarAvatar" title="Customize avatar">·</a>
   </div>
 </header>
@@ -85,5 +86,36 @@
     function onReady() { paintAvatar(); paintPoints(); }
     if (window.studentProfile) onReady();
     else window.addEventListener('authReady', onReady);
+
+    // Mute toggle — relies on partials/feedback-fx.js global.
+    // The button paints initial state from fx.muted; flipping the
+    // state plays a tick sound (only audible if unmuting). Document
+    // event 'fx-mute-changed' keeps multiple open tabs in sync.
+    function paintMuteBtn() {
+      const btn = document.getElementById('fxMuteBtn');
+      if (!btn) return;
+      const isMuted = window.fx && window.fx.muted;
+      btn.textContent = isMuted ? '🔇' : '🔊';
+      btn.classList.toggle('is-muted', !!isMuted);
+      btn.title = isMuted ? 'Sounds off — tap to enable' : 'Sounds on — tap to mute';
+    }
+    function wireMuteBtn() {
+      const btn = document.getElementById('fxMuteBtn');
+      if (!btn || btn._fxWired) return;
+      btn._fxWired = true;
+      btn.addEventListener('click', () => {
+        if (!window.fx) return;
+        const wasMuted = window.fx.muted;
+        window.fx.toggleMute();
+        paintMuteBtn();
+        // Play a tick on UNMUTE so the student hears the change
+        if (wasMuted && !window.fx.muted) window.fx.play('tick');
+      });
+      paintMuteBtn();
+    }
+    // fx may load slightly after navbar injection — try now, retry once
+    wireMuteBtn();
+    if (!(window.fx)) setTimeout(wireMuteBtn, 200);
+    document.addEventListener('fx-mute-changed', paintMuteBtn);
   })();
 </script>
