@@ -98,6 +98,7 @@ function processFile(filename) {
   html = html.replace(/href="base\.css"/g,                'href="/base.css"');
   html = html.replace(/fetch\('partials\/navbar\.html'\)/g, "fetch('/partials/navbar.html')");
   html = html.replace(/src="\.\/partials\/feedback-fx\.js"/g, 'src="/partials/feedback-fx.js"');
+  html = html.replace(/src="\.\/partials\/observer-strip\.js"/g, 'src="/partials/observer-strip.js"');
 
   // 5. Rewrite internal .html links → clean URLs
   LINK_REWRITES.forEach(([pat, repl]) => { html = html.replace(pat, repl); });

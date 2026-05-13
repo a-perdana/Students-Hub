@@ -74,6 +74,42 @@
         <button class="btn btn-primary" id="nextBtn" type="button" disabled>Next</button>
       </div>
       <p style="margin-top:12px; font-size:.78rem; color:var(--ink-3); text-align:center">EASE adapts to your level — every answer changes what comes next. There's no going back.</p>
+
+      <!-- HQ observer strip — only shown when students/{uid}.is_hq_observer === true -->
+      <div class="obs-strip" id="obsStrip" hidden>
+        <span class="obs-eyebrow">HQ</span>
+        <span class="obs-id" id="obsId">—</span>
+        <span class="obs-meta" id="obsMeta"></span>
+        <button type="button" class="obs-btn" id="obsCopyBtn">📋 Copy</button>
+        <a class="obs-btn" id="obsOpenLink" target="_blank" rel="noopener">↗ Open in CH</a>
+        <button type="button" class="obs-btn is-primary" id="obsFlagBtn">⚑ Flag</button>
+      </div>
+    </div>
+
+    <!-- HQ flag modal -->
+    <div class="obs-modal-back" id="obsModal" role="dialog" aria-modal="true">
+      <div class="obs-modal">
+        <h3>Flag question for HQ review</h3>
+        <p class="sub">Routes to <code>practice_question_flags</code>. Specialists triage from CH /practice-bank-flags.</p>
+        <div class="obs-modal-id" id="obsModalId">—</div>
+        <label class="obs-reason" for="obsReason">Reason</label>
+        <select id="obsReason">
+          <option value="formatting">Formatting / rendering broken</option>
+          <option value="ambiguous">Ambiguous wording</option>
+          <option value="wrong_answer">Marked answer is wrong</option>
+          <option value="off_curriculum">Off-curriculum</option>
+          <option value="culturally_inappropriate">Culturally inappropriate</option>
+          <option value="duplicate">Duplicate of another item</option>
+          <option value="other">Other</option>
+        </select>
+        <label class="obs-reason" for="obsNote">Note (optional, max 280)</label>
+        <textarea id="obsNote" maxlength="280"></textarea>
+        <p class="obs-modal-err" id="obsModalErr"></p>
+        <div class="obs-modal-actions">
+          <button type="button" class="btn btn-secondary" id="obsCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="obsSubmitBtn">Submit flag</button>
+        </div>
+      </div>
     </div>
 
     <div id="doneState" hidden>
@@ -96,6 +132,7 @@
     </div>
   </main>
 
+  <script src="./partials/observer-strip.js"></script>
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
@@ -176,6 +213,31 @@
 
     window.addEventListener('authReady', async ev => {
       if (!ev.detail.signedIn) { window.location.href = '/login'; return; }
+
+      // HQ observer overlay — CH deeplink lands on /ease-item-author
+      // for ease_items. No-op for plain students.
+      const obs = window.installObserverStrip({
+        collection: 'ease_items',
+        chDeeplink: 'ease-item-author?item=',
+        stripEl:    document.getElementById('obsStrip'),
+        elements: {
+          idEl:       document.getElementById('obsId'),
+          metaEl:     document.getElementById('obsMeta'),
+          copyBtn:    document.getElementById('obsCopyBtn'),
+          openLink:   document.getElementById('obsOpenLink'),
+          flagBtn:    document.getElementById('obsFlagBtn'),
+          modal:      document.getElementById('obsModal'),
+          modalId:    document.getElementById('obsModalId'),
+          reasonSel:  document.getElementById('obsReason'),
+          noteTa:     document.getElementById('obsNote'),
+          errEl:      document.getElementById('obsModalErr'),
+          cancelBtn:  document.getElementById('obsCancelBtn'),
+          submitBtn:  document.getElementById('obsSubmitBtn'),
+        },
+        firestore: { addDoc, collection, serverTimestamp },
+      });
+      window.__obsStripUpdate = obs.update;
+
       const params = new URLSearchParams(window.location.search);
       const presessionId = params.get('sessionId');
       const presubject   = params.get('subject');
@@ -552,6 +614,8 @@
       }
       // Single typeset over the question container — MathJax batches internally.
       typesetMath(document.getElementById('testBody'));
+
+      if (window.__obsStripUpdate) window.__obsStripUpdate(it);
     }
 
     document.getElementById('nextBtn').addEventListener('click', submitAnswer);
