@@ -124,12 +124,22 @@ window.applyStageTheme = function (gradeLevel) {
 // list to those 6 styles.
 //
 // Opts:
-//   uid:    auth uid (required)
+//   uid:    auth uid (required) — also identifies "self" vs "peer":
+//           if uid === currentUser.uid, falls back to the current
+//           profile's avatarStyle/avatarSeed; otherwise peer renders
+//           with default style + seed=uid (we don't have their
+//           preferences loaded, and leaking the current user's
+//           style/seed onto peer rows is a visible bug).
 //   size:   pixel size (default 96)
-//   style:  override style (e.g. 'bottts'); falls back to
-//           window.studentProfile.avatarStyle, then 'bottts'
-//   seed:   override seed; falls back to
-//           window.studentProfile.avatarSeed, then uid
+//   style:  explicit override; takes precedence over profile fallback
+//   seed:   explicit override; same precedence
+//
+// To render peer avatars with their actual preferences, the calling
+// page must fetch students/{peerUid}.avatarStyle/avatarSeed itself
+// (cost: N reads for N rows) and pass them via opts. The dashboard
+// leaderboard preview, /leaderboard, /daily-challenge class board do
+// NOT do this today — they accept the default bottts(seed=uid) for
+// peer rows, which is still deterministic + on-brand.
 const AVATAR_STYLE_ALLOWLIST = new Set([
   'bottts', 'adventurer', 'lorelei', 'notionists', 'shapes', 'fun-emoji'
 ]);
@@ -137,11 +147,13 @@ window.studentAvatarUrl = function (uid, opts) {
   if (!uid) return '';
   const o = opts || {};
   const size = o.size || 96;
-  const profile = window.studentProfile || {};
-  // Style precedence: explicit opts → profile pick → bottts default.
+  const selfUid = window.currentUser && window.currentUser.uid;
+  const isSelf  = uid === selfUid;
+  const profile = isSelf ? (window.studentProfile || {}) : {};
+  // Style precedence: explicit opts → profile (self only) → bottts default.
   let style = o.style || profile.avatarStyle || 'bottts';
   if (!AVATAR_STYLE_ALLOWLIST.has(style)) style = 'bottts';
-  // Seed precedence: explicit opts → profile seed → uid.
+  // Seed precedence: explicit opts → profile seed (self only) → uid.
   const seed = o.seed || profile.avatarSeed || uid;
   // brand palette without the # — most DiceBear styles accept a CSV;
   // multiple values mean "pick one deterministically per seed".
