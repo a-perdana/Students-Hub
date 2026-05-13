@@ -200,22 +200,33 @@ const PATH       = window.location.pathname.replace(/\/$/, '') || '/';
 const SIGNED_OUT_OK = new Set(['/login', '/shared']);
 
 // ─── Resolve schoolId from email domain ───────────────────────────
+// Returns { schools: [...], domain } on success.
+// Returns null when the email has no domain part OR Firestore rejects the
+// partner_schools query (rules require @eduversal.org / *.sch.id / pw-user
+// — gmail.com etc. get permission-denied, NOT an empty result). Caller
+// treats null the same as an empty match: sign out + invalid-domain.
 async function resolveSchoolFromDomain(emailLower) {
-  const at  = emailLower.indexOf('@');
+  const at = emailLower.indexOf('@');
   if (at < 0) return null;
   const dom = emailLower.slice(at + 1);
-  const q   = await getDocs(query(
-    collection(db, 'partner_schools'),
-    where('domain', '==', dom),
-    limit(2) // need to detect multi-school domains
-  ));
-  if (q.empty)        return { schools: [],   domain: dom };
-  if (q.size === 1)   return { schools: [{ id: q.docs[0].id, ...q.docs[0].data() }], domain: dom };
-  return { schools: q.docs.map(d => ({ id: d.id, ...d.data() })), domain: dom };
+  try {
+    const q = await getDocs(query(
+      collection(db, 'partner_schools'),
+      where('domain', '==', dom),
+      limit(2) // need to detect multi-school domains
+    ));
+    if (q.empty)      return { schools: [],   domain: dom };
+    if (q.size === 1) return { schools: [{ id: q.docs[0].id, ...q.docs[0].data() }], domain: dom };
+    return { schools: q.docs.map(d => ({ id: d.id, ...d.data() })), domain: dom };
+  } catch (e) {
+    console.warn('[auth-guard] partner_schools domain query rejected for', dom, e.code || e.message);
+    return null;
+  }
 }
 
 // ─── Main auth flow ───────────────────────────────────────────────
 onAuthStateChanged(auth, async (user) => {
+ try {
   // 1. Not signed in → /login (unless already on a signed-out-OK page)
   if (!user) {
     if (SIGNED_OUT_OK.has(PATH)) {
@@ -312,4 +323,19 @@ onAuthStateChanged(auth, async (user) => {
   window.dispatchEvent(new CustomEvent('authReady', {
     detail: { signedIn: true, status, schoolId: profile.schoolId, gradeLevel: profile.gradeLevel || null, stage }
   }));
+ } catch (e) {
+  // Any unhandled error after sign-in (rule rejection on students/{uid},
+  // network blip mid-flow, etc.) used to leave the page on display:none
+  // with a hanging spinner. Surface it to the user via /login?error=...
+  // instead.
+  console.error('[auth-guard] post-signin flow failed', e && (e.code || e.message), e);
+  const code = (e && e.code === 'permission-denied') ? 'invalid-domain' : 'unknown-status';
+  try { await signOut(auth); } catch (_) {}
+  if (PATH !== '/login') {
+    window.location.href = '/login?error=' + code;
+  } else {
+    document.body.style.display = '';
+    window.dispatchEvent(new CustomEvent('authReady', { detail: { signedIn: false } }));
+  }
+ }
 });
