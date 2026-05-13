@@ -76,13 +76,44 @@
     }
     .qstem {
       font-size: 1.05rem;
-      line-height: 1.55;
+      line-height: 1.65;
       color: var(--ink);
       margin-bottom: 22px;
+      padding: 0 4px;             /* tiny breathing room — aligns visually with option text inside the 14px+letter card */
+      text-align: left;            /* MathJax default centers display math; lock to left for a uniform read flow */
     }
-    .qstem img { max-width: 100%; height: auto; border-radius: 8px; }
+    .qstem * { text-align: left; }  /* belt + braces — override MathJax's inline center on mjx-containers */
+    .qstem mjx-container[display="true"] {
+      display: inline-block !important;   /* don't take a full line of centered space */
+      margin: 4px 0 !important;
+      text-align: left !important;
+    }
+    .qstem img { max-width: 100%; height: auto; border-radius: 8px; vertical-align: middle; }
     .qstem table { border-collapse: collapse; margin: 8px 0; }
     .qstem td, .qstem th { padding: 6px 12px; border: 1px solid var(--border); }
+
+    /* Loading skeleton for <img data-storage-path> while the Storage
+       SDK resolves the auth'd URL. Replaces the broken-image flash
+       with a calm shimmer. Auto-removed once `src` is patched in by
+       hydrateStorageImages(). */
+    .qstem img:not([src]), .qstem img[src=""],
+    .qopt img:not([src]),  .qopt img[src=""] {
+      display: inline-block;
+      min-width: 80px;
+      min-height: 40px;
+      background: linear-gradient(90deg,
+        rgba(0,0,0,.04) 0%, rgba(0,0,0,.10) 50%, rgba(0,0,0,.04) 100%);
+      background-size: 200% 100%;
+      animation: fx-img-shimmer 1.2s ease-in-out infinite;
+      border-radius: 6px;
+    }
+    @keyframes fx-img-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .qstem img:not([src]), .qopt img:not([src]) { animation: none; }
+    }
 
     .qopt {
       display: flex; align-items: center; gap: 12px;
@@ -107,7 +138,9 @@
       font-weight: 700; font-size: .88rem;
       flex-shrink: 0;
     }
-    .qopt .body { flex: 1; line-height: 1.45; }
+    .qopt .body { flex: 1; line-height: 1.45; min-width: 0; }
+    .qopt .body img { max-width: 100%; height: auto; vertical-align: middle; border-radius: 4px; }
+    .qopt .body mjx-container { vertical-align: middle; }
     .qopt.is-locked { cursor: not-allowed; }
     .qopt.is-correct {
       background: var(--ok-bg);
