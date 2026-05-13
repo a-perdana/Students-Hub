@@ -342,11 +342,11 @@
       if (mine) {
         box.innerHTML = `
           <h3>${escHtml(c.title || SUBJ_LABEL[subj] + ' — today')}</h3>
-          <p class="lead">${escHtml(c.description || 'Today\\'s rotation.')}</p>
+          <p class="lead">${escHtml(c.description || "Today's rotation.")}</p>
           <div class="dc-done">
             <span class="icon">✓</span>
             <div class="meta">
-              <strong>You\\'ve done today\\'s challenge</strong>
+              <strong>You've done today's challenge</strong>
               <span>${mine.correctCount} of ${mine.itemIds?.length || c.itemCount} correct${mine.streakBest >= 3 ? ' · best streak ' + mine.streakBest + ' 🔥' : ''}</span>
             </div>
             <span class="pct">${Math.round(mine.rawScorePct || 0)}%</span>
@@ -358,7 +358,7 @@
       // Not done yet — show CTA
       box.innerHTML = `
         <h3>${escHtml(c.title || SUBJ_LABEL[subj] + ' — today')}</h3>
-        <p class="lead">${escHtml(c.description || 'Today\\'s rotation. Quick run — five questions, instant feedback.')}</p>
+        <p class="lead">${escHtml(c.description || "Today's rotation. Quick run — five questions, instant feedback.")}</p>
         <div class="dc-meta-row">
           <span class="dc-meta-chip">${c.itemCount || 5} questions</span>
           ${mixChips}
