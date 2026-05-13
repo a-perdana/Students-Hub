@@ -246,11 +246,24 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  const resolved = await resolveSchoolFromDomain(emailLower);
-  if (!resolved || resolved.schools.length === 0) {
-    await signOut(auth);
-    window.location.href = '/login?error=invalid-domain';
-    return;
+  // 2b. HQ observer fast-path. @eduversal.org accounts (HQ Subject
+  // Specialists, central_admin, directors, coordinators) are NOT real
+  // students — they sign into SH only to QA the runners and flag bad
+  // items. Skip partner_schools domain resolution + class-picker flow
+  // entirely, and stamp the student doc with is_hq_observer:true so
+  // the runner observer strip activates. Any sub-role / role check is
+  // unnecessary — the @eduversal.org domain is already gated by CH
+  // (only HQ accounts have eduversal.org emails).
+  const isObserverDomain = emailLower.endsWith('@eduversal.org');
+
+  let resolved = null;
+  if (!isObserverDomain) {
+    resolved = await resolveSchoolFromDomain(emailLower);
+    if (!resolved || resolved.schools.length === 0) {
+      await signOut(auth);
+      window.location.href = '/login?error=invalid-domain';
+      return;
+    }
   }
 
   // 3. Fetch / auto-create students/{uid}
@@ -259,27 +272,54 @@ onAuthStateChanged(auth, async (user) => {
   let profile;
 
   if (!snap.exists()) {
-    // First login — derive schoolId if single-school domain, else null
-    const singleSchool = resolved.schools.length === 1 ? resolved.schools[0] : null;
-    profile = {
-      uid:           user.uid,
-      email:         user.email,
-      emailLower,
-      displayName:   user.displayName || user.email.split('@')[0],
-      photoURL:      user.photoURL || null,
-      schoolId:      singleSchool ? singleSchool.id   : null,
-      school:        singleSchool ? singleSchool.name : null,
-      classId:       null,
-      gradeLevel:    null,
-      status:        'needs_class',  // → /class-picker
-      createdAt:     serverTimestamp(),
-      lastLoginAt:   serverTimestamp(),
-    };
+    if (isObserverDomain) {
+      // HQ Specialist first login — no class picker, immediately active.
+      profile = {
+        uid:           user.uid,
+        email:         user.email,
+        emailLower,
+        displayName:   user.displayName || user.email.split('@')[0],
+        photoURL:      user.photoURL || null,
+        schoolId:      null,
+        school:        'Eduversal HQ',
+        classId:       null,
+        gradeLevel:    null,
+        status:        'active',
+        is_hq_observer: true,
+        createdAt:     serverTimestamp(),
+        lastLoginAt:   serverTimestamp(),
+      };
+    } else {
+      // Real student first login — derive schoolId if single-school domain, else null
+      const singleSchool = resolved.schools.length === 1 ? resolved.schools[0] : null;
+      profile = {
+        uid:           user.uid,
+        email:         user.email,
+        emailLower,
+        displayName:   user.displayName || user.email.split('@')[0],
+        photoURL:      user.photoURL || null,
+        schoolId:      singleSchool ? singleSchool.id   : null,
+        school:        singleSchool ? singleSchool.name : null,
+        classId:       null,
+        gradeLevel:    null,
+        status:        'needs_class',  // → /class-picker
+        createdAt:     serverTimestamp(),
+        lastLoginAt:   serverTimestamp(),
+      };
+    }
     await setDoc(studentRef, profile, { merge: true });
   } else {
     profile = snap.data();
-    // touch lastLoginAt (best-effort, non-blocking)
-    setDoc(studentRef, { lastLoginAt: serverTimestamp() }, { merge: true }).catch(() => {});
+    // touch lastLoginAt + ensure observer flag stays in sync for HQ
+    // accounts (best-effort, non-blocking)
+    const touch = { lastLoginAt: serverTimestamp() };
+    if (isObserverDomain && profile.is_hq_observer !== true) {
+      touch.is_hq_observer = true;
+      touch.status = 'active';
+      profile.is_hq_observer = true;
+      profile.status = 'active';
+    }
+    setDoc(studentRef, touch, { merge: true }).catch(() => {});
   }
 
   window.currentUser     = user;

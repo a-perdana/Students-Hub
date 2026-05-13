@@ -1171,6 +1171,12 @@ body[data-stage="checkpoint"] .tier-chip {
   font-size: .8rem;
   font-family: ui-monospace, Menlo, Consolas, monospace;
 }
+/* `hidden` HTML attribute is overridden by the explicit `display:flex`
+   above, which is why the strip showed for non-observer students. Make
+   the attribute win so only window.installObserverStrip → update() can
+   reveal it (it sets stripEl.hidden = false after observer mode is
+   confirmed). */
+.obs-strip[hidden] { display: none; }
 .obs-strip .obs-eyebrow {
   font-family: 'DM Sans', sans-serif;
   font-size: .68rem; font-weight: 700;

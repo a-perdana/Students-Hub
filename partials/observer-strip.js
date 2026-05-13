@@ -29,11 +29,9 @@
 
   window.installObserverStrip = function (opts) {
     const p = window.studentProfile;
-    try { console.log('[obs] install — is_hq_observer =', p && p.is_hq_observer, '(type', typeof (p && p.is_hq_observer) + ')'); } catch (_) {}
     if (!p || p.is_hq_observer !== true) {
       return { update: () => {} };
     }
-    try { console.log('[obs] install — observer mode active, opts.collection =', opts && opts.collection); } catch (_) {}
 
     const { stripEl, elements, firestore } = opts;
     const { idEl, metaEl, copyBtn, openLink, flagBtn,
@@ -50,11 +48,6 @@
       flagBtn.classList.remove('is-flagged');
       flagBtn.textContent = '⚑ Flag';
       flagBtn.disabled = false;
-
-      // Diagnostic — log once per item so we can spot why the strip
-      // renders but id/meta look empty (e.g. item.id missing or being
-      // overridden by a stray `id` field on the doc).
-      try { console.log('[obs] update', item.id, Object.keys(item)); } catch (_) {}
 
       idEl.textContent = item.id || '(no id)';
       const bits = [];
