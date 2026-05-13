@@ -384,7 +384,7 @@
         <div class="hero-name"><span id="heroName">…</span></div>
         <div class="hero-meta-pills">
           <span class="hero-pill" id="stagePill">Loading…</span>
-          <span class="hero-pill" data-tier id="heroTierPill">Apprentice</span>
+          <a class="hero-pill" data-tier id="heroTierPill" href="/how-points-work" style="text-decoration:none" title="How points work">Apprentice</a>
           <span class="hero-pill" id="heroClassPill"></span>
         </div>
       </div>
@@ -537,7 +537,7 @@
   <script src="./partials/feedback-fx.js"></script>
   <script type="module">
     import {
-      collection, query, where, onSnapshot, orderBy, limit, getDocs, doc, getDoc
+      collection, query, where, onSnapshot, orderBy, limit, getDocs, doc, getDoc, updateDoc
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -670,6 +670,20 @@
           setTimeout(() => window.fx.levelUpOverlay(lvl, t.label), 500);
         }
         try { localStorage.setItem(LAST_LVL_KEY, String(lvl)); } catch {}
+
+        // Streak milestone overlay — Cloud Function writes
+        // lastStreakMilestone:{day,bonus,seen:false} when the streak
+        // crosses 7 or 30. We render once, then flip seen:true so the
+        // celebration never repeats.
+        const m = d.lastStreakMilestone;
+        if (window.fx && m && m.seen === false && (m.day === 7 || m.day === 30)) {
+          setTimeout(() => window.fx.streakMilestoneOverlay(m.day, m.bonus || 0), lvl > lastLvl ? 2200 : 600);
+          try {
+            await updateDoc(doc(window.db, 'student_points', uid), {
+              'lastStreakMilestone.seen': true,
+            });
+          } catch (e) { /* non-fatal — re-render is mildly annoying but not broken */ }
+        }
 
         // Achievements row needs counters
         renderAchievements(d);

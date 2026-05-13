@@ -47,6 +47,7 @@ const ROUTES = {
   'practice-run.html':   'practice-run',     // /practice-run     → solo runner (also handles daily-challenge via ?challenge=)
   'daily-challenge.html':'daily-challenge',  // /daily-challenge  → today's 5-Q + class leaderboard
   'avatar.html':         'avatar',           // /avatar           → cosmetic avatar style+seed picker
+  'how-points-work.html':'how-points-work',  // /how-points-work  → student-facing gamification guide
 };
 
 // Internal href rewrites — same pattern as TH/AH/CH builds.
@@ -67,6 +68,7 @@ const LINK_REWRITES = [
   [/href="practice-run\.html(\?[^"]*)?"/g, (m, q) => `href="/practice-run${q || ''}"`],
   [/href="daily-challenge\.html"/g, 'href="/daily-challenge"'],
   [/href="avatar\.html"/g,          'href="/avatar"'],
+  [/href="how-points-work\.html"/g, 'href="/how-points-work"'],
 ];
 
 // Read partials/firebase-env.html once (injected via comment placeholder).

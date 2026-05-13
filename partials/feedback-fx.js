@@ -6,6 +6,7 @@
  *   fx.haptic(ms)              — navigator.vibrate wrapper
  *   fx.countUp(el, from, to, ms) — animated number counter
  *   fx.levelUpOverlay(level, tier) — full-screen LEVEL UP card
+ *   fx.streakMilestoneOverlay(day, bonus) — full-screen STREAK card
  *   fx.pulse(el, variant)      — one-shot pulse animation on an element
  *   fx.toggleMute()            — flip mute state (persisted in localStorage)
  *   fx.muted                   — getter
@@ -265,9 +266,32 @@
     }, 1800);
   }
 
+  // ─── Streak milestone overlay ───────────────────────────────────
+  // Day-7 / Day-30 streak celebration. Same shape as levelUpOverlay
+  // but copy + colour cue the streak loop instead of XP.
+  function streakMilestoneOverlay(day, bonus) {
+    const ov = document.createElement('div');
+    ov.className = 'fx-levelup-overlay fx-streak-overlay';
+    ov.innerHTML = ''
+      + '<div class="fx-levelup-card">'
+      +   '<div class="fx-levelup-eyebrow">' + day + '-DAY STREAK</div>'
+      +   '<div class="fx-levelup-num">🔥</div>'
+      +   '<div class="fx-levelup-tier">+' + (bonus || 0).toLocaleString('en-GB') + ' bonus points</div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('is-shown'));
+    play('levelUp');
+    haptic([40, 60, 60, 60, 40]);
+    confetti({ count: 240, y: window.innerHeight / 2 });
+    setTimeout(() => {
+      ov.classList.remove('is-shown');
+      setTimeout(() => ov.remove(), 400);
+    }, 2000);
+  }
+
   // ─── Public API ─────────────────────────────────────────────────
   window.fx = {
-    play, haptic, confetti, countUp, pulse, levelUpOverlay,
+    play, haptic, confetti, countUp, pulse, levelUpOverlay, streakMilestoneOverlay,
     toggleMute() { setMuted(!muted); return muted; },
     setMuted, get muted() { return muted; },
   };

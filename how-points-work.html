@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How Points Work — Students Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .hpw-hero {
+      background: var(--stage-gradient);
+      color: #fff;
+      padding: 24px 28px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--stage-glow);
+      margin-bottom: 20px;
+      position: relative; overflow: hidden;
+    }
+    .hpw-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 90% 20%, rgba(255,255,255,.18) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .hpw-hero h1 { margin: 0 0 6px; font-family: 'Lora', serif; font-size: 1.7rem; }
+    .hpw-hero p  { margin: 0; opacity: .92; max-width: 560px; }
+
+    .hpw-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+      position: relative; z-index: 1;
+    }
+    .hpw-stat {
+      background: rgba(255,255,255,.14);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .hpw-stat .val { font-size: 1.4rem; font-weight: 700; }
+    .hpw-stat .lbl { font-size: .78rem; opacity: .85; text-transform: uppercase; letter-spacing: .04em; }
+
+    section.hpw-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    section.hpw-card h2 {
+      margin: 0 0 12px;
+      font-family: 'Lora', serif;
+      font-size: 1.15rem;
+      display: flex; align-items: center; gap: 8px;
+    }
+    section.hpw-card h2 .em { font-size: 1.3rem; }
+    section.hpw-card p { margin: 0 0 10px; color: var(--ink-2); }
+    section.hpw-card ul { margin: 8px 0 0 1.1rem; color: var(--ink-2); }
+    section.hpw-card li { margin-bottom: 4px; }
+
+    .formula-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: .92rem;
+    }
+    .formula-table th, .formula-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .formula-table th {
+      background: var(--ink-7);
+      color: var(--ink-2);
+      font-weight: 600;
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .formula-table td.pts { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--stage-primary); }
+    .formula-table tr:last-child td { border-bottom: none; }
+
+    .tier-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tier-row:last-child { border: none; }
+    .tier-row .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .tier-row .info { flex: 1; }
+    .tier-row .info b { display: block; font-size: .96rem; }
+    .tier-row .info span { font-size: .82rem; color: var(--ink-3); }
+    .tier-row .lvl { font-weight: 600; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    .dot.t-apprentice { background: #94a3b8; }
+    .dot.t-scholar    { background: var(--stage-primary-2); }
+    .dot.t-mentor     { background: var(--stage-primary); }
+    .dot.t-master     { background: #f59e0b; }
+    .dot.t-fellow     { background: linear-gradient(135deg, #fbbf24 0%, #6c5ce7 50%, #06b6d4 100%); }
+
+    .not-built {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .not-built .nb {
+      display: flex; gap: 10px;
+      padding: 10px 12px;
+      background: var(--ink-7);
+      border-radius: var(--radius-md);
+    }
+    .not-built .nb .x {
+      flex-shrink: 0;
+      color: #ef4444; font-weight: 700;
+    }
+    .not-built .nb .txt { font-size: .9rem; color: var(--ink-2); }
+    .not-built .nb .txt b { color: var(--ink); }
+
+    .page-narrow { max-width: 880px; }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page-narrow">
+
+    <section class="hpw-hero">
+      <h1>How Points Work</h1>
+      <p>Every test, EASE session, and practice run earns points. Here's exactly how — and what the points do for you.</p>
+      <div class="hpw-stats">
+        <div class="hpw-stat"><div class="val" id="myPts">—</div><div class="lbl">Your total</div></div>
+        <div class="hpw-stat"><div class="val" id="myLvl">Lv —</div><div class="lbl">Your level</div></div>
+        <div class="hpw-stat"><div class="val" id="myTier">—</div><div class="lbl">Your tier</div></div>
+        <div class="hpw-stat"><div class="val" id="myStreak">— d</div><div class="lbl">Streak</div></div>
+      </div>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">🎯</span> The short version</h2>
+      <p>Points are an <b>engagement signal</b>, not money. They never go down, and they can't be spent on anything — there's no shop, no paid hints, no retry tokens. What they unlock is your <b>level</b>, your <b>tier</b>, and your spot on the <a href="/leaderboard">leaderboard</a>.</p>
+      <p style="margin: 0">Every level needs more XP than the last (1 point = 1 XP). Every 5–15 levels you climb a tier — Apprentice → Scholar → Mentor → Master → Cambridge Fellow.</p>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">📘</span> Chapter Tests — formal mastery</h2>
+      <p>One-off earn when your attempt is scored.</p>
+      <table class="formula-table">
+        <thead><tr><th>What</th><th style="text-align:right">Points</th></tr></thead>
+        <tbody>
+          <tr><td>Base — for finishing the test</td><td class="pts">+50</td></tr>
+          <tr><td>Score bonus — half a point per % you got right (so 80% = +40)</td><td class="pts">up to +50</td></tr>
+          <tr><td>First time you scored this test</td><td class="pts">+25</td></tr>
+          <tr><td>Perfect score (100%)</td><td class="pts">+50</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:.86rem;color:var(--ink-3)">Typical: 100–175 points per chapter test.</p>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">📈</span> EASE Growth — adaptive sessions</h2>
+      <p>3 windows a year × 3 subjects (Math / English / Science). The harder you push, the more the engine learns about your level.</p>
+      <table class="formula-table">
+        <thead><tr><th>What</th><th style="text-align:right">Points</th></tr></thead>
+        <tbody>
+          <tr><td>Base — for finishing the session</td><td class="pts">+100</td></tr>
+          <tr><td>You held or grew vs your last window</td><td class="pts">+25</td></tr>
+          <tr><td>You grew 5 or more RIT points (strong growth)</td><td class="pts">+50</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:.86rem;color:var(--ink-3)">The two growth bonuses don't stack — strong growth replaces the +25.</p>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">⚡</span> Practice + Daily Challenge</h2>
+      <p>Self-paced runs from <a href="/practice">/practice</a> and <a href="/daily-challenge">/daily-challenge</a>. No mastery effect — just XP + leaderboard rank.</p>
+      <table class="formula-table">
+        <thead><tr><th>What</th><th style="text-align:right">Practice</th><th style="text-align:right">Daily Challenge</th></tr></thead>
+        <tbody>
+          <tr><td>Base</td><td class="pts">+20</td><td class="pts">+50</td></tr>
+          <tr><td>Per correct answer</td><td class="pts">+5</td><td class="pts">+5</td></tr>
+          <tr><td>Best streak in the run ≥ 3</td><td class="pts">+10</td><td class="pts">+10</td></tr>
+          <tr><td>Best streak in the run ≥ 5 (replaces +10)</td><td class="pts">+20</td><td class="pts">+20</td></tr>
+          <tr><td>Perfect run</td><td class="pts">+30</td><td class="pts">+30</td></tr>
+          <tr><td>First daily challenge of the day, per subject</td><td class="pts">—</td><td class="pts">+25</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">🔥</span> Daily streak bonuses</h2>
+      <p>Show up <b>any</b> day and earn even one point — your streak counter ticks up. Miss a day and it resets to 1 the next time you earn.</p>
+      <table class="formula-table">
+        <thead><tr><th>Milestone</th><th style="text-align:right">Bonus</th></tr></thead>
+        <tbody>
+          <tr><td>Day 7 streak</td><td class="pts">+100</td></tr>
+          <tr><td>Day 30 streak</td><td class="pts">+250</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:10px;font-size:.86rem;color:var(--ink-3)">Each milestone pays once per account — they don't re-pay if you break the streak and rebuild it.</p>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">🏅</span> Levels &amp; tiers</h2>
+      <p>Each level needs more XP than the last. The formula is simple: <b>Level N → N+1 costs <code>100 + (N−1) × 50</code> XP</b>. Climbing a tier doesn't unlock anything new — it's a public mark of effort that shows on your dashboard ring and leaderboard chip.</p>
+      <div style="margin-top:14px">
+        <div class="tier-row"><span class="dot t-apprentice"></span><div class="info"><b>Apprentice</b><span>Where everyone starts</span></div><span class="lvl">Lv 1–4</span></div>
+        <div class="tier-row"><span class="dot t-scholar"></span><div class="info"><b>Scholar</b><span>~700 XP — a handful of tests in</span></div><span class="lvl">Lv 5–9</span></div>
+        <div class="tier-row"><span class="dot t-mentor"></span><div class="info"><b>Mentor</b><span>~3,250 XP — a busy term</span></div><span class="lvl">Lv 10–19</span></div>
+        <div class="tier-row"><span class="dot t-master"></span><div class="info"><b>Master</b><span>~11,000 XP — sustained effort across the year</span></div><span class="lvl">Lv 20–34</span></div>
+        <div class="tier-row"><span class="dot t-fellow"></span><div class="info"><b>Cambridge Fellow</b><span>~32,700 XP — top-of-cohort</span></div><span class="lvl">Lv 35+</span></div>
+      </div>
+    </section>
+
+    <section class="hpw-card">
+      <h2><span class="em">🚫</span> What points are NOT for</h2>
+      <p>We deliberately don't have these. Helps keep the test results honest.</p>
+      <div class="not-built">
+        <div class="nb"><span class="x">✕</span><span class="txt"><b>No paid hints.</b> The runner never sells "show me the answer".</span></div>
+        <div class="nb"><span class="x">✕</span><span class="txt"><b>No spending shop.</b> Points are a score, not a wallet.</span></div>
+        <div class="nb"><span class="x">✕</span><span class="txt"><b>No penalties.</b> Wrong answers and skipped tests cost zero points.</span></div>
+        <div class="nb"><span class="x">✕</span><span class="txt"><b>No gifting between students.</b> Your points belong to your account only.</span></div>
+      </div>
+    </section>
+
+    <p style="text-align:center;color:var(--ink-3);font-size:.85rem;margin:24px 0 40px">
+      Question that isn't answered here? Ask your teacher — they can flag it to the Eduversal team.
+    </p>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    function tierFor(level) {
+      if (level >= 35) return 'Cambridge Fellow';
+      if (level >= 20) return 'Master';
+      if (level >= 10) return 'Mentor';
+      if (level >=  5) return 'Scholar';
+      return                 'Apprentice';
+    }
+
+    window.addEventListener('authReady', async (ev) => {
+      if (!ev.detail.signedIn) return;
+      try {
+        const snap = await getDoc(doc(window.db, 'student_points', window.currentUser.uid));
+        const d = snap.exists() ? snap.data() : {};
+        const pts    = d.totalPoints || 0;
+        const lvl    = d.level || 1;
+        const streak = d.streak?.current || 0;
+        document.getElementById('myPts').textContent    = pts.toLocaleString('en-GB');
+        document.getElementById('myLvl').textContent    = 'Lv ' + lvl;
+        document.getElementById('myTier').textContent   = tierFor(lvl);
+        document.getElementById('myStreak').textContent = streak + ' d';
+      } catch (e) {
+        console.warn('[how-points-work] points load failed', e.message);
+      }
+    });
+  </script>
+</body>
+</html>
