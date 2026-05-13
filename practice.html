@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Practice — Students Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .hero-pra { margin-bottom: 22px; }
+    .hero-pra .stage-chip { margin-bottom: 8px; }
+    .hero-pra h1 { font-size: clamp(1.4rem, 3vw, 1.9rem); margin: 0; }
+    .hero-pra p  { color: var(--ink-3); margin-top: 4px; }
+
+    /* Subject pick row */
+    .subj-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin-bottom: 22px;
+    }
+    @media (max-width: 720px) { .subj-row { grid-template-columns: 1fr; } }
+    .subj-card {
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex; align-items: center; gap: 14px;
+      text-align: left;
+    }
+    .subj-card:hover:not(.is-locked) {
+      border-color: var(--stage-primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .subj-card.is-active {
+      border-color: var(--stage-primary);
+      background: var(--stage-primary-2);
+    }
+    .subj-card.is-locked {
+      opacity: .55; cursor: not-allowed;
+    }
+    .subj-card .glyph {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--stage-primary-2); color: var(--stage-primary-dk);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; flex-shrink: 0;
+    }
+    .subj-card .meta strong { display: block; font-weight: 700; color: var(--ink); }
+    .subj-card .meta span   { font-size: .8rem; color: var(--ink-3); }
+
+    /* Filter row */
+    .pick-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+    .pick-card h3 {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem; margin: 0 0 4px;
+    }
+    .pick-card .lead { color: var(--ink-3); font-size: .9rem; margin-bottom: 16px; }
+
+    .pick-section { margin-bottom: 18px; }
+    .pick-section:last-child { margin-bottom: 0; }
+    .pick-label {
+      font-size: .76rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--ink-2);
+      margin-bottom: 8px;
+    }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pick-chip {
+      padding: 8px 14px;
+      background: var(--paper);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      font-size: .85rem; font-weight: 600;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all .12s;
+    }
+    .pick-chip:hover { border-color: var(--stage-primary); color: var(--stage-primary-dk); }
+    .pick-chip.is-active {
+      background: var(--stage-primary); color: #fff;
+      border-color: var(--stage-primary);
+      box-shadow: var(--stage-glow);
+    }
+    .pick-chip .count {
+      display: inline-block; margin-left: 6px;
+      padding: 1px 7px; border-radius: 99px;
+      background: rgba(0,0,0,.06);
+      font-size: .72rem; font-weight: 700;
+    }
+    .pick-chip.is-active .count { background: rgba(255,255,255,.25); }
+    .pick-chip.is-disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
+    /* Start bar */
+    .start-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      padding: 16px 22px;
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      color: #fff; border-radius: var(--radius-lg);
+      box-shadow: var(--stage-glow);
+    }
+    .start-bar .summary strong {
+      display: block; font-size: 1rem;
+    }
+    .start-bar .summary span { font-size: .82rem; opacity: .9; }
+    .start-bar .btn-start {
+      background: #fff; color: var(--stage-primary-dk);
+      padding: 12px 22px; border-radius: 10px;
+      font-weight: 700; font-size: .9rem;
+      border: none; cursor: pointer;
+      transition: all .15s;
+    }
+    .start-bar .btn-start:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+    .start-bar .btn-start:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* Recent runs */
+    .recent-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    @media (max-width: 880px) { .recent-grid { grid-template-columns: 1fr; } }
+    .recent-tile {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+    }
+    .recent-tile .meta { flex: 1; min-width: 0; }
+    .recent-tile .topic { font-weight: 600; color: var(--ink); font-size: .9rem; }
+    .recent-tile .sub   { font-size: .75rem; color: var(--ink-3); margin-top: 2px; }
+    .recent-tile .pct {
+      font-family: 'Lora', serif; font-weight: 700;
+      padding: 5px 12px; border-radius: 99px;
+      font-size: .88rem;
+    }
+    .recent-tile .pct.good { background: var(--ok-bg); color: var(--ok); }
+    .recent-tile .pct.mid  { background: var(--warn-bg); color: var(--warn); }
+    .recent-tile .pct.low  { background: var(--danger-bg); color: var(--danger); }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page">
+    <section class="hero-pra">
+      <span class="stage-chip"><span class="dot"></span> Practice mode</span>
+      <h1>Practice your way</h1>
+      <p>Pick a subject and a topic, take a quick 10-question run. Every correct answer earns points.</p>
+    </section>
+
+    <!-- Subject row -->
+    <section class="subj-row" id="subjRow">
+      <button type="button" class="subj-card" data-subj="math">
+        <span class="glyph">🧮</span>
+        <div class="meta"><strong>Math</strong><span id="mathCount">…</span></div>
+      </button>
+      <button type="button" class="subj-card is-locked" data-subj="english" disabled>
+        <span class="glyph">📖</span>
+        <div class="meta"><strong>English</strong><span>Coming soon</span></div>
+      </button>
+      <button type="button" class="subj-card is-locked" data-subj="science" disabled>
+        <span class="glyph">🔬</span>
+        <div class="meta"><strong>Science</strong><span>Coming soon</span></div>
+      </button>
+    </section>
+
+    <!-- Picker card -->
+    <section class="pick-card">
+      <h3>Pick your focus</h3>
+      <p class="lead">Choose a topic and difficulty — we'll serve you 10 questions that match.</p>
+
+      <div class="pick-section">
+        <div class="pick-label">Topic</div>
+        <div class="chip-row" id="topicChips">
+          <span class="skel skel-chip"></span>
+          <span class="skel skel-chip"></span>
+          <span class="skel skel-chip"></span>
+        </div>
+      </div>
+
+      <div class="pick-section">
+        <div class="pick-label">Difficulty</div>
+        <div class="chip-row" id="diffChips">
+          <button type="button" class="pick-chip is-active" data-diff="any">Any</button>
+          <button type="button" class="pick-chip"           data-diff="easy">Easy</button>
+          <button type="button" class="pick-chip"           data-diff="medium">Medium</button>
+          <button type="button" class="pick-chip"           data-diff="hard">Hard</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Start bar -->
+    <section class="start-bar">
+      <div class="summary">
+        <strong id="startSummary">Choose a topic to start</strong>
+        <span id="startSubline">10 questions · solo · zero pressure</span>
+      </div>
+      <button type="button" class="btn-start" id="btnStart" disabled>Start →</button>
+    </section>
+
+    <!-- Recent runs -->
+    <section style="margin-top:28px">
+      <h3 style="font-family:'Lora',serif; font-size:1.05rem; margin:0 0 12px">Your recent practice</h3>
+      <div id="recentBox">
+        <div class="empty" style="padding:14px 0; font-size:.88rem">Loading recent runs…</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      collection, query, where, orderBy, limit, getDocs
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    // ─── State ───────────────────────────────────────────────────
+    const state = {
+      subjectId: 'math',
+      topicGroup: null,
+      difficulty: 'any',
+      counts: { byTopic: {}, byDifficulty: {} },
+    };
+
+    const TOPIC_LABEL = {
+      algebra:          { icon: '🔣', label: 'Algebra' },
+      number:           { icon: '🔢', label: 'Number & Arithmetic' },
+      geometry:         { icon: '📐', label: 'Geometry' },
+      'problem-solving':{ icon: '🧩', label: 'Problem Solving' },
+      statistics:       { icon: '📊', label: 'Statistics' },
+      probability:      { icon: '🎲', label: 'Probability' },
+      mixed:            { icon: '🎯', label: 'Mixed' },
+    };
+
+    const DIFF_LABEL = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) return;
+      // Wire subject card click — pilot only math is live
+      document.querySelectorAll('.subj-card').forEach(c => {
+        if (c.classList.contains('is-locked')) return;
+        c.addEventListener('click', () => selectSubject(c.dataset.subj));
+      });
+      // Wire difficulty chips
+      document.querySelectorAll('#diffChips .pick-chip').forEach(ch => {
+        ch.addEventListener('click', () => selectDifficulty(ch.dataset.diff));
+      });
+      document.getElementById('btnStart').addEventListener('click', startRun);
+      selectSubject('math');
+      loadRecent(window.currentUser.uid);
+    });
+
+    async function selectSubject(subj) {
+      state.subjectId = subj;
+      state.topicGroup = null;
+      document.querySelectorAll('.subj-card').forEach(c =>
+        c.classList.toggle('is-active', c.dataset.subj === subj)
+      );
+      await loadCounts(subj);
+      renderTopicChips();
+      updateStartBar();
+    }
+
+    async function loadCounts(subj) {
+      // Best-effort metadata aggregator: fetch up to 1000 active items for
+      // this subject and tally topicGroup + difficulty client-side. For 805
+      // math items this is fine; if practice_questions grows past ~5k we
+      // need a Cloud Function aggregate doc.
+      try {
+        const q = query(
+          collection(window.db, 'practice_questions'),
+          where('subjectId', '==', subj),
+          where('status', '==', 'active'),
+          limit(1000)
+        );
+        const snap = await getDocs(q);
+        const byT = {}, byD = {};
+        snap.forEach(d => {
+          const v = d.data();
+          const t = v.topicGroup || 'mixed';
+          const diff = v.difficulty || 'medium';
+          byT[t] = (byT[t] || 0) + 1;
+          byD[diff] = (byD[diff] || 0) + 1;
+        });
+        state.counts.byTopic = byT;
+        state.counts.byDifficulty = byD;
+        document.getElementById('mathCount').textContent =
+          subj === 'math' ? (snap.size + ' questions ready') : (snap.size + ' items');
+      } catch (e) {
+        console.warn('[practice] count load failed', e);
+        state.counts = { byTopic: {}, byDifficulty: {} };
+      }
+    }
+
+    function renderTopicChips() {
+      const box = document.getElementById('topicChips');
+      const entries = Object.entries(state.counts.byTopic)
+        .filter(([, n]) => n > 0)
+        .sort((a, b) => b[1] - a[1]);
+      if (entries.length === 0) {
+        box.innerHTML = '<div style="color:var(--ink-3); font-size:.88rem">No topics available right now.</div>';
+        return;
+      }
+      box.innerHTML = entries.map(([k, n]) => {
+        const lbl = TOPIC_LABEL[k] || { icon: '📚', label: k };
+        const isActive = state.topicGroup === k ? ' is-active' : '';
+        return `<button type="button" class="pick-chip${isActive}" data-topic="${escAttr(k)}">${lbl.icon} ${escHtml(lbl.label)} <span class="count">${n}</span></button>`;
+      }).join('');
+      box.querySelectorAll('.pick-chip').forEach(ch => {
+        ch.addEventListener('click', () => selectTopic(ch.dataset.topic));
+      });
+    }
+
+    function selectTopic(t) {
+      state.topicGroup = state.topicGroup === t ? null : t;
+      renderTopicChips();
+      updateStartBar();
+    }
+
+    function selectDifficulty(d) {
+      state.difficulty = d;
+      document.querySelectorAll('#diffChips .pick-chip').forEach(c =>
+        c.classList.toggle('is-active', c.dataset.diff === d)
+      );
+      updateStartBar();
+    }
+
+    function updateStartBar() {
+      const btn = document.getElementById('btnStart');
+      const summary = document.getElementById('startSummary');
+      const sub = document.getElementById('startSubline');
+      if (!state.topicGroup) {
+        btn.disabled = true;
+        summary.textContent = 'Choose a topic to start';
+        sub.textContent = '10 questions · solo · zero pressure';
+        return;
+      }
+      const tLbl = (TOPIC_LABEL[state.topicGroup] || { label: state.topicGroup }).label;
+      const dLbl = state.difficulty === 'any' ? 'any difficulty' : DIFF_LABEL[state.difficulty].toLowerCase();
+      btn.disabled = false;
+      summary.textContent = tLbl;
+      sub.textContent = `10 questions · ${dLbl} · solo run`;
+    }
+
+    function startRun() {
+      const params = new URLSearchParams({
+        subject: state.subjectId,
+        topic:   state.topicGroup,
+        diff:    state.difficulty,
+        n:       '10',
+      });
+      window.location.href = '/practice-run?' + params.toString();
+    }
+
+    async function loadRecent(uid) {
+      const box = document.getElementById('recentBox');
+      try {
+        const q = query(
+          collection(window.db, 'practice_attempts'),
+          where('studentUid', '==', uid),
+          orderBy('submittedAt', 'desc'),
+          limit(6)
+        );
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">No practice runs yet. Start one above to get going.</div>';
+          return;
+        }
+        const rows = snap.docs
+          .map(d => d.data())
+          .filter(v => v.status !== 'in_progress')
+          .map(v => {
+            const pct = typeof v.rawScorePct === 'number' ? Math.round(v.rawScorePct) : 0;
+            const cls = pct >= 80 ? 'good' : pct >= 50 ? 'mid' : 'low';
+            const tLbl = (TOPIC_LABEL[v.topicGroup] || { label: v.topicGroup || 'Mixed' }).label;
+            const when = v.submittedAt?.toDate?.()?.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) || '';
+            return `<div class="recent-tile">
+              <div class="meta">
+                <div class="topic">${escHtml(tLbl)}</div>
+                <div class="sub">${escHtml(v.subjectId || '')} · ${when}</div>
+              </div>
+              <span class="pct ${cls}">${pct}%</span>
+            </div>`;
+          });
+        if (rows.length === 0) {
+          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">No completed practice runs yet.</div>';
+        } else {
+          box.innerHTML = `<div class="recent-grid">${rows.join('')}</div>`;
+        }
+      } catch (e) {
+        console.warn('[practice] recent load failed', e.message);
+        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Could not load recent runs.</div>';
+      }
+    }
+
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+    function escAttr(s) { return escHtml(s); }
+  </script>
+</body>
+</html>

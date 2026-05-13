@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Practice Run — Students Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+      svg: { fontCache: 'global' },
+      options: { renderActions: { addMenu: [] } },
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    /* Strip dashboard chrome — practice is a focused mode */
+    .topbar { display: none !important; }
+    body { background: var(--paper); }
+
+    .run-shell {
+      max-width: 720px; margin: 0 auto;
+      padding: 18px 16px 60px;
+    }
+    .run-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 14px;
+    }
+    .run-header .eyebrow {
+      font-size: .72rem; color: var(--ink-3);
+      text-transform: uppercase; letter-spacing: .08em;
+    }
+    .run-header .topic { font-weight: 700; font-size: 1.05rem; }
+    .quit-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--ink-3);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      font-size: .82rem;
+    }
+    .quit-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+    /* Progress strip with dots */
+    .run-progress {
+      display: flex; gap: 6px;
+      margin-bottom: 22px;
+    }
+    .run-dot {
+      flex: 1; height: 6px; border-radius: 3px;
+      background: var(--border);
+      transition: background .25s;
+    }
+    .run-dot.done.correct { background: var(--ok); }
+    .run-dot.done.wrong   { background: var(--danger); }
+    .run-dot.current      { background: var(--stage-primary); }
+
+    /* Score chip */
+    .score-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 99px;
+      background: var(--stage-primary-2); color: var(--stage-primary-dk);
+      font-size: .82rem; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Question card */
+    .qcard {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      box-shadow: var(--shadow-sm);
+    }
+    .qstem {
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: var(--ink);
+      margin-bottom: 22px;
+    }
+    .qstem img { max-width: 100%; height: auto; border-radius: 8px; }
+    .qstem table { border-collapse: collapse; margin: 8px 0; }
+    .qstem td, .qstem th { padding: 6px 12px; border: 1px solid var(--border); }
+
+    .qopt {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px;
+      background: var(--paper);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all .12s;
+      text-align: left;
+      width: 100%;
+    }
+    .qopt:hover:not(.is-locked) {
+      border-color: var(--stage-primary);
+      background: var(--white);
+    }
+    .qopt .letter {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--white); border: 1.5px solid var(--border);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .88rem;
+      flex-shrink: 0;
+    }
+    .qopt .body { flex: 1; line-height: 1.45; }
+    .qopt.is-locked { cursor: not-allowed; }
+    .qopt.is-correct {
+      background: var(--ok-bg);
+      border-color: var(--ok);
+    }
+    .qopt.is-correct .letter { background: var(--ok); color: #fff; border-color: var(--ok); }
+    .qopt.is-wrong {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+    }
+    .qopt.is-wrong .letter { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .qopt.is-correct-untouched { border-style: dashed; }
+
+    /* Feedback band — appears after answer */
+    .feedback {
+      margin-top: 18px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      display: none;
+      align-items: center; gap: 14px;
+    }
+    .feedback.show { display: flex; }
+    .feedback.ok { background: var(--ok-bg); color: var(--ok); }
+    .feedback.no { background: var(--danger-bg); color: var(--danger); }
+    .feedback .icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.6);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .feedback .text { flex: 1; }
+    .feedback .text strong { display: block; font-size: .95rem; }
+    .feedback .text span { font-size: .82rem; opacity: .85; }
+
+    /* Next bar */
+    .run-foot {
+      display: flex; justify-content: flex-end;
+      margin-top: 18px;
+    }
+    .btn-next {
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      color: #fff; border: none;
+      padding: 12px 28px; border-radius: 10px;
+      font-weight: 700; font-size: .9rem;
+      cursor: pointer;
+      box-shadow: var(--stage-glow);
+      transition: all .15s;
+    }
+    .btn-next:hover { transform: translateY(-1px); }
+    .btn-next:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    /* Done state */
+    .done-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    .done-card .big-pct {
+      font-family: 'Lora', serif;
+      font-size: 3.2rem; line-height: 1;
+      font-weight: 700;
+      margin: 12px 0 6px;
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .done-card .verdict { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+    .done-card .verdict-sub { color: var(--ink-3); font-size: .92rem; margin-bottom: 22px; }
+    .done-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin: 22px 0;
+    }
+    @media (max-width: 520px) { .done-stats { grid-template-columns: 1fr; } }
+    .done-stat {
+      padding: 14px; background: var(--paper); border-radius: 12px;
+    }
+    .done-stat .val { font-family: 'Lora', serif; font-weight: 700; font-size: 1.3rem; color: var(--ink); }
+    .done-stat .lbl { font-size: .76rem; color: var(--ink-3); margin-top: 2px; }
+    .done-actions {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    .done-actions .btn { padding: 12px 22px; }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="run-shell">
+    <div class="run-header">
+      <div>
+        <div class="eyebrow">Practice run</div>
+        <div class="topic" id="runTopic">Loading…</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center">
+        <span class="score-chip" id="scoreChip">0 / 0</span>
+        <button type="button" class="quit-btn" id="quitBtn">Quit</button>
+      </div>
+    </div>
+
+    <div class="run-progress" id="runProgress"></div>
+
+    <div id="loadState" class="empty">
+      <div class="empty-title">Loading questions…</div>
+      Pulling 10 from the bank.
+    </div>
+
+    <div id="errorState" class="empty" hidden>
+      <div class="empty-title">Couldn't load practice</div>
+      <div id="errorMsg" style="margin-bottom:14px"></div>
+      <a href="/practice" class="btn btn-secondary">Back to practice</a>
+    </div>
+
+    <div id="qcard" class="qcard" hidden>
+      <div class="qstem" id="qstem"></div>
+      <div id="qopts"></div>
+      <div class="feedback" id="feedback">
+        <span class="icon" id="fbIcon">✓</span>
+        <div class="text">
+          <strong id="fbTitle">Correct!</strong>
+          <span id="fbBody"></span>
+        </div>
+      </div>
+      <div class="run-foot">
+        <button type="button" class="btn-next" id="btnNext" disabled>Next →</button>
+      </div>
+    </div>
+
+    <div id="doneCard" class="done-card" hidden>
+      <div style="font-size:3rem">🎉</div>
+      <div class="big-pct" id="donePct">—</div>
+      <div class="verdict" id="doneVerdict">Done</div>
+      <div class="verdict-sub" id="doneSub"></div>
+
+      <div class="done-stats">
+        <div class="done-stat"><div class="val" id="doneCorrect">—</div><div class="lbl">Correct</div></div>
+        <div class="done-stat"><div class="val" id="doneStreak">—</div><div class="lbl">Best streak</div></div>
+        <div class="done-stat"><div class="val" id="donePoints">—</div><div class="lbl">Points (pending)</div></div>
+      </div>
+
+      <div class="done-actions" id="doneActions">
+        <a href="/practice" class="btn btn-secondary">Pick another topic</a>
+        <button type="button" class="btn btn-primary" id="btnAgain">Run it again →</button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      collection, query, where, orderBy, limit, getDocs,
+      doc, getDoc, addDoc, updateDoc, serverTimestamp,
+      documentId
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // ─── State ───────────────────────────────────────────────────
+    const params = new URLSearchParams(window.location.search);
+    const CHALLENGE_ID = params.get('challenge');   // e.g. '2026-05-13_math'
+    const SUBJECT = params.get('subject') || (CHALLENGE_ID ? CHALLENGE_ID.split('_')[1] : 'math');
+    const TOPIC   = params.get('topic')   || null;
+    const DIFF    = params.get('diff')    || 'any';
+    const N       = Math.max(1, Math.min(20, parseInt(params.get('n') || '10', 10)));
+    const MODE    = CHALLENGE_ID ? 'daily_challenge' : 'practice';
+
+    const TOPIC_LABEL = {
+      algebra: 'Algebra', number: 'Number & Arithmetic', geometry: 'Geometry',
+      'problem-solving': 'Problem Solving', statistics: 'Statistics',
+      probability: 'Probability', mixed: 'Mixed',
+    };
+
+    const state = {
+      items: [],          // ordered list of practice_questions docs
+      idx: 0,
+      attemptId: null,    // practice_attempts doc id (set after first create)
+      responses: [],
+      correctCount: 0,
+      streak: 0,
+      bestStreak: 0,
+      locked: false,      // true after answering current item (before Next)
+    };
+
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+    });
+
+    window.addEventListener('authReady', async (ev) => {
+      if (!ev.detail.signedIn) return;
+      // Header label switches when running a daily challenge
+      if (CHALLENGE_ID) {
+        document.querySelector('.run-header .eyebrow').textContent = 'Daily Challenge';
+        document.getElementById('runTopic').textContent = SUBJECT + ' · today';
+      } else {
+        document.getElementById('runTopic').textContent =
+          (TOPIC_LABEL[TOPIC] || 'Mixed') + ' · ' + SUBJECT;
+      }
+      document.getElementById('quitBtn').addEventListener('click', quit);
+      document.getElementById('btnNext').addEventListener('click', next);
+      document.getElementById('btnAgain').addEventListener('click',
+        () => { window.location.href = window.location.href; });
+      try {
+        await loadItems();
+        await createAttempt();
+        renderProgress();
+        renderItem();
+      } catch (e) {
+        console.error('[practice-run] init', e);
+        showError(e.message || 'Unknown error');
+      }
+    });
+
+    // ─── Item fetch ─────────────────────────────────────────────
+    // For MVP: pull up to 60 candidates matching topic + difficulty, then
+    // shuffle + slice N. This avoids needing a random Firestore query.
+    // MCQ-only (auto-grade reliably; short_answer would need a tolerant
+    // matcher we don't have yet).
+    async function loadItems() {
+      if (CHALLENGE_ID) {
+        await loadChallengeItems();
+      } else {
+        await loadFreeItems();
+      }
+    }
+
+    async function loadChallengeItems() {
+      const cSnap = await getDoc(doc(window.db, 'daily_challenges', CHALLENGE_ID));
+      if (!cSnap.exists()) throw new Error('Today\'s challenge isn\'t live yet.');
+      const c = cSnap.data();
+      if (c.status !== 'open') throw new Error('This challenge isn\'t open right now.');
+      state.challenge = { id: cSnap.id, ...c };
+      const ids = Array.isArray(c.itemIds) ? c.itemIds : [];
+      if (ids.length === 0) throw new Error('Challenge has no items configured.');
+      // Firestore "in" caps at 30 ids per query. Daily challenges are
+      // typically 5 items — safe to single-shot.
+      const q = query(
+        collection(window.db, 'practice_questions'),
+        where(documentId(), 'in', ids.slice(0, 30))
+      );
+      const snap = await getDocs(q);
+      const byId = {};
+      snap.forEach(d => { byId[d.id] = { id: d.id, ...d.data() }; });
+      // Preserve curator's chosen order
+      state.items = ids.map(id => byId[id]).filter(Boolean).filter(it =>
+        it.correctAnswer && Array.isArray(it.options) && it.options.length >= 2
+      );
+      if (state.items.length === 0) throw new Error('Challenge items unavailable.');
+    }
+
+    async function loadFreeItems() {
+      const constraints = [
+        where('subjectId', '==', SUBJECT),
+        where('status', '==', 'active'),
+        where('type', '==', 'mcq'),
+      ];
+      if (TOPIC) constraints.push(where('topicGroup', '==', TOPIC));
+      if (DIFF !== 'any') constraints.push(where('difficulty', '==', DIFF));
+      const q = query(collection(window.db, 'practice_questions'), ...constraints, limit(60));
+      const snap = await getDocs(q);
+      const pool = [];
+      snap.forEach(d => {
+        const v = d.data();
+        if (!v.correctAnswer) return;
+        if (!Array.isArray(v.options) || v.options.length < 2) return;
+        pool.push({ id: d.id, ...v });
+      });
+      if (pool.length === 0) {
+        throw new Error('No questions available for this topic and difficulty.');
+      }
+      shuffle(pool);
+      state.items = pool.slice(0, N);
+    }
+
+    // ─── Attempt lifecycle ──────────────────────────────────────
+    async function createAttempt() {
+      const p = window.studentProfile;
+      const ref = await addDoc(collection(window.db, 'practice_attempts'), {
+        studentUid: window.currentUser.uid,
+        studentName: p.displayName || '',
+        schoolId: p.schoolId || null,
+        classId:  p.classId   || null,
+        gradeLevel: p.gradeLevel || null,
+        subjectId: SUBJECT,
+        mode: MODE,
+        sourceType: CHALLENGE_ID ? 'challenge' : 'free',
+        assessmentId: null,
+        challengeId: CHALLENGE_ID || null,
+        itemIds: state.items.map(i => i.id),
+        topicGroup: TOPIC,
+        responses: [],
+        status: 'in_progress',
+        correctCount: 0,
+        attemptedCount: 0,
+        rawScorePct: 0,
+        streakBest: 0,
+        pointsAwarded: null,
+        createdAt: serverTimestamp(),
+        submittedAt: null,
+      });
+      state.attemptId = ref.id;
+    }
+
+    async function submitAttempt() {
+      if (!state.attemptId) return;
+      const pct = Math.round((state.correctCount / state.items.length) * 100);
+      await updateDoc(doc(window.db, 'practice_attempts', state.attemptId), {
+        responses: state.responses,
+        status: 'submitted',
+        correctCount: state.correctCount,
+        attemptedCount: state.responses.length,
+        rawScorePct: pct,
+        streakBest: state.bestStreak,
+        submittedAt: serverTimestamp(),
+      });
+    }
+
+    // ─── Render ─────────────────────────────────────────────────
+    function renderProgress() {
+      const box = document.getElementById('runProgress');
+      box.innerHTML = state.items.map((_, i) => {
+        let cls = 'run-dot';
+        if (i < state.responses.length) {
+          cls += ' done ' + (state.responses[i].isCorrect ? 'correct' : 'wrong');
+        } else if (i === state.idx) {
+          cls += ' current';
+        }
+        return `<span class="${cls}"></span>`;
+      }).join('');
+      document.getElementById('scoreChip').textContent =
+        state.correctCount + ' / ' + state.responses.length;
+    }
+
+    function renderItem() {
+      document.getElementById('loadState').hidden = true;
+      document.getElementById('qcard').hidden = false;
+
+      const it = state.items[state.idx];
+      const stem = document.getElementById('qstem');
+      const opts = document.getElementById('qopts');
+
+      // Stem (prefer rich HTML, fall back to plain)
+      if (it.stemHtml) {
+        stem.innerHTML = sanitiseQuestionHtml(it.stemHtml);
+      } else {
+        stem.textContent = it.stem || '';
+      }
+      // Diagram fallback (if not in stemHtml as <img>)
+      if (it.diagramUrl && !/<img/i.test(it.stemHtml || '')) {
+        const img = document.createElement('img');
+        img.src = it.diagramUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.style.maxWidth = '100%';
+        img.style.marginTop = '10px';
+        stem.appendChild(img);
+      }
+
+      // Options
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      opts.innerHTML = it.options.map((o, i) => {
+        const rich = Array.isArray(it.optionsHtml) ? it.optionsHtml[i] : null;
+        const body = rich ? sanitiseQuestionHtml(rich) : escHtml(String(o || ''));
+        return `<button type="button" class="qopt" data-letter="${letters[i]}">
+          <span class="letter">${letters[i]}</span>
+          <span class="body">${body}</span>
+        </button>`;
+      }).join('');
+
+      opts.querySelectorAll('.qopt').forEach(btn => {
+        btn.addEventListener('click', () => answer(btn.dataset.letter));
+      });
+
+      document.getElementById('feedback').classList.remove('show');
+      document.getElementById('btnNext').disabled = true;
+      state.locked = false;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([stem, opts]).catch(()=>{});
+      }
+    }
+
+    function answer(letter) {
+      if (state.locked) return;
+      state.locked = true;
+      const it = state.items[state.idx];
+      const isCorrect = letter === it.correctAnswer;
+      state.responses.push({
+        itemId: it.id,
+        answer: letter,
+        isCorrect,
+        timeSpentMs: 0, // not tracking in MVP
+        answeredAt: new Date().toISOString(),
+      });
+      if (isCorrect) {
+        state.correctCount++;
+        state.streak++;
+        state.bestStreak = Math.max(state.bestStreak, state.streak);
+      } else {
+        state.streak = 0;
+      }
+
+      // Paint option states
+      const opts = document.getElementById('qopts').querySelectorAll('.qopt');
+      opts.forEach(o => {
+        o.classList.add('is-locked');
+        if (o.dataset.letter === it.correctAnswer) {
+          o.classList.add(isCorrect ? 'is-correct' : 'is-correct-untouched');
+        } else if (o.dataset.letter === letter) {
+          o.classList.add('is-wrong');
+        }
+      });
+
+      // Feedback band
+      const fb = document.getElementById('feedback');
+      fb.classList.add('show');
+      fb.classList.toggle('ok', isCorrect);
+      fb.classList.toggle('no', !isCorrect);
+      document.getElementById('fbIcon').textContent = isCorrect ? '✓' : '✗';
+      document.getElementById('fbTitle').textContent = isCorrect
+        ? (state.streak >= 3 ? `Correct! ${state.streak} in a row 🔥` : 'Correct!')
+        : 'Not quite';
+      document.getElementById('fbBody').textContent = isCorrect
+        ? 'Nice work — onto the next.'
+        : `The correct answer was ${it.correctAnswer}.`;
+
+      document.getElementById('btnNext').disabled = false;
+      renderProgress();
+    }
+
+    async function next() {
+      if (state.idx + 1 < state.items.length) {
+        state.idx++;
+        renderProgress();
+        renderItem();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Done — submit + show summary
+        try {
+          await submitAttempt();
+        } catch (e) {
+          console.warn('[practice-run] submit failed', e);
+        }
+        showDone();
+      }
+    }
+
+    function showDone() {
+      document.getElementById('qcard').hidden = true;
+      document.getElementById('doneCard').hidden = false;
+      if (CHALLENGE_ID) {
+        document.getElementById('doneActions').innerHTML =
+          '<a href="/daily-challenge" class="btn btn-secondary">See leaderboard</a>'
+          + '<a href="/practice" class="btn btn-primary">Free practice →</a>';
+      }
+
+      const pct = Math.round((state.correctCount / state.items.length) * 100);
+      document.getElementById('donePct').textContent = pct + '%';
+      document.getElementById('doneCorrect').textContent =
+        state.correctCount + ' / ' + state.items.length;
+      document.getElementById('doneStreak').textContent = state.bestStreak;
+      // Rough estimate — Cloud Function will award real points
+      const estPts = state.correctCount * 10 + state.bestStreak * 5;
+      document.getElementById('donePoints').textContent = '+' + estPts;
+
+      const verdict = document.getElementById('doneVerdict');
+      const sub = document.getElementById('doneSub');
+      if (pct === 100) {
+        verdict.textContent = 'Perfect run!';
+        sub.textContent = 'Every single one. Try a harder level?';
+      } else if (pct >= 80) {
+        verdict.textContent = 'Strong run';
+        sub.textContent = 'You\'re close to mastering this topic.';
+      } else if (pct >= 50) {
+        verdict.textContent = 'Solid effort';
+        sub.textContent = 'A few more runs and you\'ll have this.';
+      } else {
+        verdict.textContent = 'Keep going';
+        sub.textContent = 'This topic needs more reps. Try easier difficulty?';
+      }
+    }
+
+    async function quit() {
+      // Best effort — try to save partial attempt as submitted with what we have
+      if (state.attemptId && state.responses.length > 0) {
+        try { await submitAttempt(); } catch {}
+      }
+      window.location.href = '/practice';
+    }
+
+    function showError(msg) {
+      document.getElementById('loadState').hidden = true;
+      document.getElementById('qcard').hidden = true;
+      document.getElementById('errorState').hidden = false;
+      document.getElementById('errorMsg').textContent = msg;
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+    // Allowlist sanitiser — matches Students Hub test.html + ease-test.html.
+    // Allows <p>/<span>/<img https-only>/<br>/<strong>/<em>/<u>/<b>/<i>/<ul>/<ol>/<li>/<table>...
+    function sanitiseQuestionHtml(html) {
+      const ALLOW = new Set(['P','SPAN','IMG','BR','STRONG','EM','B','I','U','UL','OL','LI','TABLE','TR','TD','TH','TBODY','THEAD','SUP','SUB','DIV']);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = String(html || '');
+      const walk = (el) => {
+        [...el.children].forEach(walk);
+        if (!ALLOW.has(el.tagName)) {
+          const text = el.textContent || '';
+          el.replaceWith(document.createTextNode(text));
+          return;
+        }
+        if (el.tagName === 'IMG') {
+          const src = el.getAttribute('src') || '';
+          const rebased = src.startsWith('/storage/')
+            ? 'https://latihan.id' + src
+            : src;
+          [...el.attributes].forEach(a => el.removeAttribute(a.name));
+          if (/^https:\/\//i.test(rebased)) el.setAttribute('src', rebased);
+          el.setAttribute('alt', '');
+          el.setAttribute('loading', 'lazy');
+        } else {
+          // Strip everything except `class` (so math-tex spans still render)
+          [...el.attributes].forEach(a => {
+            if (a.name !== 'class') el.removeAttribute(a.name);
+          });
+        }
+      };
+      [...wrap.children].forEach(walk);
+      return wrap.innerHTML;
+    }
+  </script>
+</body>
+</html>

@@ -15,6 +15,8 @@
   <nav class="topbar-nav" id="topbarNav">
     <a href="/" data-nav="dashboard">Dashboard</a>
     <a href="/tests" data-nav="tests">Tests</a>
+    <a href="/practice" data-nav="practice">Practice</a>
+    <a href="/daily-challenge" data-nav="daily-challenge">Daily</a>
     <a href="/growth" data-nav="growth">Growth</a>
     <a href="/leaderboard" data-nav="leaderboard">Leaderboard</a>
     <a href="/profile" data-nav="profile">Profile</a>
@@ -35,9 +37,14 @@
     const path = (window.location.pathname.replace(/\/$/, '') || '/');
     const map  = {
       '/': 'dashboard', '/tests': 'tests', '/growth': 'growth',
-      '/leaderboard': 'leaderboard', '/profile': 'profile'
+      '/leaderboard': 'leaderboard', '/profile': 'profile',
+      '/practice': 'practice', '/daily-challenge': 'daily-challenge'
     };
-    const activeKey = map[path] || (path.startsWith('/test') ? 'tests' : null);
+    let activeKey = map[path] || null;
+    if (!activeKey) {
+      if (path.startsWith('/practice-run')) activeKey = 'practice';
+      else if (path.startsWith('/test'))    activeKey = 'tests';
+    }
     if (activeKey) {
       const link = document.querySelector('#topbarNav a[data-nav="' + activeKey + '"]');
       if (link) link.classList.add('active');

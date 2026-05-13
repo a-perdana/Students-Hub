@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Challenge — Students Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .hero-dc {
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      color: #fff;
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      margin-bottom: 22px;
+      box-shadow: var(--stage-glow);
+      position: relative; overflow: hidden;
+    }
+    .hero-dc::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 70%);
+    }
+    .hero-dc h1 { font-family: 'Lora', serif; font-size: clamp(1.4rem, 3vw, 2rem); margin: 0; }
+    .hero-dc .sub { opacity: .92; margin-top: 6px; }
+    .hero-dc .date-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 99px;
+      background: rgba(255,255,255,.22);
+      font-size: .82rem; font-weight: 600; margin-bottom: 12px;
+      backdrop-filter: blur(6px);
+    }
+
+    /* Subject tab row */
+    .subj-tabs {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 580px) { .subj-tabs { grid-template-columns: 1fr; } }
+    .subj-tab {
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all .15s;
+      display: flex; align-items: center; gap: 10px;
+      text-align: left;
+    }
+    .subj-tab:hover { border-color: var(--stage-primary); }
+    .subj-tab.is-active {
+      border-color: var(--stage-primary);
+      background: var(--stage-primary-2);
+    }
+    .subj-tab .glyph {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--stage-primary-2); color: var(--stage-primary-dk);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .subj-tab.is-active .glyph { background: var(--stage-primary); color: #fff; }
+    .subj-tab .meta strong { display: block; font-weight: 700; color: var(--ink); }
+    .subj-tab .meta span { font-size: .76rem; color: var(--ink-3); }
+    .subj-tab.is-done { border-color: var(--ok); }
+    .subj-tab.is-done .meta span { color: var(--ok); font-weight: 600; }
+
+    /* Challenge state card */
+    .dc-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      margin-bottom: 18px;
+      min-height: 180px;
+    }
+    .dc-card h3 { font-family: 'Lora', serif; font-size: 1.15rem; margin: 0 0 6px; }
+    .dc-card .lead { color: var(--ink-3); font-size: .92rem; margin-bottom: 18px; }
+    .dc-meta-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-bottom: 18px;
+    }
+    .dc-meta-chip {
+      padding: 5px 12px; border-radius: 99px;
+      background: var(--paper); border: 1px solid var(--border);
+      font-size: .82rem; color: var(--ink-2); font-weight: 600;
+    }
+    .dc-cta {
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      color: #fff; border: none;
+      padding: 14px 28px; border-radius: 10px;
+      font-weight: 700; font-size: .95rem;
+      cursor: pointer;
+      box-shadow: var(--stage-glow);
+      transition: all .15s;
+    }
+    .dc-cta:hover { transform: translateY(-1px); }
+    .dc-cta:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    /* Already-done state */
+    .dc-done {
+      background: var(--ok-bg);
+      border: 1.5px solid var(--ok);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .dc-done .icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--ok); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .dc-done .meta { flex: 1; }
+    .dc-done .meta strong { display: block; color: var(--ok); }
+    .dc-done .meta span { font-size: .85rem; color: var(--ink-2); }
+    .dc-done .pct {
+      font-family: 'Lora', serif; font-weight: 700; font-size: 1.5rem; color: var(--ok);
+    }
+
+    /* Leaderboard */
+    .lb-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+    }
+    .lb-card-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .lb-card-h h3 { font-family: 'Lora', serif; font-size: 1.05rem; margin: 0; }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 36px 36px 1fr auto auto;
+      gap: 10px; align-items: center;
+      padding: 10px 12px;
+      background: var(--paper); border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .lb-row.is-me { background: var(--stage-primary-2); border: 1.5px solid var(--stage-primary); }
+    .lb-row .medal {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .82rem;
+    }
+    .medal-gold   { background: var(--gold-2);   color: #92400e; }
+    .medal-silver { background: var(--silver-2); color: #475569; }
+    .medal-bronze { background: var(--bronze-2); color: #92400e; }
+    .medal-num    { background: var(--white); color: var(--ink-3); border: 1px solid var(--border); }
+    .lb-row .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--stage-primary-2); color: var(--stage-primary-dk);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .78rem;
+      overflow: hidden;
+    }
+    .lb-row .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .lb-row .name { font-weight: 600; color: var(--ink); font-size: .9rem; }
+    .lb-row .pct { font-family: 'Lora', serif; font-weight: 700; color: var(--ink); }
+    .lb-row .time { font-size: .76rem; color: var(--ink-3); }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page">
+    <section class="hero-dc">
+      <span class="date-chip" id="dateChip">Loading…</span>
+      <h1>Daily Challenge</h1>
+      <div class="sub">5 questions. Resets at midnight. Every classmate races the same set.</div>
+    </section>
+
+    <section class="subj-tabs" id="subjTabs">
+      <button type="button" class="subj-tab is-active" data-subj="math">
+        <span class="glyph">🧮</span>
+        <div class="meta"><strong>Math</strong><span id="mathStatus">Loading…</span></div>
+      </button>
+      <button type="button" class="subj-tab" data-subj="english">
+        <span class="glyph">📖</span>
+        <div class="meta"><strong>English</strong><span id="englishStatus">Loading…</span></div>
+      </button>
+      <button type="button" class="subj-tab" data-subj="science">
+        <span class="glyph">🔬</span>
+        <div class="meta"><strong>Science</strong><span id="scienceStatus">Loading…</span></div>
+      </button>
+    </section>
+
+    <section class="dc-card" id="dcBody">
+      <div class="empty" style="padding:14px 0; font-size:.88rem">Loading today's challenge…</div>
+    </section>
+
+    <section class="lb-card">
+      <div class="lb-card-h">
+        <h3>Class leaderboard — today</h3>
+        <span style="font-size:.78rem; color:var(--ink-3)" id="lbScope">your class</span>
+      </div>
+      <div id="lbBody">
+        <div class="empty" style="padding:14px 0; font-size:.88rem">Waiting for classmates to finish…</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      collection, query, where, orderBy, limit, getDocs,
+      doc, getDoc
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    const SUBJECTS = ['math', 'english', 'science'];
+    const SUBJ_LABEL = { math: 'Math', english: 'English', science: 'Science' };
+    const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
+
+    let state = {
+      subject: 'math',
+      todayKey: dateKey(new Date()),
+      challenges: {},   // subjectId → daily_challenges doc
+      myAttempts: {},   // subjectId → practice_attempts doc (submitted) | null
+    };
+
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    window.addEventListener('authReady', async (ev) => {
+      if (!ev.detail.signedIn) return;
+      document.getElementById('dateChip').textContent =
+        new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+      // Wire subject tabs
+      document.querySelectorAll('.subj-tab').forEach(t => {
+        t.addEventListener('click', () => selectSubject(t.dataset.subj));
+      });
+
+      // Fetch all 3 challenge docs in parallel
+      await Promise.all(SUBJECTS.map(s => fetchChallenge(s)));
+      await Promise.all(SUBJECTS.map(s => fetchMyAttempt(s)));
+      paintTabs();
+      selectSubject('math');
+    });
+
+    async function fetchChallenge(subj) {
+      try {
+        const id = `${state.todayKey}_${subj}`;
+        const snap = await getDoc(doc(window.db, 'daily_challenges', id));
+        state.challenges[subj] = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+      } catch (e) {
+        console.warn('[dc] challenge fetch failed', subj, e.message);
+        state.challenges[subj] = null;
+      }
+    }
+
+    async function fetchMyAttempt(subj) {
+      const c = state.challenges[subj];
+      if (!c) { state.myAttempts[subj] = null; return; }
+      try {
+        const q = query(
+          collection(window.db, 'practice_attempts'),
+          where('studentUid', '==', window.currentUser.uid),
+          where('challengeId', '==', c.id),
+          where('status', '==', 'submitted'),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        state.myAttempts[subj] = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+      } catch (e) {
+        console.warn('[dc] attempt fetch failed', subj, e.message);
+        state.myAttempts[subj] = null;
+      }
+    }
+
+    function paintTabs() {
+      SUBJECTS.forEach(s => {
+        const c = state.challenges[s];
+        const mine = state.myAttempts[s];
+        const tab = document.querySelector(`.subj-tab[data-subj="${s}"]`);
+        const status = document.getElementById(s + 'Status');
+        if (!c || c.status !== 'open') {
+          status.textContent = 'Not live';
+          tab.classList.remove('is-done');
+        } else if (mine) {
+          status.textContent = `Done · ${Math.round(mine.rawScorePct || 0)}%`;
+          tab.classList.add('is-done');
+        } else {
+          status.textContent = `${c.itemCount || 5} questions ready`;
+          tab.classList.remove('is-done');
+        }
+      });
+    }
+
+    function selectSubject(subj) {
+      state.subject = subj;
+      document.querySelectorAll('.subj-tab').forEach(t =>
+        t.classList.toggle('is-active', t.dataset.subj === subj)
+      );
+      renderBody();
+      loadLeaderboard();
+    }
+
+    function renderBody() {
+      const subj = state.subject;
+      const c = state.challenges[subj];
+      const mine = state.myAttempts[subj];
+      const box = document.getElementById('dcBody');
+
+      if (!c) {
+        box.innerHTML = `
+          <h3>${SUBJ_GLYPH[subj]} ${SUBJ_LABEL[subj]} challenge isn't live today</h3>
+          <p class="lead">HQ rotates challenges per subject. Check back tomorrow — or jump into free practice in the meantime.</p>
+          <a href="/practice" class="btn btn-secondary">Free practice →</a>
+        `;
+        return;
+      }
+
+      if (c.status !== 'open') {
+        box.innerHTML = `
+          <h3>${escHtml(c.title || SUBJ_LABEL[subj] + ' challenge')}</h3>
+          <p class="lead">This challenge is ${escHtml(c.status)}. See you tomorrow.</p>
+        `;
+        return;
+      }
+
+      // Live + open
+      const mix = c.difficultyMix || {};
+      const mixChips = ['easy', 'medium', 'hard']
+        .filter(d => (mix[d] || 0) > 0)
+        .map(d => `<span class="dc-meta-chip">${mix[d]} ${d}</span>`)
+        .join('');
+
+      if (mine) {
+        box.innerHTML = `
+          <h3>${escHtml(c.title || SUBJ_LABEL[subj] + ' — today')}</h3>
+          <p class="lead">${escHtml(c.description || 'Today\\'s rotation.')}</p>
+          <div class="dc-done">
+            <span class="icon">✓</span>
+            <div class="meta">
+              <strong>You\\'ve done today\\'s challenge</strong>
+              <span>${mine.correctCount} of ${mine.itemIds?.length || c.itemCount} correct${mine.streakBest >= 3 ? ' · best streak ' + mine.streakBest + ' 🔥' : ''}</span>
+            </div>
+            <span class="pct">${Math.round(mine.rawScorePct || 0)}%</span>
+          </div>
+        `;
+        return;
+      }
+
+      // Not done yet — show CTA
+      box.innerHTML = `
+        <h3>${escHtml(c.title || SUBJ_LABEL[subj] + ' — today')}</h3>
+        <p class="lead">${escHtml(c.description || 'Today\\'s rotation. Quick run — five questions, instant feedback.')}</p>
+        <div class="dc-meta-row">
+          <span class="dc-meta-chip">${c.itemCount || 5} questions</span>
+          ${mixChips}
+        </div>
+        <button type="button" class="dc-cta" id="btnGo">Start challenge →</button>
+      `;
+      document.getElementById('btnGo').addEventListener('click', () => {
+        window.location.href = `/practice-run?challenge=${encodeURIComponent(c.id)}`;
+      });
+    }
+
+    // ─── Class leaderboard ──────────────────────────────────────
+    // Reads practice_attempts where (classId, mode=='daily_challenge',
+    // submittedAt this-subject's challenge). Composite index registered.
+    async function loadLeaderboard() {
+      const box = document.getElementById('lbBody');
+      const scopeLabel = document.getElementById('lbScope');
+      const p = window.studentProfile;
+      const c = state.challenges[state.subject];
+      if (!c || !p.classId) {
+        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Need a class to see today\'s board.</div>';
+        return;
+      }
+      scopeLabel.textContent = p.className || 'your class';
+
+      try {
+        const q = query(
+          collection(window.db, 'practice_attempts'),
+          where('classId', '==', p.classId),
+          where('mode', '==', 'daily_challenge'),
+          where('challengeId', '==', c.id),
+          where('status', '==', 'submitted'),
+          orderBy('submittedAt', 'asc'),
+          limit(20)
+        );
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Nobody in your class has finished today yet. Be the first!</div>';
+          return;
+        }
+        const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort by (rawScorePct DESC, submittedAt ASC) — best score first, ties break on speed
+        rows.sort((a, b) => {
+          if ((b.rawScorePct || 0) !== (a.rawScorePct || 0)) {
+            return (b.rawScorePct || 0) - (a.rawScorePct || 0);
+          }
+          const at = a.submittedAt?.toMillis?.() || 0;
+          const bt = b.submittedAt?.toMillis?.() || 0;
+          return at - bt;
+        });
+        const me = window.currentUser.uid;
+        box.innerHTML = rows.slice(0, 10).map((r, i) => {
+          const isMe = r.studentUid === me;
+          const medal = i === 0 ? 'medal-gold' : i === 1 ? 'medal-silver' : i === 2 ? 'medal-bronze' : 'medal-num';
+          const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(r.studentUid, { size: 56 }) : '';
+          const when = r.submittedAt?.toDate?.()?.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) || '';
+          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
+            <span class="medal ${medal}">${i + 1}</span>
+            <span class="avatar">${avatarUrl ? `<img src="${avatarUrl}" alt="" loading="lazy">` : escHtml((r.studentName || '?')[0])}</span>
+            <span class="name">${escHtml(r.studentName || 'Student')}${isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700">YOU</span>' : ''}</span>
+            <span class="pct">${Math.round(r.rawScorePct || 0)}%</span>
+            <span class="time">${when}</span>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        console.warn('[dc] leaderboard load failed', e.message);
+        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Leaderboard unavailable right now.</div>';
+      }
+    }
+
+    function escHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+  </script>
+</body>
+</html>
