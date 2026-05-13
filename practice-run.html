@@ -88,7 +88,24 @@
       margin: 4px 0 !important;
       text-align: left !important;
     }
-    .qstem img { max-width: 100%; height: auto; border-radius: 8px; vertical-align: middle; }
+    /* Inline figure tile — wraps any <img> in the stem so the image's
+       white canvas reads as a deliberate framed figure rather than a
+       hard rectangle on the qcard surface (which can sit on paper /
+       mor-tint / hover backgrounds). `background:#fff` covers
+       transparent PNGs that would otherwise pick up the container
+       tint. Loading-state shimmer rule below is more specific
+       (`:not([src])`) so this doesn't disturb it. */
+    .qstem img {
+      background: #fff;
+      padding: 6px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+      max-width: 100%;
+      height: auto;
+      vertical-align: middle;
+      box-sizing: border-box;
+    }
     .qstem table { border-collapse: collapse; margin: 8px 0; }
     .qstem td, .qstem th { padding: 6px 12px; border: 1px solid var(--border); }
 
@@ -138,7 +155,19 @@
       flex-shrink: 0;
     }
     .qopt .body { flex: 1; line-height: 1.45; min-width: 0; }
-    .qopt .body img { max-width: 100%; height: auto; vertical-align: middle; border-radius: 4px; }
+    /* See .qstem img note — tighter padding here since option rows
+       are denser than the stem area. */
+    .qopt .body img {
+      background: #fff;
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+      max-width: 100%;
+      height: auto;
+      vertical-align: middle;
+      box-sizing: border-box;
+    }
     .qopt .body mjx-container { vertical-align: middle; }
     .qopt.is-locked { cursor: not-allowed; }
     .qopt.is-correct {
@@ -225,6 +254,7 @@
       display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
     }
     .done-actions .btn { padding: 12px 22px; }
+    /* HQ observer strip + flag modal styles are in base.css */
   </style>
 </head>
 <body style="display:none">
@@ -270,6 +300,42 @@
       <div class="run-foot">
         <button type="button" class="btn-next" id="btnNext" disabled>Next →</button>
       </div>
+
+      <!-- HQ observer strip — hidden unless studentProfile.is_hq_observer === true -->
+      <div class="obs-strip" id="obsStrip" hidden>
+        <span class="obs-eyebrow">HQ</span>
+        <span class="obs-id" id="obsId">—</span>
+        <span class="obs-meta" id="obsMeta"></span>
+        <button type="button" class="obs-btn" id="obsCopyBtn" title="Copy item ID">📋 Copy</button>
+        <a class="obs-btn" id="obsOpenLink" target="_blank" rel="noopener" title="Open in Central Hub">↗ Open in CH</a>
+        <button type="button" class="obs-btn is-primary" id="obsFlagBtn" title="Flag this item for HQ review">⚑ Flag</button>
+      </div>
+    </div>
+
+    <!-- HQ flag modal -->
+    <div class="obs-modal-back" id="obsModal" role="dialog" aria-modal="true" aria-labelledby="obsModalTitle">
+      <div class="obs-modal">
+        <h3 id="obsModalTitle">Flag question for HQ review</h3>
+        <p class="sub">Routes to <code>practice_question_flags</code>. Specialists triage from CH /practice-bank-flags.</p>
+        <div class="obs-modal-id" id="obsModalId">—</div>
+        <label class="obs-reason" for="obsReason">Reason</label>
+        <select id="obsReason">
+          <option value="formatting">Formatting / rendering broken (table strip, math, image)</option>
+          <option value="ambiguous">Ambiguous wording or multiple correct answers</option>
+          <option value="wrong_answer">Marked answer is wrong</option>
+          <option value="off_curriculum">Off-curriculum / not Cambridge-aligned</option>
+          <option value="culturally_inappropriate">Culturally inappropriate</option>
+          <option value="duplicate">Duplicate of another item</option>
+          <option value="other">Other (describe below)</option>
+        </select>
+        <label class="obs-reason" for="obsNote">Note <span style="font-weight:400;color:var(--ink-3)">(optional, max 280 chars)</span></label>
+        <textarea id="obsNote" maxlength="280" placeholder="Anything HQ should know — quote the bad cell, paste the right answer, etc."></textarea>
+        <p class="obs-modal-err" id="obsModalErr"></p>
+        <div class="obs-modal-actions">
+          <button type="button" class="btn btn-secondary" id="obsCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="obsSubmitBtn">Submit flag</button>
+        </div>
+      </div>
     </div>
 
     <div id="doneCard" class="done-card" hidden>
@@ -293,6 +359,7 @@
 
   <script type="module" src="auth-guard.js"></script>
   <script src="./partials/feedback-fx.js"></script>
+  <script src="./partials/observer-strip.js"></script>
   <script type="module">
     import {
       collection, query, where, orderBy, limit, getDocs,
@@ -350,6 +417,34 @@
       document.getElementById('btnNext').addEventListener('click', next);
       document.getElementById('btnAgain').addEventListener('click',
         () => { window.location.href = window.location.href; });
+
+      // ─── HQ observer strip wiring ─────────────────────────────
+      // students/{uid}.is_hq_observer is a CH-managed flag. We only
+      // expose the runner identity overlay when it's true. Helper
+      // lives in /partials/observer-strip.js — loaded before this
+      // module so window.installObserverStrip is available.
+      const obs = window.installObserverStrip({
+        collection: 'practice_questions',
+        chDeeplink: 'practice-bank-admin?item=',
+        stripEl:    document.getElementById('obsStrip'),
+        elements: {
+          idEl:       document.getElementById('obsId'),
+          metaEl:     document.getElementById('obsMeta'),
+          copyBtn:    document.getElementById('obsCopyBtn'),
+          openLink:   document.getElementById('obsOpenLink'),
+          flagBtn:    document.getElementById('obsFlagBtn'),
+          modal:      document.getElementById('obsModal'),
+          modalId:    document.getElementById('obsModalId'),
+          reasonSel:  document.getElementById('obsReason'),
+          noteTa:     document.getElementById('obsNote'),
+          errEl:      document.getElementById('obsModalErr'),
+          cancelBtn:  document.getElementById('obsCancelBtn'),
+          submitBtn:  document.getElementById('obsSubmitBtn'),
+        },
+        firestore: { addDoc, collection, serverTimestamp },
+      });
+      window.__obsStripUpdate = obs.update;
+
       try {
         await loadItems();
         await createAttempt();
@@ -552,6 +647,9 @@
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([stem, opts]).catch(()=>{});
       }
+
+      // HQ observer strip — only visible when students/{uid}.is_hq_observer === true.
+      if (window.__obsStripUpdate) window.__obsStripUpdate(it);
     }
 
     function answer(letter) {

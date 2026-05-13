@@ -343,7 +343,32 @@ body.test-mode .topbar { display: none; }
 .qopt.selected .qopt-letter {
   background: var(--mor); color: #fff;
 }
-.qopt-text { flex: 1; font-size: 0.96rem; line-height: 1.5; }
+.qopt-text { flex: 1; font-size: 0.96rem; line-height: 1.5; min-width: 0; }
+
+/* Diagram / option images often arrive on a flat white canvas (ExamView,
+ * latihan.id). When the surrounding container is paper / mor-2 / hover
+ * tint the image's white edge becomes a hard rectangular seam. Wrap
+ * every <img> inside a stem or option in a small white "tile" — soft
+ * border, gentle shadow, breathing-room padding — so it reads as a
+ * deliberate inline figure regardless of the container's bg colour.
+ * `background:#fff` is intentional even though most images already are
+ * — it covers transparent PNGs that would otherwise pick up the option
+ * tint. */
+.qstem img,
+.qopt-text img {
+  background: #fff;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04);
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+/* Slightly tighter padding inside options — options are denser than
+ * the stem area. */
+.qopt-text img { padding: 4px; border-radius: 8px; }
 
 .test-nav {
   display: flex; gap: 12px; margin-top: 24px;
@@ -1128,3 +1153,116 @@ body[data-stage="checkpoint"] .tier-chip {
     transform: none;
   }
 }
+
+/* ─── HQ Observer Strip ─────────────────────────────────────────────
+   Shared by /practice-run, /test and /ease-test. Only rendered when
+   students/{uid}.is_hq_observer === true. Plain students never see it.
+   Helper: partials/observer-strip.js builds the runtime behaviour.
+   Flag target: practice_question_flags collection.
+*/
+.obs-strip {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px dashed #f59e0b;
+  border-radius: 8px;
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+  font-size: .8rem;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.obs-strip .obs-eyebrow {
+  font-family: 'DM Sans', sans-serif;
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #92400e;
+}
+.obs-strip .obs-id {
+  flex: 1 1 auto; min-width: 200px;
+  color: #1f2937; font-weight: 600;
+  word-break: break-all;
+}
+.obs-strip .obs-meta {
+  font-family: 'DM Sans', sans-serif;
+  color: #92400e; font-size: .76rem;
+}
+.obs-strip .obs-btn {
+  font-family: 'DM Sans', sans-serif;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: .76rem; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  border: 1px solid #f59e0b;
+  background: #fff; color: #92400e;
+  transition: background .12s;
+}
+.obs-strip .obs-btn:hover { background: #fef3c7; }
+.obs-strip .obs-btn.is-primary { background: #f59e0b; color: #fff; }
+.obs-strip .obs-btn.is-primary:hover { background: #d97706; }
+.obs-strip .obs-btn.is-flagged { background: #ef4444; color: #fff; border-color: #dc2626; cursor: default; }
+
+.obs-modal-back {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 100;
+}
+.obs-modal-back.is-open { display: flex; }
+.obs-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 460px;
+  width: calc(100% - 32px);
+  box-shadow: 0 20px 60px -10px rgba(0,0,0,.3);
+}
+.obs-modal h3 {
+  margin: 0 0 6px;
+  font-family: 'Lora', serif;
+  font-size: 1.15rem;
+}
+.obs-modal p.sub {
+  margin: 0 0 14px;
+  color: var(--ink-3);
+  font-size: .85rem;
+}
+.obs-modal .obs-modal-id {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: .76rem;
+  background: var(--paper);
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  word-break: break-all;
+}
+.obs-modal label.obs-reason {
+  display: block;
+  font-size: .82rem;
+  color: var(--ink-2);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.obs-modal select, .obs-modal textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: .9rem;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+.obs-modal textarea { min-height: 70px; resize: vertical; }
+.obs-modal .obs-modal-actions {
+  display: flex; gap: 10px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.obs-modal .obs-modal-err {
+  color: var(--danger);
+  font-size: .8rem;
+  margin: 0 0 8px;
+  display: none;
+}
+.obs-modal .obs-modal-err.is-visible { display: block; }
