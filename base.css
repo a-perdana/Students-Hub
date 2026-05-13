@@ -112,14 +112,14 @@ body[data-stage="igcse"] {
   background:
     radial-gradient(ellipse 800px 600px at 0% 0%,    rgba(108,92,231,.20) 0%, transparent 65%),
     radial-gradient(ellipse 800px 600px at 100% 100%, rgba(8,145,178,.20)  0%, transparent 65%),
-    var(--paper);
+    #f4f1ff;   /* soft lavender cream base — mor-tinted */
   background-attachment: fixed;
 }
 body[data-stage="alevel"] {
   background:
     radial-gradient(ellipse 800px 600px at 0% 0%,    rgba(30,41,59,.18) 0%, transparent 65%),
     radial-gradient(ellipse 800px 600px at 100% 100%, rgba(220,38,38,.16) 0%, transparent 65%),
-    var(--paper);
+    #f1f3f9;   /* soft slate cream base — navy-tinted */
   background-attachment: fixed;
 }
 
@@ -984,23 +984,15 @@ body[data-stage="checkpoint"] {
 }
 
 /* Soft tinted page background for Checkpoint — two radial washes
-   (emerald top-left, amber bottom-right) over the base paper grey.
-   Cards keep their white/paper fills, so the wash only shows in
-   negative space (gutters, around the hero, behind the achievements
-   row). Fixed attachment so the tint stays put while content
-   scrolls — feels like a stage set.
-   Pure cosmetic — no semantic impact.
-
-   Note: opacity bumped from .10 to .22 because the original .10
-   was below the eye's noticeability threshold against #f7f7fb
-   paper — first round of feedback couldn't tell anything had
-   changed. .22 keeps it subtle (cards still pop white) but the
-   tint is now legibly different from neutral grey. */
+   (emerald top-left, amber bottom-right) layered on a soft mint-
+   cream base instead of neutral paper grey. Cards keep their
+   white/paper fills, so the wash only shows in negative space.
+   Fixed attachment so the tint stays put while content scrolls. */
 body[data-stage="checkpoint"] {
   background:
     radial-gradient(ellipse 800px 600px at 0% 0%,    rgba(16,185,129,.22) 0%, transparent 65%),
     radial-gradient(ellipse 800px 600px at 100% 100%, rgba(251,191,36,.22) 0%, transparent 65%),
-    var(--paper);
+    #f0fbf6;   /* soft mint cream base — emerald-tinted off-white */
   background-attachment: fixed;
 }
 
