@@ -103,6 +103,26 @@ body[data-stage="alevel"] {
   --stage-glow:       0 18px 40px -16px rgba(30,41,59,.55);
 }
 
+/* Stage-tinted page backgrounds — applied to the IGCSE + A-Level
+   bodies same way as Checkpoint (defined later in this file).
+   Each stage gets its own dual-radial wash so the negative space
+   subtly echoes the hero gradient instead of sitting on neutral
+   grey. Fixed attachment for the scroll-stage feel. */
+body[data-stage="igcse"] {
+  background:
+    radial-gradient(ellipse 700px 500px at 0% 0%,    rgba(108,92,231,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 100%, rgba(8,145,178,.10)  0%, transparent 60%),
+    var(--paper);
+  background-attachment: fixed;
+}
+body[data-stage="alevel"] {
+  background:
+    radial-gradient(ellipse 700px 500px at 0% 0%,    rgba(30,41,59,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 100%, rgba(220,38,38,.08) 0%, transparent 60%),
+    var(--paper);
+  background-attachment: fixed;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -961,6 +981,21 @@ body[data-stage="checkpoint"] {
   --cp-radius-lg:     24px;
   --cp-border:        2px solid rgba(6,95,70,.16);
   --cp-spring:        cubic-bezier(.34,1.56,.64,1);
+}
+
+/* Soft tinted page background for Checkpoint — two faint radial
+   washes (emerald top-left, amber bottom-right) over the base
+   paper grey. Cards keep their white/paper fills, so the wash
+   only shows in negative space (gutters, around the hero, behind
+   the achievements row). Fixed attachment so the tint stays put
+   while content scrolls — feels like a stage set.
+   Pure cosmetic — no semantic impact. */
+body[data-stage="checkpoint"] {
+  background:
+    radial-gradient(ellipse 700px 500px at 0% 0%,    rgba(16,185,129,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 100%, rgba(251,191,36,.10) 0%, transparent 60%),
+    var(--paper);
+  background-attachment: fixed;
 }
 
 /* Cards: thicker borders, chunky offset shadow, more rounded */
