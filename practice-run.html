@@ -92,29 +92,39 @@
     .qstem table { border-collapse: collapse; margin: 8px 0; }
     .qstem td, .qstem th { padding: 6px 12px; border: 1px solid var(--border); }
 
-    /* Loading skeleton for <img data-storage-path> while the Storage
-       SDK resolves the auth'd URL. Replaces the broken-image flash
-       with a calm shimmer. Auto-removed once `src` is patched in by
-       hydrateStorageImages(); on 5s timeout replaceWithImageToken()
-       swaps the <img> for an inline '🖼️ image' pill instead. */
+    /* Loading state for <img data-storage-path> while the Storage
+       SDK resolves the auth'd URL. Renders as a circular spinner
+       using a CSS-only conic-gradient. Auto-removed once `src` is
+       patched in by hydrateStorageImages(); on 5s timeout
+       replaceWithImageToken() swaps the <img> for an inline '🖼️
+       image' pill instead.
+       Implementation note: <img> elements can't host child pseudo-
+       elements, so we use a background conic-gradient + mask to
+       draw the rotating ring directly on the <img> box. */
     .qstem img:not([src]), .qstem img[src=""],
     .qopt  img:not([src]), .qopt  img[src=""] {
       display: inline-block;
-      width: 60px; height: 24px;
-      background: linear-gradient(90deg,
-        rgba(0,0,0,.04) 0%, rgba(0,0,0,.10) 50%, rgba(0,0,0,.04) 100%);
-      background-size: 200% 100%;
-      animation: fx-img-shimmer 1.2s ease-in-out infinite;
-      border-radius: 6px;
+      width: 28px; height: 28px;
+      border-radius: 50%;
       vertical-align: middle;
+      background:
+        conic-gradient(from 0deg,
+          var(--stage-primary, #6c5ce7) 0deg,
+          var(--stage-primary, #6c5ce7) 90deg,
+          rgba(0,0,0,.06) 90deg,
+          rgba(0,0,0,.06) 360deg);
+      -webkit-mask: radial-gradient(circle, transparent 8px, #000 9px);
+              mask: radial-gradient(circle, transparent 8px, #000 9px);
+      animation: fx-img-spin .9s linear infinite;
     }
-    /* Stem images are usually larger — give them a roomier skeleton */
+    /* Stem images are usually larger — slightly bigger spinner */
     .qstem img:not([src]), .qstem img[src=""] {
-      width: 120px; height: 40px;
+      width: 36px; height: 36px;
+      -webkit-mask: radial-gradient(circle, transparent 11px, #000 12px);
+              mask: radial-gradient(circle, transparent 11px, #000 12px);
     }
-    @keyframes fx-img-shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+    @keyframes fx-img-spin {
+      to { transform: rotate(360deg); }
     }
     @media (prefers-reduced-motion: reduce) {
       .qstem img:not([src]), .qopt img:not([src]) { animation: none; }
