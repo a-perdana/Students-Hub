@@ -925,3 +925,173 @@ body.test-mode .topbar { display: none; }
   .fx-levelup-overlay { transition: opacity .12s; }
   .fx-levelup-card { transition: none; transform: none; }
 }
+
+/* ───────────────────────────────────────────────────────────────
+ * CHECKPOINT-STAGE CARTOON OVERHAUL (Year 7-8 pilot, 2026-05-13)
+ *
+ * Scoped to body[data-stage="checkpoint"] only — IGCSE + A-Level
+ * keep their existing professional chrome.
+ *
+ * Design hooks:
+ *   - "Chunky" offset shadows for a 3D-button game feel
+ *   - Larger border-radius everywhere (18-24px)
+ *   - Thicker borders (2-3px)
+ *   - Boosted colour saturation in the Checkpoint palette
+ *   - Springier interaction transitions (cubic-bezier overshoot)
+ *
+ * Nothing is page-specific — pages that respect base.css tokens
+ * inherit automatically. Page-level overrides on specific surfaces
+ * (dashboard hero, quest panel) live in their own <style> block.
+ * ─────────────────────────────────────────────────────────────── */
+body[data-stage="checkpoint"] {
+  /* Boost the existing emerald + amber palette */
+  --stage-primary:    #059669;
+  --stage-primary-dk: #065f46;
+  --stage-primary-2:  #d1fae5;
+  --stage-accent:     #f59e0b;
+  --stage-accent-dk:  #b45309;
+  --stage-accent-2:   #fef3c7;
+  --stage-gradient:   linear-gradient(135deg, #10b981 0%, #fbbf24 100%);
+  --stage-glow:       0 14px 28px -8px rgba(16,185,129,.45),
+                      0 0 0 1px rgba(255,255,255,.4) inset;
+  /* Cartoon-specific tokens */
+  --cp-shadow-chunk:  0 4px 0 rgba(6,95,70,.18);
+  --cp-shadow-chunk-lg: 0 6px 0 rgba(6,95,70,.22);
+  --cp-radius:        18px;
+  --cp-radius-lg:     24px;
+  --cp-border:        2px solid rgba(6,95,70,.16);
+  --cp-spring:        cubic-bezier(.34,1.56,.64,1);
+}
+
+/* Cards: thicker borders, chunky offset shadow, more rounded */
+body[data-stage="checkpoint"] .card {
+  border: var(--cp-border);
+  border-radius: var(--cp-radius);
+  box-shadow: var(--cp-shadow-chunk);
+  transition: transform .15s var(--cp-spring),
+              box-shadow .15s var(--cp-spring);
+}
+body[data-stage="checkpoint"] .card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cp-shadow-chunk-lg);
+}
+
+/* Hero — extra punch + soft rotated highlight */
+body[data-stage="checkpoint"] .stage-hero,
+body[data-stage="checkpoint"] .hero-dc,
+body[data-stage="checkpoint"] .ease-cta,
+body[data-stage="checkpoint"] .start-bar {
+  border-radius: var(--cp-radius-lg);
+  box-shadow:
+    0 18px 32px -8px rgba(16,185,129,.45),
+    0 8px 0 rgba(6,95,70,.18),
+    0 0 0 2px rgba(255,255,255,.4) inset;
+}
+
+/* Primary buttons get a 3D-game button feel */
+body[data-stage="checkpoint"] .btn-primary,
+body[data-stage="checkpoint"] .dc-cta,
+body[data-stage="checkpoint"] .btn-start,
+body[data-stage="checkpoint"] .btn-next {
+  border-radius: 14px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  box-shadow: 0 4px 0 rgba(6,95,70,.32),
+              0 8px 16px -4px rgba(16,185,129,.45);
+  transition: transform .12s var(--cp-spring),
+              box-shadow .12s var(--cp-spring);
+}
+body[data-stage="checkpoint"] .btn-primary:hover,
+body[data-stage="checkpoint"] .dc-cta:hover,
+body[data-stage="checkpoint"] .btn-start:hover:not(:disabled),
+body[data-stage="checkpoint"] .btn-next:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 0 rgba(6,95,70,.32),
+              0 10px 22px -4px rgba(16,185,129,.55);
+}
+body[data-stage="checkpoint"] .btn-primary:active,
+body[data-stage="checkpoint"] .dc-cta:active,
+body[data-stage="checkpoint"] .btn-start:active:not(:disabled),
+body[data-stage="checkpoint"] .btn-next:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(6,95,70,.32),
+              0 3px 8px -2px rgba(16,185,129,.55);
+}
+
+/* Stat tiles get chunky shadows + spring hover */
+body[data-stage="checkpoint"] .stat-tile {
+  border: var(--cp-border);
+  border-radius: var(--cp-radius);
+  box-shadow: var(--cp-shadow-chunk);
+  transition: transform .15s var(--cp-spring),
+              box-shadow .15s var(--cp-spring);
+}
+body[data-stage="checkpoint"] .stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cp-shadow-chunk-lg);
+}
+
+/* CTA tiles → bouncier hover */
+body[data-stage="checkpoint"] .cta-tile {
+  border: var(--cp-border);
+  border-radius: var(--cp-radius);
+  box-shadow: var(--cp-shadow-chunk);
+  transition: transform .18s var(--cp-spring),
+              box-shadow .18s var(--cp-spring),
+              border-color .12s;
+}
+body[data-stage="checkpoint"] .cta-tile:hover {
+  transform: translateY(-3px) rotate(-.4deg);
+  box-shadow: var(--cp-shadow-chunk-lg);
+}
+body[data-stage="checkpoint"] .cta-tile:nth-child(2n):hover { transform: translateY(-3px) rotate(.4deg); }
+
+/* Level badge — slightly thicker ring + drop shadow */
+body[data-stage="checkpoint"] .level-badge .ring-track { stroke-width: 6; }
+body[data-stage="checkpoint"] .level-badge .ring-fill  { stroke-width: 6; }
+body[data-stage="checkpoint"] .level-badge .level-num {
+  box-shadow:
+    0 4px 0 rgba(6,95,70,.32),
+    var(--stage-glow);
+}
+
+/* Topbar: cleaner separation, no glass effect needed */
+body[data-stage="checkpoint"] .topbar {
+  border-bottom: 2px solid rgba(6,95,70,.12);
+  box-shadow: 0 2px 0 rgba(6,95,70,.06);
+}
+body[data-stage="checkpoint"] .topbar-nav a.active {
+  background: var(--stage-primary);
+  box-shadow: 0 3px 0 rgba(6,95,70,.32);
+}
+
+/* Stage chip — pill with a hand-drawn vibe */
+body[data-stage="checkpoint"] .stage-chip {
+  border: 2px solid currentColor;
+  font-weight: 700;
+  letter-spacing: .04em;
+  padding: 4px 12px;
+}
+body[data-stage="checkpoint"] .tier-chip {
+  font-weight: 800;
+  letter-spacing: .06em;
+  box-shadow: 0 2px 0 rgba(6,95,70,.18);
+}
+
+/* Reduced motion respects user preference */
+@media (prefers-reduced-motion: reduce) {
+  body[data-stage="checkpoint"] .card,
+  body[data-stage="checkpoint"] .stat-tile,
+  body[data-stage="checkpoint"] .cta-tile,
+  body[data-stage="checkpoint"] .btn-primary,
+  body[data-stage="checkpoint"] .dc-cta,
+  body[data-stage="checkpoint"] .btn-start,
+  body[data-stage="checkpoint"] .btn-next {
+    transition: none;
+  }
+  body[data-stage="checkpoint"] .card:hover,
+  body[data-stage="checkpoint"] .stat-tile:hover,
+  body[data-stage="checkpoint"] .cta-tile:hover {
+    transform: none;
+  }
+}

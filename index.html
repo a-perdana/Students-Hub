@@ -7,36 +7,171 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
   <style>
-    /* Hero — stage-themed gradient with level / streak / points */
-    .hero {
-      position: relative;
-      margin-bottom: 22px;
-    }
-    .hero-grid {
+    /* ─── Hero v2 — big avatar + quest welcome ─────────────────── */
+    .hero-v2 {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 24px; align-items: center;
+      grid-template-columns: auto 1fr auto;
+      gap: 24px;
+      align-items: center;
+      padding: 24px 28px;
+      margin-bottom: 22px;
+      background: var(--stage-gradient);
+      color: #fff;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--stage-glow);
+      position: relative; overflow: hidden;
+    }
+    .hero-v2::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 90% 20%, rgba(255,255,255,.18) 0%, transparent 55%);
+      pointer-events: none;
     }
     @media (max-width: 720px) {
-      .hero-grid { grid-template-columns: 1fr; }
-    }
-    .hero-title { font-size: clamp(1.5rem, 3vw, 2rem); }
-    .hero-name  { font-weight: 700; }
-    .hero-meta-row {
-      display: flex; flex-wrap: wrap; gap: 8px;
-      margin-top: 14px;
-    }
-    .hero-right {
-      display: flex; align-items: center; gap: 16px;
-    }
-    @media (max-width: 720px) {
-      .hero-right { justify-content: flex-start; flex-wrap: wrap; }
+      .hero-v2 {
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        gap: 16px 18px;
+      }
+      .hero-v2 .hero-cta { grid-column: 1 / -1; }
     }
 
-    /* Stat tiles row */
+    /* Big avatar with tier ring */
+    .hero-avatar-shell {
+      position: relative;
+      width: 110px; height: 110px;
+      flex-shrink: 0;
+    }
+    .hero-avatar-shell svg.tier-ring {
+      position: absolute; inset: 0;
+      transform: rotate(-90deg);
+      width: 100%; height: 100%;
+    }
+    .hero-avatar-shell .ring-track-v2 { fill: none; stroke: rgba(255,255,255,.25); stroke-width: 6; }
+    .hero-avatar-shell .ring-fill-v2  { fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round;
+      transition: stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1);
+      filter: drop-shadow(0 0 6px rgba(255,255,255,.55));
+    }
+    .hero-avatar-shell .avatar-pic {
+      position: absolute; inset: 12px;
+      border-radius: 50%; overflow: hidden;
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 6px 18px -4px rgba(0,0,0,.25);
+    }
+    .hero-avatar-shell .avatar-pic img { width: 100%; height: 100%; display: block; }
+    .hero-avatar-shell .lvl-badge {
+      position: absolute; bottom: -4px; right: -4px;
+      min-width: 32px; height: 32px; padding: 0 8px;
+      border-radius: 16px;
+      background: #fff; color: var(--stage-primary-dk);
+      font-weight: 800; font-size: .85rem;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,.18), 0 0 0 2px var(--stage-primary);
+    }
+
+    /* Hero text */
+    .hero-text { min-width: 0; }
+    .hero-greet { font-size: .82rem; opacity: .88; font-weight: 600; }
+    .hero-name  { font-family: 'Lora', serif; font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 600; margin: 2px 0 6px; }
+    .hero-meta-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px;
+      background: rgba(255,255,255,.2);
+      border-radius: 99px;
+      font-size: .75rem; font-weight: 600;
+      backdrop-filter: blur(6px);
+    }
+    .hero-pill[data-tier] { background: rgba(255,255,255,.95); color: var(--stage-primary-dk); }
+
+    /* Hero CTA — primary daily challenge entry */
+    .hero-cta {
+      background: rgba(255,255,255,.95);
+      color: var(--stage-primary-dk);
+      padding: 12px 18px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 700;
+      display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: 0 6px 14px -3px rgba(0,0,0,.18);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 18px -3px rgba(0,0,0,.25); text-decoration: none; }
+    .hero-cta .arrow { font-size: 1.05rem; }
+    .hero-cta-eyebrow { display: block; font-size: .68rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; opacity: .65; }
+
+    /* ─── Quest panel ──────────────────────────────────────────── */
+    .quest-panel { margin-bottom: 22px; }
+    .quest-h {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .quest-h h2 { font-family: 'Lora', serif; font-size: 1.2rem; margin: 0; }
+    .quest-h .meta { font-size: .8rem; color: var(--ink-3); }
+
+    .quest-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    }
+    @media (max-width: 760px) { .quest-grid { grid-template-columns: 1fr; } }
+
+    .quest-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex; flex-direction: column;
+      min-height: 140px;
+      position: relative; overflow: hidden;
+      transition: transform .15s, box-shadow .15s, border-color .15s;
+      text-decoration: none; color: inherit;
+    }
+    .quest-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+      border-color: var(--stage-primary);
+      text-decoration: none;
+    }
+    .quest-card.is-done {
+      background: var(--ok-bg);
+      border-color: var(--ok);
+    }
+    .quest-card.is-done::after {
+      content: '✓';
+      position: absolute; top: 12px; right: 14px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--ok); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1rem;
+    }
+    .quest-card .q-glyph {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--stage-primary-2);
+      color: var(--stage-primary-dk);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      margin-bottom: 10px;
+    }
+    .quest-card.is-done .q-glyph { background: rgba(255,255,255,.6); color: var(--ok); }
+    .quest-card .q-title { font-weight: 700; color: var(--ink); margin-bottom: 2px; font-size: .95rem; }
+    .quest-card .q-sub   { font-size: .78rem; color: var(--ink-3); line-height: 1.4; flex: 1; }
+    .quest-card .q-reward {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: .76rem; font-weight: 700;
+      color: var(--stage-primary-dk);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .quest-card.is-done .q-reward {
+      color: var(--ok);
+      border-top-color: rgba(22,101,52,.25);
+    }
+
+    /* ─── Stat tiles row (compacted) ───────────────────────────── */
     .stat-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -45,7 +180,99 @@
     }
     @media (max-width: 880px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
 
-    /* Main grid */
+    /* ─── Class Race widget ───────────────────────────────────── */
+    .race-card {
+      background: linear-gradient(135deg, var(--mor-2) 0%, var(--cyan-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 22px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+    }
+    @media (max-width: 720px) { .race-card { grid-template-columns: 1fr; } }
+    .race-text h3 { font-family: 'Lora', serif; font-size: 1.1rem; margin: 0 0 4px; }
+    .race-text p { margin: 0 0 8px; color: var(--ink-2); font-size: .88rem; }
+    .race-stat {
+      font-family: 'Lora', serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--stage-primary-dk);
+      line-height: 1;
+    }
+    .race-stat .total { color: var(--ink-3); font-size: 1rem; }
+    .race-podium {
+      display: flex; gap: 6px;
+      align-items: flex-end;
+    }
+    .race-podium .race-spot {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px;
+    }
+    .race-podium .race-spot .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff; overflow: hidden;
+      box-shadow: 0 4px 10px -2px rgba(0,0,0,.15);
+      border: 2px solid #fff;
+    }
+    .race-podium .race-spot .avatar img { width: 100%; height: 100%; display: block; }
+    .race-podium .race-spot .medal {
+      font-size: 1.1rem;
+    }
+    .race-podium .race-spot.rank-1 .avatar { width: 52px; height: 52px; border-color: var(--gold); }
+    .race-podium .race-spot.rank-2 .avatar { border-color: var(--silver); }
+    .race-podium .race-spot.rank-3 .avatar { border-color: var(--bronze); }
+
+    /* ─── Achievements row ────────────────────────────────────── */
+    .ach-card {
+      margin-bottom: 22px;
+    }
+    .ach-h {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .ach-h h2 { font-family: 'Lora', serif; font-size: 1.2rem; margin: 0; }
+    .ach-h .meta { font-size: .82rem; color: var(--ink-3); }
+    .ach-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 880px) { .ach-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 480px) { .ach-row { grid-template-columns: repeat(2, 1fr); } }
+
+    .ach-tile {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 8px;
+      text-align: center;
+      transition: transform .12s;
+    }
+    .ach-tile:hover { transform: translateY(-2px); }
+    .ach-tile.locked { background: var(--paper); border-style: dashed; opacity: .85; }
+    .ach-tile .ach-glyph {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+      filter: drop-shadow(0 2px 6px rgba(108,92,231,.18));
+    }
+    .ach-tile.locked .ach-glyph { filter: grayscale(.85) opacity(.4); }
+    .ach-tile .ach-label { font-size: .72rem; font-weight: 600; color: var(--ink-2); line-height: 1.2; }
+    .ach-tile.locked .ach-label { color: var(--ink-3); }
+    .ach-tile .ach-progress {
+      margin-top: 6px;
+      height: 4px; border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .ach-tile .ach-progress > span {
+      display: block; height: 100%;
+      background: var(--stage-gradient);
+      transition: width .6s cubic-bezier(.2,.8,.2,1);
+    }
+
+    /* ─── Lower grid (existing content, kept) ────────────────── */
     .grid-2 { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
     @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
 
@@ -54,7 +281,7 @@
       gap: 12px; margin-bottom: 14px;
     }
     .card-h h3 { font-family: 'Lora', serif; font-size: 1.05rem; margin: 0; }
-    .card-h .more { font-size: .82rem; color: var(--stage-primary-dk); font-weight: 600; }
+    .card-h .more { font-size: .82rem; color: var(--stage-primary-dk); font-weight: 700; }
 
     .test-row {
       display: flex; align-items: center; justify-content: space-between;
@@ -81,7 +308,6 @@
     .test-row-score.pass { background: var(--ok-bg); color: var(--ok); }
     .test-row-score.fail { background: var(--danger-bg); color: var(--danger); }
 
-    /* Growth row */
     .grow-row {
       display: flex; align-items: center; justify-content: space-between;
       gap: 12px; padding: 10px 0;
@@ -98,9 +324,7 @@
     .grow-meta { flex: 1; min-width: 0; }
     .grow-name { font-weight: 600; color: var(--ink); font-size: .94rem; }
     .grow-sub  { font-size: .76rem; color: var(--ink-3); }
-    .grow-score {
-      font-family: 'Lora', serif; font-weight: 700; font-size: 1.15rem; color: var(--ink);
-    }
+    .grow-score { font-family: 'Lora', serif; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
     .grow-delta {
       display: inline-block; margin-left: 6px;
       padding: 2px 8px; border-radius: 99px;
@@ -108,81 +332,6 @@
     }
     .grow-delta.up   { background: var(--ok-bg); color: var(--ok); }
     .grow-delta.down { background: var(--danger-bg); color: var(--danger); }
-
-    /* EASE window CTA */
-    .ease-cta {
-      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
-      color: #fff;
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 14px;
-      box-shadow: var(--stage-glow);
-      display: flex; align-items: center; gap: 14px;
-    }
-    .ease-cta-icon {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: rgba(255,255,255,.22); backdrop-filter: blur(8px);
-      display: inline-flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; flex-shrink: 0;
-    }
-    .ease-cta-meta { flex: 1; min-width: 0; }
-    .ease-cta-meta strong { display: block; font-size: .95rem; }
-    .ease-cta-meta span   { font-size: .78rem; opacity: .9; }
-    .ease-cta a.btn {
-      background: #fff; color: var(--stage-primary-dk);
-      padding: 8px 14px; border-radius: 8px;
-      font-weight: 700; font-size: .84rem; text-decoration: none;
-      white-space: nowrap;
-    }
-
-    /* Leaderboard preview */
-    .lb-preview .lb-row { background: var(--paper); border: none; padding: 8px 12px; }
-    .lb-preview .lb-row.is-me { background: var(--stage-primary-2); border: 1.5px solid var(--stage-primary); }
-
-    /* Mini-badges strip */
-    .badge-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    @media (max-width: 480px) { .badge-strip { grid-template-columns: repeat(2, 1fr); } }
-
-    /* Footer band — practice + daily + leaderboard + growth */
-    .cta-row {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-      margin-top: 22px;
-    }
-    @media (max-width: 1024px) { .cta-row { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 560px)  { .cta-row { grid-template-columns: 1fr; } }
-    .cta-tile {
-      background: var(--white); border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px 22px;
-      display: flex; align-items: center; gap: 16px;
-      text-decoration: none; color: inherit;
-      transition: all .15s;
-      position: relative; overflow: hidden;
-    }
-    .cta-tile:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow);
-      border-color: var(--stage-primary-2);
-      text-decoration: none;
-    }
-    .cta-tile::before {
-      content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: var(--stage-gradient);
-    }
-    .cta-tile .icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      background: var(--stage-gradient); color: #fff;
-      display: inline-flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .cta-tile .icon svg { width: 24px; height: 24px; }
-    .cta-tile .meta strong { display: block; font-weight: 700; color: var(--ink); font-size: 1rem; }
-    .cta-tile .meta span   { font-size: .82rem; color: var(--ink-3); }
   </style>
 </head>
 <body style="display:none">
@@ -200,34 +349,68 @@
   <div id="navbar-container"></div>
 
   <main class="page">
-    <!-- HERO -->
-    <section class="hero stage-hero">
-      <div class="hero-grid">
-        <div>
-          <span class="stage-chip" id="stageChip"><span class="dot"></span> <span id="stageLabel">Loading…</span></span>
-          <span class="tier-chip" id="tierChip" data-tier="apprentice" style="margin-left:6px; display:none" title="Your rank — climbs as you level up">
-            <span class="tier-dot"></span> <span id="tierLabel">Apprentice</span>
-          </span>
-          <h1 class="hero-title" style="margin-top:10px">
-            <span id="helloGreeting">Welcome back</span>,
-            <span class="hero-name" id="helloName">…</span>
-          </h1>
-          <p id="helloMeta">Loading your class…</p>
+    <!-- ─── HERO v2: avatar + greeting + EASE/challenge CTA ─── -->
+    <section class="hero-v2">
+      <div class="hero-avatar-shell" id="heroAvatarShell">
+        <svg class="tier-ring" viewBox="0 0 110 110">
+          <circle class="ring-track-v2" cx="55" cy="55" r="50"/>
+          <circle class="ring-fill-v2"  id="heroRingFill" cx="55" cy="55" r="50"
+            stroke-dasharray="314.16" stroke-dashoffset="314.16"/>
+        </svg>
+        <div class="avatar-pic">
+          <img id="heroAvatarImg" src="" alt="">
         </div>
-        <div class="hero-right">
-          <div class="level-badge level-badge-lg" id="levelBadge" data-tier="apprentice" title="Your level">
-            <svg class="ring" viewBox="0 0 56 56">
-              <circle class="ring-track" cx="28" cy="28" r="24"/>
-              <circle class="ring-fill" id="ringFill" cx="28" cy="28" r="24"
-                stroke-dasharray="150.8" stroke-dashoffset="150.8"/>
-            </svg>
-            <span class="level-num" id="levelNum">1</span>
-          </div>
+        <div class="lvl-badge" id="heroLvlBadge">1</div>
+      </div>
+
+      <div class="hero-text">
+        <div class="hero-greet" id="heroGreet">Welcome back</div>
+        <div class="hero-name"><span id="heroName">…</span></div>
+        <div class="hero-meta-pills">
+          <span class="hero-pill" id="stagePill">Loading…</span>
+          <span class="hero-pill" data-tier id="heroTierPill">Apprentice</span>
+          <span class="hero-pill" id="heroClassPill"></span>
         </div>
+      </div>
+
+      <a href="/daily-challenge" class="hero-cta" id="heroCta">
+        <div style="text-align:left">
+          <span class="hero-cta-eyebrow" id="heroCtaEyebrow">Today</span>
+          <strong id="heroCtaLabel">Daily Challenge</strong>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+    </section>
+
+    <!-- ─── QUESTS: 3 daily missions ─── -->
+    <section class="quest-panel">
+      <div class="quest-h">
+        <h2>Today's Quests</h2>
+        <span class="meta" id="questMeta">Loading…</span>
+      </div>
+      <div class="quest-grid" id="questGrid">
+        <a href="/daily-challenge" class="quest-card" data-quest="challenge">
+          <span class="q-glyph">⚡</span>
+          <div class="q-title">Take today's challenge</div>
+          <div class="q-sub">Five questions. Same set as your classmates. Race to be #1.</div>
+          <div class="q-reward">★ +50 points</div>
+        </a>
+        <a href="/practice" class="quest-card" data-quest="practice">
+          <span class="q-glyph">🎯</span>
+          <div class="q-title">Free practice run</div>
+          <div class="q-sub">Pick a topic and try 10 questions. Earn points + climb tiers.</div>
+          <div class="q-reward">★ +20-100 points</div>
+        </a>
+        <a href="#" class="quest-card" data-quest="streak" id="streakQuest">
+          <span class="q-glyph">🔥</span>
+          <div class="q-title">Keep your streak alive</div>
+          <div class="q-sub" id="streakQuestSub">Do any test or run today. Don't break the chain!</div>
+          <div class="q-reward">★ Streak bonus</div>
+        </a>
       </div>
     </section>
 
-    <!-- STAT TILES -->
+    <!-- ─── STAT TILES (kept from v1) ─── -->
     <section class="stat-row" id="statRow">
       <div class="stat-tile">
         <div class="stat-tile-icon icon-gold">
@@ -240,7 +423,7 @@
       </div>
       <div class="stat-tile">
         <div class="stat-tile-icon icon-flame">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>
         </div>
         <div class="stat-tile-meta">
           <div class="stat-tile-val" id="streakDays">—</div>
@@ -267,9 +450,27 @@
       </div>
     </section>
 
-    <!-- MAIN GRID -->
+    <!-- ─── CLASS RACE widget ─── -->
+    <section class="race-card" id="raceCard" style="display:none">
+      <div class="race-text">
+        <h3>Your class is racing</h3>
+        <p id="raceLine">Loading class progress…</p>
+        <div class="race-stat" id="raceCount">—</div>
+      </div>
+      <div class="race-podium" id="racePodium"></div>
+    </section>
+
+    <!-- ─── ACHIEVEMENTS ─── -->
+    <section class="ach-card">
+      <div class="ach-h">
+        <h2>Achievements</h2>
+        <a href="#" class="meta" id="achTotal">— / 8 unlocked</a>
+      </div>
+      <div class="ach-row" id="achRow"></div>
+    </section>
+
+    <!-- ─── Lower grid: tests + growth ─── -->
     <section class="grid-2">
-      <!-- Upcoming tests -->
       <div class="card">
         <div class="card-h">
           <h3>Tests available now</h3>
@@ -278,12 +479,8 @@
         <div id="upcomingList">
           <span class="skel skel-line"></span>
           <span class="skel skel-line-sm"></span>
-          <span class="skel skel-line"></span>
-          <span class="skel skel-line-sm"></span>
         </div>
       </div>
-
-      <!-- Recent results -->
       <div class="card">
         <div class="card-h">
           <h3>Recent results</h3>
@@ -292,13 +489,10 @@
         <div id="recentList">
           <span class="skel skel-line"></span>
           <span class="skel skel-line-sm"></span>
-          <span class="skel skel-line"></span>
-          <span class="skel skel-line-sm"></span>
         </div>
       </div>
     </section>
 
-    <!-- GROWTH + LEADERBOARD ROW -->
     <section class="grid-2" style="margin-top:16px">
       <div class="card">
         <div class="card-h">
@@ -307,60 +501,19 @@
         </div>
         <div id="growthSummary">
           <span class="skel skel-line"></span>
-          <span class="skel skel-line-sm"></span>
-          <span class="skel skel-line"></span>
         </div>
       </div>
-
-      <div class="card lb-preview">
+      <div class="card">
         <div class="card-h">
-          <h3>Class leaderboard</h3>
-          <a href="/leaderboard" class="more">Full board →</a>
+          <h3>Quick links</h3>
         </div>
-        <div id="lbPreview">
-          <span class="skel skel-tile"></span>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px">
+          <a href="/leaderboard" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🏆 Leaderboard</a>
+          <a href="/growth" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">📈 Growth</a>
+          <a href="/profile" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">👤 Profile</a>
+          <a href="/avatar" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🎨 Avatar</a>
         </div>
       </div>
-    </section>
-
-    <!-- CTA tiles: practice + daily challenge + leaderboard + growth -->
-    <section class="cta-row">
-      <a href="/practice" class="cta-tile">
-        <span class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        </span>
-        <div class="meta">
-          <strong>Practice your way</strong>
-          <span>Pick a topic, 10 quick questions, instant feedback. Points keep adding up.</span>
-        </div>
-      </a>
-      <a href="/daily-challenge" class="cta-tile">
-        <span class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
-        </span>
-        <div class="meta">
-          <strong>Today's challenge</strong>
-          <span>5 questions. Same set as your whole class. Race the clock and the class.</span>
-        </div>
-      </a>
-      <a href="/leaderboard" class="cta-tile">
-        <span class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        </span>
-        <div class="meta">
-          <strong>Climb the leaderboard</strong>
-          <span>Compare yourself with classmates, your year, school &amp; network.</span>
-        </div>
-      </a>
-      <a href="/growth" class="cta-tile">
-        <span class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        </span>
-        <div class="meta">
-          <strong>Track your growth</strong>
-          <span>See your EASE score climb across Term 1, Term 2 &amp; Term 3 windows.</span>
-        </div>
-      </a>
     </section>
   </main>
 
@@ -383,38 +536,70 @@
     const SUBJ_LABEL = { math: 'Math', english: 'English', science: 'Science' };
     const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
 
+    function dateKey(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
+    }
+    const TODAY = dateKey(new Date());
+
+    // State for quest panel — built up as data lands
+    const questState = {
+      challengeDone: false,
+      practiceDone:  false,
+      streakAlive:   false,
+    };
+
     window.addEventListener('authReady', (ev) => {
       if (!ev.detail.signedIn) return;
       const p = window.studentProfile;
-      const first = (p.displayName || '').split(' ')[0] || '';
+      const uid = window.currentUser.uid;
+      const first = (p.displayName || '').split(' ')[0] || 'there';
+
       const hr = new Date().getHours();
       const greet = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+      document.getElementById('heroGreet').textContent = greet + ',';
+      document.getElementById('heroName').textContent  = first;
 
-      document.getElementById('helloGreeting').textContent = greet;
-      document.getElementById('helloName').textContent = first || 'there';
-      document.getElementById('helloMeta').textContent =
-        [p.school, p.className, p.gradeLevel ? 'Grade ' + p.gradeLevel : null]
-          .filter(Boolean).join(' · ');
+      // Hero avatar
+      const url = window.studentAvatarUrl ? window.studentAvatarUrl(uid, { size: 200 }) : '';
+      if (url) document.getElementById('heroAvatarImg').src = url;
 
-      // Stage chip
+      // Stage pill
       const stage = ev.detail.stage || 'igcse';
       const stageMap = {
-        checkpoint: 'Checkpoint · Grade 7–8',
-        igcse:      'IGCSE · Grade 9–10',
-        alevel:     'A-Level · Grade 11–12',
+        checkpoint: 'Checkpoint · Yr 7-8',
+        igcse:      'IGCSE · Yr 9-10',
+        alevel:     'A-Level · Yr 11-12',
       };
-      document.getElementById('stageLabel').textContent = stageMap[stage] || 'Eduversal';
+      document.getElementById('stagePill').textContent = stageMap[stage] || 'Eduversal';
 
-      subscribeAttempts(window.currentUser.uid);
-      loadGrowthSummary(window.currentUser.uid);
-      loadPoints(window.currentUser.uid);
-      loadLeaderboardPreview(p.classId);
+      // Class pill
+      const cls = p.className || '';
+      const classPill = document.getElementById('heroClassPill');
+      if (cls) classPill.textContent = cls;
+      else classPill.style.display = 'none';
+
+      // Pull all the data
+      loadPoints(uid);
+      checkChallengeDone(uid);
+      checkPracticeDoneToday(uid);
+      subscribeAttempts(uid);
+      loadGrowthSummary(uid);
+      loadClassRace(p.classId);
     });
 
-    // ─── Points / Level / Streak ──────────────────────────────────
-    // Backed by student_points/{uid}. Doc may not exist yet (Cloud
-    // Function will create on first attempt submit). Render zero-state
-    // gracefully — the new student should still see the dashboard.
+    // ─── Tier ──────────────────────────────────────────────────
+    function tierFor(level) {
+      if (level >= 35) return { id: 'fellow',     label: 'Cambridge Fellow' };
+      if (level >= 20) return { id: 'master',     label: 'Master' };
+      if (level >= 10) return { id: 'mentor',     label: 'Mentor' };
+      if (level >=  5) return { id: 'scholar',    label: 'Scholar' };
+      return                  { id: 'apprentice', label: 'Apprentice' };
+    }
+
+    // ─── Points + tier ring on hero avatar ─────────────────────
     async function loadPoints(uid) {
       try {
         const snap = await getDoc(doc(window.db, 'student_points', uid));
@@ -424,11 +609,10 @@
         const prog   = Math.max(0, Math.min(100, d.levelProgress || 0));
         const streak = d.streak?.current || 0;
 
-        const ptsEl = document.getElementById('totalPts');
-        // Animate from the previous saved value (if any) → current.
-        // Stored in localStorage so we can animate even on first dashboard load.
+        // Animate totalPts from previous saved value
         const LAST_PTS_KEY = 'sh-last-total-pts:' + uid;
         const lastPts = parseInt(localStorage.getItem(LAST_PTS_KEY) || '0', 10);
+        const ptsEl = document.getElementById('totalPts');
         if (window.fx && pts > lastPts && lastPts >= 0) {
           window.fx.countUp(ptsEl, lastPts, pts, 1100);
         } else {
@@ -437,108 +621,215 @@
         try { localStorage.setItem(LAST_PTS_KEY, String(pts)); } catch {}
 
         document.getElementById('streakDays').textContent = streak;
-        document.getElementById('levelNum').textContent = lvl;
+        document.getElementById('heroLvlBadge').textContent = 'Lv ' + lvl;
 
-        // Animate progress ring: circumference = 2πr = 150.8 for r=24
-        const ring = document.getElementById('ringFill');
-        const C = 150.8;
+        // Hero ring fill = level progress
+        const ring = document.getElementById('heroRingFill');
+        const C = 2 * Math.PI * 50; // r=50
         ring.setAttribute('stroke-dasharray', C);
         ring.setAttribute('stroke-dashoffset', C * (1 - prog/100));
 
-        applyTier(lvl);
+        // Tier pill
+        const t = tierFor(lvl);
+        const tierPill = document.getElementById('heroTierPill');
+        tierPill.textContent = t.label;
+        tierPill.setAttribute('data-tier', t.id);
 
-        // ── Level up detection ────────────────────────────────────
-        // If the saved level is lower than the current, the student
-        // levelled up since last visit. Show the celebration overlay
-        // and bump the stored value. First-ever load (no stored value)
-        // doesn't trigger — only progression triggers.
+        // Streak alive today?
+        const todayMatch = streak > 0 && d.streak?.lastDayISO === TODAY;
+        questState.streakAlive = todayMatch;
+        const streakCard = document.getElementById('streakQuest');
+        const streakSub = document.getElementById('streakQuestSub');
+        if (todayMatch) {
+          streakCard.classList.add('is-done');
+          streakSub.textContent = `${streak}-day streak going. Come back tomorrow to keep it alive.`;
+        } else if (streak > 0) {
+          streakSub.textContent = `${streak}-day streak — but you haven't shown up today yet. One run keeps it.`;
+        }
+
+        // Level-up overlay
         const LAST_LVL_KEY = 'sh-last-level:' + uid;
         const lastLvl = parseInt(localStorage.getItem(LAST_LVL_KEY) || '0', 10);
         if (window.fx && lastLvl > 0 && lvl > lastLvl) {
-          const t = tierFor(lvl);
-          // Slight delay so the page paints first
           setTimeout(() => window.fx.levelUpOverlay(lvl, t.label), 500);
         }
         try { localStorage.setItem(LAST_LVL_KEY, String(lvl)); } catch {}
+
+        // Achievements row needs counters
+        renderAchievements(d);
+        recomputeQuestMeta();
       } catch (e) {
-        console.warn('[dashboard] points load failed (collection may not exist yet)', e.message);
+        console.warn('[dashboard] points load failed', e.message);
         document.getElementById('totalPts').textContent = '0';
         document.getElementById('streakDays').textContent = '0';
-        applyTier(1);
+        renderAchievements({});
+        recomputeQuestMeta();
       }
     }
 
-    // ─── Tier derivation (cosmetic-only) ──────────────────────────
-    // Maps student_points.level → visible rank. NEVER feeds assessment.
-    function tierFor(level) {
-      if (level >= 35) return { id: 'fellow',     label: 'Cambridge Fellow' };
-      if (level >= 20) return { id: 'master',     label: 'Master' };
-      if (level >= 10) return { id: 'mentor',     label: 'Mentor' };
-      if (level >=  5) return { id: 'scholar',    label: 'Scholar' };
-      return                  { id: 'apprentice', label: 'Apprentice' };
-    }
-    function applyTier(level) {
-      const t = tierFor(level);
-      const badge = document.getElementById('levelBadge');
-      const chip  = document.getElementById('tierChip');
-      const lbl   = document.getElementById('tierLabel');
-      if (badge) {
-        badge.setAttribute('data-tier', t.id);
-        badge.title = t.label + ' · Level ' + level;
-      }
-      if (chip) {
-        chip.setAttribute('data-tier', t.id);
-        chip.style.display = '';
-      }
-      if (lbl) lbl.textContent = t.label;
-    }
-
-    // ─── Leaderboard preview ──────────────────────────────────────
-    // Top 5 in the student's class. Reads student_points where classId
-    // matches. Falls back to "starting soon" message if collection empty.
-    async function loadLeaderboardPreview(classId) {
-      const box = document.getElementById('lbPreview');
-      if (!classId) {
-        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Join a class to see your leaderboard.</div>';
-        return;
-      }
+    // ─── Challenge done today? ─────────────────────────────────
+    async function checkChallengeDone(uid) {
       try {
-        const q = query(
-          collection(window.db, 'student_points'),
-          where('classId', '==', classId),
-          orderBy('totalPoints', 'desc'),
+        const subs = ['math','english','science'];
+        // Any open challenge today the student has submitted?
+        for (const s of subs) {
+          const cid = `${TODAY}_${s}`;
+          const qs = query(
+            collection(window.db, 'practice_attempts'),
+            where('studentUid', '==', uid),
+            where('challengeId', '==', cid),
+            where('status', '==', 'submitted'),
+            limit(1)
+          );
+          const snap = await getDocs(qs);
+          if (!snap.empty) { questState.challengeDone = true; break; }
+        }
+        if (questState.challengeDone) {
+          const card = document.querySelector('.quest-card[data-quest="challenge"]');
+          card.classList.add('is-done');
+          card.querySelector('.q-sub').textContent = 'Done — see how the class is doing today.';
+          // Hero CTA pivots to leaderboard preview
+          const cta = document.getElementById('heroCta');
+          cta.href = '/daily-challenge';
+          document.getElementById('heroCtaEyebrow').textContent = 'Done';
+          document.getElementById('heroCtaLabel').textContent = 'See leaderboard';
+        }
+      } catch (e) { console.warn('[dashboard] challengeDone check failed', e.message); }
+      recomputeQuestMeta();
+    }
+
+    // ─── Free practice done today? ─────────────────────────────
+    async function checkPracticeDoneToday(uid) {
+      try {
+        // Practice attempts submitted today (UTC slice — close enough
+        // for end-of-day; pilot is in Asia/Jakarta but createdAt is
+        // server-side UTC and we just want "did anything happen today")
+        const since = new Date();
+        since.setHours(0, 0, 0, 0);
+        const qs = query(
+          collection(window.db, 'practice_attempts'),
+          where('studentUid', '==', uid),
+          where('mode', '==', 'practice'),
+          where('status', '==', 'submitted'),
+          orderBy('submittedAt', 'desc'),
           limit(5)
         );
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          box.innerHTML =
-            '<div class="empty" style="padding:14px 0; font-size:.88rem">'
-            + 'The class leaderboard kicks in after the first test.<br>'
-            + '<a href="/tests" style="color:var(--stage-primary-dk); font-weight:600; font-size:.85rem">Take a test →</a>'
-            + '</div>';
-          return;
-        }
-        const me = window.currentUser.uid;
-        const rows = snap.docs.map((d, i) => {
-          const v = d.data();
-          const isMe = d.id === me;
-          const medal = i === 0 ? 'medal-gold' : i === 1 ? 'medal-silver' : i === 2 ? 'medal-bronze' : 'medal-num';
-          const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(d.id, { size: 64 }) : '';
-          return `<div class="lb-row ${isMe ? 'is-me' : ''}">
-            <span class="medal ${medal}">${i + 1}</span>
-            <span class="avatar"><img src="${escAttr(avatarUrl)}" alt="" loading="lazy"></span>
-            <span class="name">${escHtml(v.displayName || 'Student')}${isMe ? ' <span style="font-size:.7rem;color:var(--stage-primary);font-weight:700">YOU</span>' : ''}</span>
-            <span class="pts">${(v.totalPoints||0).toLocaleString('en-GB')}</span>
-          </div>`;
+        const snap = await getDocs(qs);
+        let foundToday = false;
+        snap.forEach(d => {
+          const t = d.data().submittedAt?.toDate?.();
+          if (t && t.getTime() >= since.getTime()) foundToday = true;
         });
-        box.innerHTML = rows.join('');
-      } catch (e) {
-        console.warn('[dashboard] leaderboard preview failed', e.message);
-        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Leaderboard starting soon.</div>';
-      }
+        questState.practiceDone = foundToday;
+        if (foundToday) {
+          const card = document.querySelector('.quest-card[data-quest="practice"]');
+          card.classList.add('is-done');
+          card.querySelector('.q-sub').textContent = 'Done today. One more for a bigger streak!';
+        }
+      } catch (e) { console.warn('[dashboard] practiceDone check failed', e.message); }
+      recomputeQuestMeta();
     }
 
-    // ─── Growth summary + EASE CTA ────────────────────────────────
+    function recomputeQuestMeta() {
+      let done = 0;
+      if (questState.challengeDone) done++;
+      if (questState.practiceDone)  done++;
+      if (questState.streakAlive)   done++;
+      const meta = document.getElementById('questMeta');
+      meta.textContent = done === 3 ? '🎉 All done — great work today!' :
+                         done === 0 ? 'Pick any quest to get started' :
+                         `${done} of 3 done · keep going`;
+    }
+
+    // ─── Class race widget ─────────────────────────────────────
+    async function loadClassRace(classId) {
+      if (!classId) return;
+      try {
+        // Any of today's daily_challenges in the student's class —
+        // count how many distinct studentUids have submitted.
+        const subs = ['math','english','science'];
+        let totalSubmissions = 0;
+        const studentSet = new Set();
+        const topRows = [];
+        for (const s of subs) {
+          const cid = `${TODAY}_${s}`;
+          const qs = query(
+            collection(window.db, 'practice_attempts'),
+            where('classId', '==', classId),
+            where('challengeId', '==', cid),
+            where('status', '==', 'submitted'),
+            limit(20)
+          );
+          const snap = await getDocs(qs);
+          snap.forEach(d => {
+            const v = d.data();
+            studentSet.add(v.studentUid);
+            totalSubmissions++;
+            topRows.push({ uid: v.studentUid, name: v.studentName, pct: v.rawScorePct || 0, at: v.submittedAt });
+          });
+        }
+        if (totalSubmissions === 0) return; // hide card
+        // Pick the top 3 by score, then by speed
+        topRows.sort((a,b) => (b.pct - a.pct) || ((a.at?.toMillis?.()||0) - (b.at?.toMillis?.()||0)));
+        const top = topRows.slice(0,3);
+
+        document.getElementById('raceCard').style.display = '';
+        document.getElementById('raceLine').textContent =
+          `${studentSet.size} classmate${studentSet.size===1?'':'s'} already did a challenge today.`;
+        document.getElementById('raceCount').innerHTML =
+          `${totalSubmissions} <span class="total">submissions</span>`;
+        const podium = document.getElementById('racePodium');
+        const medals = ['🥇','🥈','🥉'];
+        podium.innerHTML = top.map((r, i) => {
+          const url = window.studentAvatarUrl ? window.studentAvatarUrl(r.uid, { size: 80 }) : '';
+          return `<div class="race-spot rank-${i+1}">
+            <span class="medal">${medals[i]}</span>
+            <span class="avatar">${url ? `<img src="${url}" alt="" loading="lazy">` : ''}</span>
+          </div>`;
+        }).join('');
+      } catch (e) { console.warn('[dashboard] class race load failed', e.message); }
+    }
+
+    // ─── Achievements ──────────────────────────────────────────
+    // Eight badges derived client-side from student_points counters.
+    // No new collection — drives off chapterTestsCompleted /
+    // practiceRunsCompleted / dailyChallengesCompleted / streak.
+    // Each badge has a goal and shows progress to next.
+    function renderAchievements(d) {
+      const total = d.totalPoints || 0;
+      const streak = d.streak?.longest || d.streak?.current || 0;
+      const chap = d.chapterTestsCompleted || 0;
+      const prac = d.practiceRunsCompleted || 0;
+      const daily = d.dailyChallengesCompleted || 0;
+      const perfect = d.perfectScores || 0;
+
+      const BADGES = [
+        { id:'starter',  glyph:'🌱', label:'First steps',  cur: prac+chap+daily, goal: 1 },
+        { id:'streak3',  glyph:'🔥', label:'3-day streak', cur: streak, goal: 3 },
+        { id:'streak7',  glyph:'⚡', label:'Weekly hero',  cur: streak, goal: 7 },
+        { id:'p100',     glyph:'💯', label:'100 points',   cur: total,  goal: 100 },
+        { id:'p1000',    glyph:'🏆', label:'1,000 club',   cur: total,  goal: 1000 },
+        { id:'daily3',   glyph:'⭐', label:'3 dailies',    cur: daily,  goal: 3 },
+        { id:'practice10', glyph:'🎯', label:'10 practices', cur: prac, goal: 10 },
+        { id:'perfect',  glyph:'✨', label:'Perfect run',  cur: perfect, goal: 1 },
+      ];
+
+      let unlocked = 0;
+      const html = BADGES.map(b => {
+        const done = b.cur >= b.goal;
+        if (done) unlocked++;
+        const pct = Math.min(100, Math.round((b.cur / b.goal) * 100));
+        return `<div class="ach-tile ${done ? '' : 'locked'}" title="${b.label}: ${b.cur}/${b.goal}">
+          <div class="ach-glyph">${b.glyph}</div>
+          <div class="ach-label">${b.label}</div>
+          <div class="ach-progress"><span style="width:${pct}%"></span></div>
+        </div>`;
+      }).join('');
+      document.getElementById('achRow').innerHTML = html;
+      document.getElementById('achTotal').textContent = `${unlocked} / ${BADGES.length} unlocked`;
+    }
+
+    // ─── Growth summary (unchanged from v1, trimmed) ───────────
     async function loadGrowthSummary(uid) {
       try {
         const wsnap = await getDocs(query(
@@ -559,7 +850,6 @@
         const have = {};
         gsnap.forEach(d => { have[d.data().subjectId] = d.data(); });
 
-        // Compute overall growth delta for stat tile
         let totalDelta = 0, deltaCount = 0;
         Object.values(have).forEach(g => {
           const w = (g.windows || []).slice(-1)[0];
@@ -571,27 +861,6 @@
 
         const box = document.getElementById('growthSummary');
         const parts = [];
-
-        if (openWin) {
-          const submitted = new Set();
-          (openWin.subjects || []).forEach(s => {
-            const g = have[s];
-            const last = g?.windows?.slice(-1)[0];
-            if (last && last.windowId === openWin.id) submitted.add(s);
-          });
-          const pending = (openWin.subjects || []).filter(s => !submitted.has(s));
-          if (pending.length > 0) {
-            parts.push(`<div class="ease-cta">
-              <span class="ease-cta-icon">⚡</span>
-              <div class="ease-cta-meta">
-                <strong>EASE ${escHtml(windowLabel(openWin.window))} is open</strong>
-                <span>${pending.map(s => SUBJ_LABEL[s] || s).join(', ')} pending</span>
-              </div>
-              <a class="btn" href="/ease-test">Take it →</a>
-            </div>`);
-          }
-        }
-
         Object.entries(have).forEach(([s, g]) => {
           const w = (g.windows || []).slice(-1)[0];
           if (!w) return;
@@ -607,9 +876,8 @@
             <div><span class="grow-score">${w.ritScore}</span>${delta}</div>
           </div>`);
         });
-
         if (parts.length === 0) {
-          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">EASE growth assessments will start when a window opens. Stay tuned!</div>';
+          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">EASE growth assessments will start when a window opens.</div>';
         } else {
           box.innerHTML = parts.join('');
         }
@@ -620,7 +888,7 @@
       }
     }
 
-    // ─── Chapter attempts (upcoming + recent) ─────────────────────
+    // ─── Chapter attempts (kept) ───────────────────────────────
     function subscribeAttempts(uid) {
       const q = query(
         collection(window.db, 'chapter_test_attempts'),
@@ -638,8 +906,6 @@
           return now >= opens && now <= closes;
         });
         const recent = all.filter(a => ['scored','flagged','submitted'].includes(a.status)).slice(0, 5);
-
-        // Stat tile: tests completed
         const done = all.filter(a => ['scored','flagged','submitted'].includes(a.status)).length;
         document.getElementById('testsCompleted').textContent = done;
 
