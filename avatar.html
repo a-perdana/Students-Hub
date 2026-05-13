@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avatar — Students Hub</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="base.css">
+  <style>
+    .av-hero {
+      display: flex; align-items: center; gap: 22px;
+      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
+      color: #fff;
+      border-radius: var(--radius-xl);
+      padding: 26px 28px;
+      margin-bottom: 22px;
+      box-shadow: var(--stage-glow);
+    }
+    .av-hero .preview-shell {
+      width: 110px; height: 110px;
+      flex-shrink: 0;
+      background: rgba(255,255,255,.18);
+      border-radius: 22px;
+      padding: 8px;
+      backdrop-filter: blur(8px);
+    }
+    .av-hero .preview-shell img {
+      width: 100%; height: 100%; border-radius: 18px; background: #fff;
+    }
+    .av-hero h1 { font-family: 'Lora', serif; font-size: 1.6rem; margin: 0 0 4px; }
+    .av-hero p  { margin: 0 0 14px; opacity: .9; max-width: 480px; line-height: 1.45; }
+    .av-hero .meta-row {
+      display: flex; gap: 18px; flex-wrap: wrap;
+      font-size: .82rem; opacity: .88;
+    }
+    .av-hero .meta-row span strong { display: block; opacity: .8; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* Style picker grid */
+    .section { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 18px; }
+    .section h3 { font-family: 'Lora', serif; font-size: 1.1rem; margin: 0 0 4px; }
+    .section p.lead { color: var(--ink-3); font-size: .9rem; margin: 0 0 18px; }
+
+    .style-grid {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    @media (max-width: 760px) { .style-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 460px) { .style-grid { grid-template-columns: 1fr; } }
+
+    .style-tile {
+      background: var(--paper);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all .14s;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .style-tile:hover { border-color: var(--stage-primary); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .style-tile.is-active {
+      border-color: var(--stage-primary);
+      background: var(--stage-primary-2);
+      box-shadow: 0 0 0 3px var(--stage-primary-2), var(--shadow);
+    }
+    .style-tile .av {
+      width: 56px; height: 56px;
+      border-radius: 12px;
+      background: var(--white);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .style-tile .av img { width: 100%; height: 100%; display: block; }
+    .style-tile .label { font-weight: 600; color: var(--ink); }
+    .style-tile .sub { font-size: .76rem; color: var(--ink-3); margin-top: 2px; }
+
+    /* Seed gallery */
+    .seed-row {
+      display: grid; gap: 10px;
+      grid-template-columns: repeat(6, 1fr);
+    }
+    @media (max-width: 720px) { .seed-row { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 460px) { .seed-row { grid-template-columns: repeat(3, 1fr); } }
+    .seed-tile {
+      background: var(--paper);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 6px;
+      cursor: pointer;
+      transition: all .12s;
+      aspect-ratio: 1;
+    }
+    .seed-tile:hover { border-color: var(--stage-primary); }
+    .seed-tile.is-active {
+      border-color: var(--stage-primary);
+      background: var(--stage-primary-2);
+    }
+    .seed-tile img { width: 100%; height: 100%; border-radius: 8px; background: var(--white); }
+
+    .roll-btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .roll-btn-row .btn { padding: 10px 18px; font-size: .88rem; }
+
+    /* Save bar */
+    .save-bar {
+      position: sticky; bottom: 16px;
+      display: flex; justify-content: flex-end; gap: 12px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      box-shadow: var(--shadow);
+      margin-top: 18px;
+    }
+    .save-bar .status { margin-right: auto; color: var(--ink-3); font-size: .85rem; align-self: center; }
+    .save-bar .status.ok { color: var(--ok); font-weight: 600; }
+    .save-bar .status.no { color: var(--danger); font-weight: 600; }
+    .save-bar .btn { padding: 10px 22px; font-size: .9rem; }
+  </style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+
+  <div id="navbar-container"></div>
+
+  <main class="page-narrow">
+    <!-- Hero with live preview -->
+    <section class="av-hero">
+      <div class="preview-shell">
+        <img id="livePreview" src="" alt="">
+      </div>
+      <div style="flex:1; min-width:0">
+        <h1>Your avatar</h1>
+        <p>Pick a style, roll a seed until you like it, save. Your avatar shows up on your dashboard, the leaderboard, and your daily-challenge results.</p>
+        <div class="meta-row">
+          <span><strong>Style</strong><span id="metaStyle">bottts</span></span>
+          <span><strong>Seed</strong><span id="metaSeed">…</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Style picker -->
+    <section class="section">
+      <h3>Style</h3>
+      <p class="lead">Each style is a different vibe — robots, characters, abstract shapes. Pick the one that feels like you.</p>
+      <div class="style-grid" id="styleGrid">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+    <!-- Seed gallery -->
+    <section class="section">
+      <h3>Look</h3>
+      <p class="lead">Don't love the first one? Roll for a new look — same style, different details. Tap any preview to pick it.</p>
+      <div class="seed-row" id="seedRow">
+        <!-- populated by JS -->
+      </div>
+      <div class="roll-btn-row">
+        <button type="button" class="btn btn-secondary" id="btnReroll">🎲 Roll new looks</button>
+        <button type="button" class="btn btn-secondary" id="btnReset">Reset to default</button>
+      </div>
+    </section>
+
+    <!-- Save bar -->
+    <div class="save-bar">
+      <span class="status" id="saveStatus">Pick a style + look, then Save.</span>
+      <a href="/profile" class="btn btn-secondary">Back to profile</a>
+      <button type="button" class="btn btn-primary" id="btnSave" disabled>Save avatar</button>
+    </div>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script type="module">
+    import {
+      doc, updateDoc, serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
+    });
+
+    // Six styles offered. Matches the firestore.rules allowlist on
+    // students/{uid}.avatarStyle. If you change this set, update the
+    // rule too (see Common Mistake — drift between style allowlist
+    // and rule envelope silently breaks Save with permission-denied).
+    const STYLES = [
+      { id: 'bottts',     label: 'Robot',     sub: 'Friendly bot (default)' },
+      { id: 'adventurer', label: 'Adventurer', sub: 'Cartoon character' },
+      { id: 'lorelei',    label: 'Lorelei',   sub: 'Playful portrait' },
+      { id: 'notionists', label: 'Notionist', sub: 'Clean line art' },
+      { id: 'shapes',     label: 'Shapes',    sub: 'Abstract geometry' },
+      { id: 'fun-emoji',  label: 'Emoji',     sub: 'Round face icon' },
+    ];
+
+    const state = {
+      style: 'bottts',
+      seed:  '',
+      seedGallery: [],   // 6 seeds shown in the row
+      dirty: false,
+      savedStyle: 'bottts',
+      savedSeed:  '',
+    };
+
+    window.addEventListener('authReady', (ev) => {
+      if (!ev.detail.signedIn) return;
+      const p = window.studentProfile;
+      const uid = window.currentUser.uid;
+      state.style = p.avatarStyle || 'bottts';
+      state.seed  = p.avatarSeed  || uid;
+      state.savedStyle = state.style;
+      state.savedSeed  = state.seed;
+      state.seedGallery = freshSeedGallery(state.seed);
+
+      renderStyles();
+      renderSeedRow();
+      renderHero();
+
+      document.getElementById('btnReroll').addEventListener('click', () => {
+        state.seedGallery = freshSeedGallery();
+        renderSeedRow();
+      });
+      document.getElementById('btnReset').addEventListener('click', () => {
+        state.style = 'bottts';
+        state.seed  = uid;
+        state.seedGallery = freshSeedGallery(state.seed);
+        renderStyles();
+        renderSeedRow();
+        renderHero();
+        markDirty();
+      });
+      document.getElementById('btnSave').addEventListener('click', save);
+    });
+
+    function renderStyles() {
+      const box = document.getElementById('styleGrid');
+      box.innerHTML = STYLES.map(s => {
+        const url = avatarUrl(s.id, state.seed, 88);
+        const active = s.id === state.style ? ' is-active' : '';
+        return `<button type="button" class="style-tile${active}" data-style="${s.id}">
+          <span class="av"><img src="${url}" alt="" loading="lazy"></span>
+          <div>
+            <div class="label">${s.label}</div>
+            <div class="sub">${s.sub}</div>
+          </div>
+        </button>`;
+      }).join('');
+      box.querySelectorAll('.style-tile').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.style = btn.dataset.style;
+          renderStyles();
+          renderSeedRow();
+          renderHero();
+          markDirty();
+        });
+      });
+    }
+
+    function renderSeedRow() {
+      const box = document.getElementById('seedRow');
+      box.innerHTML = state.seedGallery.map(s => {
+        const url = avatarUrl(state.style, s, 88);
+        const active = s === state.seed ? ' is-active' : '';
+        return `<button type="button" class="seed-tile${active}" data-seed="${escAttr(s)}">
+          <img src="${url}" alt="" loading="lazy">
+        </button>`;
+      }).join('');
+      box.querySelectorAll('.seed-tile').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.seed = btn.dataset.seed;
+          renderSeedRow();
+          renderHero();
+          markDirty();
+        });
+      });
+    }
+
+    function renderHero() {
+      document.getElementById('livePreview').src = avatarUrl(state.style, state.seed, 128);
+      document.getElementById('metaStyle').textContent = state.style;
+      document.getElementById('metaSeed').textContent = state.seed.length > 16
+        ? state.seed.slice(0, 8) + '…' + state.seed.slice(-4)
+        : state.seed;
+    }
+
+    function markDirty() {
+      const same = state.style === state.savedStyle && state.seed === state.savedSeed;
+      state.dirty = !same;
+      document.getElementById('btnSave').disabled = !state.dirty;
+      const status = document.getElementById('saveStatus');
+      status.className = 'status';
+      status.textContent = same ? 'Looking good as-is.' : 'You have unsaved changes.';
+    }
+
+    async function save() {
+      const uid = window.currentUser.uid;
+      const status = document.getElementById('saveStatus');
+      const btn = document.getElementById('btnSave');
+      btn.disabled = true;
+      status.className = 'status';
+      status.textContent = 'Saving…';
+      try {
+        await updateDoc(doc(window.db, 'students', uid), {
+          avatarStyle: state.style,
+          avatarSeed:  state.seed,
+          avatarUpdatedAt: serverTimestamp(),
+        });
+        // Update the local profile so other open tabs / immediate renders pick up
+        if (window.studentProfile) {
+          window.studentProfile.avatarStyle = state.style;
+          window.studentProfile.avatarSeed  = state.seed;
+        }
+        state.savedStyle = state.style;
+        state.savedSeed  = state.seed;
+        state.dirty = false;
+        status.classList.add('ok');
+        status.textContent = '✓ Saved — your new avatar is live everywhere.';
+      } catch (e) {
+        console.error('[avatar] save failed', e);
+        status.classList.add('no');
+        status.textContent = 'Save failed: ' + (e.code || e.message);
+        btn.disabled = false;
+      }
+    }
+
+    // ─── Avatar URL helper (mirrors auth-guard.js studentAvatarUrl,
+    //     but takes explicit style+seed for the picker) ───────────
+    function avatarUrl(style, seed, size) {
+      const bg = 'efedfb,ecfeff,fef3c7,d1fae5,fee2e2,e0e7ff';
+      return 'https://api.dicebear.com/9.x/' + style + '/svg'
+        + '?seed=' + encodeURIComponent(seed)
+        + '&size=' + size
+        + '&backgroundColor=' + bg
+        + '&radius=50';
+    }
+
+    // 6 random-ish seeds (URL-safe). First is current seed so the
+    // active state has somewhere to land. Re-roll generates a fresh
+    // set, dropping the current seed.
+    function freshSeedGallery(includeCurrent) {
+      const out = [];
+      if (includeCurrent) out.push(includeCurrent);
+      while (out.length < 6) out.push(randomSeed());
+      return out;
+    }
+    function randomSeed() {
+      // 8 hex chars — easy to read in the meta line, ~4B combos
+      const bytes = new Uint8Array(4);
+      (window.crypto || window.msCrypto).getRandomValues(bytes);
+      return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function escAttr(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      })[c]);
+    }
+  </script>
+</body>
+</html>

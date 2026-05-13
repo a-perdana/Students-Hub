@@ -110,24 +110,44 @@ window.applyStageTheme = function (gradeLevel) {
   return stage;
 };
 
-// ─── Avatar URL (DiceBear bottts — cosmetic) ────────────────────
-// Deterministic robot avatar keyed off uid. NEVER pulls from
-// students/{uid}.photoURL (Google profile picture stays internal).
-// Cosmetic only — never feeds assessment. Same uid → same avatar
-// across every render surface (dashboard / leaderboard / navbar).
+// ─── Avatar URL (DiceBear — cosmetic) ────────────────────────────
+// Deterministic avatar keyed off uid (or per-student override via
+// students/{uid}.avatarSeed + avatarStyle, set on the /avatar page).
+// NEVER pulls from photoURL (Google profile picture stays internal).
+// Cosmetic only — never feeds assessment. Same (style, seed) →
+// same avatar across every render surface.
 //
-// Style: bottts (robot, CC0, no human likeness — safest for a
-// school setting with parent visibility). Background colours drawn
-// from brand palette so the chrome stays on-brand.
+// Default style: bottts (robot, CC0, no human likeness — safest
+// floor for a school setting with parent visibility). Students can
+// switch to adventurer / lorelei / notionists / shapes / fun-emoji
+// via /avatar; the rule envelope in students/{uid} pins the allow
+// list to those 6 styles.
+//
+// Opts:
+//   uid:    auth uid (required)
+//   size:   pixel size (default 96)
+//   style:  override style (e.g. 'bottts'); falls back to
+//           window.studentProfile.avatarStyle, then 'bottts'
+//   seed:   override seed; falls back to
+//           window.studentProfile.avatarSeed, then uid
+const AVATAR_STYLE_ALLOWLIST = new Set([
+  'bottts', 'adventurer', 'lorelei', 'notionists', 'shapes', 'fun-emoji'
+]);
 window.studentAvatarUrl = function (uid, opts) {
   if (!uid) return '';
   const o = opts || {};
   const size = o.size || 96;
-  // brand palette without the # — adventurer, bottts etc. accept
-  // a CSV. Multiple values mean "pick one deterministically per seed".
+  const profile = window.studentProfile || {};
+  // Style precedence: explicit opts → profile pick → bottts default.
+  let style = o.style || profile.avatarStyle || 'bottts';
+  if (!AVATAR_STYLE_ALLOWLIST.has(style)) style = 'bottts';
+  // Seed precedence: explicit opts → profile seed → uid.
+  const seed = o.seed || profile.avatarSeed || uid;
+  // brand palette without the # — most DiceBear styles accept a CSV;
+  // multiple values mean "pick one deterministically per seed".
   const bg = 'efedfb,ecfeff,fef3c7,d1fae5,fee2e2,e0e7ff';
-  return 'https://api.dicebear.com/9.x/bottts/svg'
-    + '?seed=' + encodeURIComponent(uid)
+  return 'https://api.dicebear.com/9.x/' + style + '/svg'
+    + '?seed=' + encodeURIComponent(seed)
     + '&size=' + size
     + '&backgroundColor=' + bg
     + '&radius=50';
