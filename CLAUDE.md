@@ -4,14 +4,15 @@
 
 Eduversal partner-school **student** portal. Audience: 12–18 year-old students in partner schools, primarily Grade 7–8 for the MVP pilot.
 
-Single mission: **assessment delivery + growth tracking**. Not a Student Information System — there is no class roster management, no homework, no messaging, no announcements, no attendance, no grade book. Those belong to other systems (or other hubs).
+Mission: **formal assessment + growth tracking + gamification**. Not a Student Information System — no class roster management, no homework, no messaging, no announcements, no attendance, no grade book. Those belong to other systems (or other hubs).
 
-Two assessment modes flow through this hub:
+Three modes flow through this hub:
 
 | Mode | Purpose | Frequency |
 |---|---|---|
 | **Chapter Tests** | "Did the student master this Cambridge unit?" — per-chapter mastery check, network-uniform, authored by HQ Subject Specialists | Per pacing-collection unit (≈8–12/year/subject) |
 | **EASE Growth** | "How much has the student grown in Math/English/Science across the year?" — adaptive, cross-grade scale score | 3 windows/year (Term 1 / Term 2 / Term 3) |
+| **Practice + Gamification** (2026-05-12 / 2026-05-13) | Self-paced practice runs over `practice_assessments` bundles · daily 5-Q challenge · 4-tab leaderboard (class/grade/school/network) · point/level/tier/streak economy · cosmetic avatar. **NEVER feeds `chapter_mastery` or `ease_growth`** — boundary same as `practice_questions`. See `memory/project_sh_gamification_economy.md`. | Always-on; daily challenge cycles 00:00 Asia/Jakarta |
 
 **Vanilla HTML/CSS/JS** (no React, no bundler). Pages load Firebase via CDN.
 
@@ -173,8 +174,13 @@ Bump this when expanding the pilot to other grades.
 | `profile.html` | `/profile` | active | Read-only profile + sign-out |
 | `shared.html` | `/shared?token=…` | NONE | Parent share link landing. Token-gated `get`; renders chapter attempt OR EASE session report based on which field the token doc carries. Phase 2. |
 | `how-points-work.html` | `/how-points-work` | active | Student-facing gamification guide (formulas, level table, tier ladder, what we DON'T do panel). |
+| `practice.html` | `/practice` | active | Practice picker — subject + topic + difficulty filters → launches `/practice-run` on a `practice_assessments` bundle. |
+| `practice-run.html` | `/practice-run` (`?assessment=` or `?challenge=`) | active | Solo runner. Same item-rendering pipeline as `test.html` but for `practice_questions`. Writes to `practice_attempts/{attemptId}`. Triggers `awardPracticeAttemptPoints` Cloud Function on submit. Daily challenge mode via `?challenge=`. |
+| `daily-challenge.html` | `/daily-challenge` | active | Today's 5-question challenge (id rotated server-side at 00:00 Asia/Jakarta by `rotateDailyChallenges`) + per-class leaderboard for the day. |
+| `leaderboard.html` | `/leaderboard` | active | Mathletics-style 4-tab board: Class / Grade / School / Network. Reads `school_leaderboards/{boardId}` (Cloud-Function-maintained). |
+| `avatar.html` | `/avatar` | active | Cosmetic style + seed picker. Writes avatar fields onto `students/{uid}`. **No spending shop intentionally** — see `memory/project_sh_gamification_economy.md`. |
 
-12 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
+17 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
 
 ### HQ Observer Strip (2026-05-13) — all 3 runners
 
@@ -253,6 +259,11 @@ Owner (student) can revoke by deleting the token doc — owner-delete path in ru
 | `ease_responses/{responseId}` | Per-item adaptive trail row. Student appends own response while session is `in_progress`. **Immutable** after creation. | active student (own row append only) |
 | `ease_growth/{uid}_{subjectId}` | Cross-window aggregate. Student writes own doc on submit (current MVP); Phase 3 Cloud Function will recompute server-side. | active student (own doc); admin/staff read |
 | `parent_share_tokens/{token}` | Token-gated shared attempt reads. Token IS the credential (`get` allow-listed in lint `PUBLIC_COLLECTIONS`); `list:false` even for admin. Owner can revoke (delete). | active student creates own; owner-delete |
+| `practice_questions` (read) · `practice_assessments` (read) | Gamification source banks. Both **read-only** here — composed in CH (`/practice-bank-admin`, `/practice-assessment-author`). Active students can read for `/practice` + `/practice-run` + `/daily-challenge`. **NEVER writes to `chapter_mastery` / `ease_growth`** (root CLAUDE.md #33 + #38). | CH coordinator (writes); active student (reads only) |
+| `practice_attempts/{attemptId}` | Created by student on practice/daily-challenge run. Self-update while `status:'in_progress'`; immutable after submit. Triggers `awardPracticeAttemptPoints` Cloud Function. | active student (own row only) |
+| `daily_challenges/{date}` | Today's 5-Q bundle pointer. Rotated 00:00 Asia/Jakarta by `rotateDailyChallenges`. Read-only here. | Cloud Function only |
+| `student_points/{uid}` | Per-student running totals: points / level / tier / streak / badges. **Cloud-Function-only writes** — `awardChapterTestPoints`, `awardEaseSessionPoints`, `awardPracticeAttemptPoints` triggers credit this. Self-read OK. | Cloud Function (write) · self (read) |
+| `school_leaderboards/{boardId}` | 4-tab leaderboard aggregates (class/grade/school/network × weekly/monthly/all-time). **Cloud-Function-only writes** — maintained by `rebuildLeaderboards` cron + `resetLeaderboardWindows` window-rollover cron. Self-read OK. | Cloud Function (write) · active student (read) |
 
 **Timestamp:** `createdAt` (serverTimestamp). NEVER `timestamp`.
 
@@ -329,13 +340,16 @@ Phase 1 / 1.5 / 2 are all SHIPPED as of 2026-05-10. Only Phase 3 work remains; t
 - ~~Class picker hardcoded to 7–8~~ → **Still hardcoded; intentional for pilot** — bump `ALLOWED_GRADES` const in `class-picker.html` when expanding.
 - ~~No `/test-session-launcher` on TH~~ → **Live in TH** (`/test-session-launcher` + `/student-approvals`).
 
-### Phase 3 backlog (deferred work)
+### Phase 3 backlog (largely shipped 2026-05-11 / 2026-05-13)
 
-- **Server-side EASE scoring + calibration.** Cloud Function trigger on `ease_responses` to recompute theta server-side (current implementation is client-side; trustable for pilot but not adversarial). Same Function will calibrate item logits/discrimination from accumulated response data, leaving `ease_items.difficulty` as a bootstrap and `ease_items.pilotPhase` flipping to `false`.
-- **`chapter_mastery/{studentUid}_{subjectId}_{unitCode}` aggregate** + Cloud Function trigger on `chapter_test_attempts` write. Current TH `/class-assessment` heatmap computes from raw attempts — fine for one class but not for `/teaching-progress`-style cross-school dashboards. Once aggregates land, pacing dashboards can read mastery directly without re-scanning attempts.
-- **Heavy-handed kiosk lockdown** — forced fullscreen, copy/paste disable, right-click block, exam-style network heartbeats. Current implementation is informational `tabSwitches` counter only.
-- **Item exposure cap** — adaptive engine currently has no exposure ceiling, so a popular medium-difficulty item could dominate the bank. Phase 3 should track `seenCount` ratio and weight item selection accordingly.
-- **Cross-window growth claims.** UI must label first 3 windows as "window-specific norm"; growth claims are reliable from window 4 only (item calibration unstable until then).
-- **Parent persistent login.** Current parent flow is token-share-only. Phase 3 may add parent Auth (separate from student domain whitelist) + multi-child linking. Token-share keeps working in parallel.
-- **`/teaching-progress` mastery integration.** TH pacing dashboards still read teacher self-report; once `chapter_mastery` aggregates ship, swap pacing data source to objective mastery.
-- **Religion / PPKn / IPS coverage.** Old EASE handbook covered these; new EASE Growth = Math/English/Science only. Decision pending: (a) chapter tests cover them, OR (b) "EASE Achievement" parallel product, OR (c) drop from network assessment scope. Talk to directors.
+**Shipped:**
+- ~~**Server-side EASE scoring + calibration.**~~ → **Live.** `onEaseResponseCreated` re-grades responses server-side; `calibrateEaseItems` weekly cron flips `pilotPhase:false` once `seenCount ≥ 30`. Pacing + class-assessment + growth dashboards read `serverTheta` / `serverSE`.
+- ~~**`chapter_mastery` aggregate**~~ → **Live.** `onChapterAttemptWritten` Cloud Function maintains `chapter_mastery/{studentUid}_{subjectId}_{unitCode}` on every attempt write.
+- ~~**Item exposure cap**~~ → **Live.** Selection score = `|Δθ| + 0.15 · log1p(seenCount)`; `seenCount` + `correctRate` maintained transactionally by `onEaseResponseCreated`.
+- ~~**Heavy-handed kiosk lockdown**~~ → **Light kiosk shipped** via `partials/kiosk-lockdown.js` (forced fullscreen on first gesture · copy/paste/right-click blocked · F12 / Ctrl+Shift+I / Ctrl+U warning · `lockdownEvents[]` audit batched every 5s). Pilot-grade deterrent + audit trail; not a true kiosk.
+- ~~**Cross-window growth claims**~~ → **Live.** UI labels first 3 windows as "window-specific norm"; growth chip suppressed until `windows.length >= 4`.
+- ~~**Religion / PPKn / IPS coverage**~~ → **Decided 2026-05-11.** Chapter tests are the system of record; no parallel "EASE Achievement" product. Scope locked.
+
+**Still deferred:**
+- **Parent persistent login.** Current parent flow is token-share-only. Phase 3+ may add parent Auth (separate from student domain whitelist) + multi-child linking. Token-share keeps working in parallel.
+- **`/teaching-progress` mastery integration.** TH pacing dashboards still read teacher self-report; swap to read `chapter_mastery` aggregates directly.
