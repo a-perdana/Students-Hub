@@ -58,7 +58,7 @@ If you find yourself reaching for `users/{uid}`, `role_*`, or `applyStaffBridge`
 cd "Central Hub" && firebase deploy --only firestore:rules --project centralhub-8727b
 ```
 
-For full schema + collection catalogue, see [`docs/FIRESTORE_SCHEMA.md`](../docs/FIRESTORE_SCHEMA.md) (§18 covers Students Hub-specific collections) and the root `CLAUDE.md`.
+For full schema + collection catalogue, see [`docs/architecture/FIRESTORE_SCHEMA.md`](../docs/architecture/FIRESTORE_SCHEMA.md) (§18 covers Students Hub-specific collections) and the root `CLAUDE.md`.
 
 ---
 
