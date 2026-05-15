@@ -133,6 +133,13 @@ fs.copyFileSync(
 );
 console.log('Copied: dist/base.css');
 
+// Copy Eduversal master logo (white-on-transparent, 600x176) used by login + navbar.
+const logoSrc = path.join(__dirname, 'eduversal-logo-white.png');
+if (fs.existsSync(logoSrc)) {
+  fs.copyFileSync(logoSrc, path.join(distDir, 'eduversal-logo-white.png'));
+  console.log('Copied: dist/eduversal-logo-white.png');
+}
+
 // Copy partials/ folder (skip firebase-env.html — already inlined)
 const partialsSrc  = path.join(__dirname, 'partials');
 const partialsDist = path.join(distDir, 'partials');

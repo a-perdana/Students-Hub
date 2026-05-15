@@ -84,22 +84,18 @@
     }
 
     .brand-row {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 16px;
       font-family: 'Lora', serif; font-weight: 600; font-size: 1.05rem;
       color: #e9eaf5;
       letter-spacing: .2px;
     }
-    .brand-mark-lg {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #6c5ce7 0%, #0891b2 100%);
-      display: inline-flex; align-items: center; justify-content: center;
-      color: #fff; font-family: 'Lora', serif; font-size: 1.35rem; font-weight: 700;
-      box-shadow: 0 8px 24px rgba(108,92,231,.45);
+    .brand-logo {
+      height: 40px; width: auto; display: block;
+      filter: drop-shadow(0 8px 24px rgba(108,92,231,.45));
     }
     .brand-row .sub {
-      display: block; font-size: .76rem; font-family: 'DM Sans', sans-serif;
-      font-weight: 500; color: #a8acc4; letter-spacing: 1.2px; text-transform: uppercase;
+      display: block; font-size: .78rem; font-family: 'DM Sans', sans-serif;
+      font-weight: 500; color: #a8acc4; letter-spacing: 1.6px; text-transform: uppercase;
     }
 
     .hero-copy { margin: 56px 0; max-width: 520px; }
@@ -344,11 +340,8 @@
     <!-- LEFT: hero / brand pane -->
     <section class="hero">
       <div class="brand-row">
-        <span class="brand-mark-lg">E</span>
-        <span>
-          Eduversal
-          <span class="sub">Students Hub</span>
-        </span>
+        <img class="brand-logo" src="eduversal-logo-white.png" alt="Eduversal">
+        <span class="sub">Students Hub</span>
       </div>
 
       <div class="hero-copy">
