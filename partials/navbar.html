@@ -19,6 +19,7 @@
     <a href="/daily-challenge" data-nav="daily-challenge">Daily</a>
     <a href="/growth" data-nav="growth">Growth</a>
     <a href="/leaderboard" data-nav="leaderboard">Leaderboard</a>
+    <a href="/handbook" data-nav="handbook">Handbook</a>
     <a href="/profile" data-nav="profile">Profile</a>
   </nav>
   <div class="topbar-user">
@@ -39,7 +40,8 @@
     const map  = {
       '/': 'dashboard', '/tests': 'tests', '/growth': 'growth',
       '/leaderboard': 'leaderboard', '/profile': 'profile',
-      '/practice': 'practice', '/daily-challenge': 'daily-challenge'
+      '/practice': 'practice', '/daily-challenge': 'daily-challenge',
+      '/handbook': 'handbook'
     };
     let activeKey = map[path] || null;
     if (!activeKey) {

@@ -48,6 +48,7 @@ const ROUTES = {
   'daily-challenge.html':'daily-challenge',  // /daily-challenge  → today's 5-Q + class leaderboard
   'avatar.html':         'avatar',           // /avatar           → cosmetic avatar style+seed picker
   'how-points-work.html':'how-points-work',  // /how-points-work  → student-facing gamification guide
+  'handbook.html':       'handbook',          // /handbook         → Student Handbook reader (school-facing network handbook)
 };
 
 // Internal href rewrites — same pattern as TH/AH/CH builds.
@@ -69,6 +70,7 @@ const LINK_REWRITES = [
   [/href="daily-challenge\.html"/g, 'href="/daily-challenge"'],
   [/href="avatar\.html"/g,          'href="/avatar"'],
   [/href="how-points-work\.html"/g, 'href="/how-points-work"'],
+  [/href="handbook\.html"/g,        'href="/handbook"'],
 ];
 
 // Read partials/firebase-env.html once (injected via comment placeholder).
