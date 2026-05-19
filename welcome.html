@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome — Students Hub</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Lora:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
+<style>
+.welcome-hero {
+  background: linear-gradient(135deg, #6c5ce7 0%, #4e3db8 55%, #0891b2 100%);
+  color: #fff; padding: 36px 28px 32px; border-radius: 20px;
+  margin: 16px auto; max-width: 920px; position: relative; overflow: hidden;
+}
+.welcome-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 85% 25%, rgba(255,217,61,0.18) 0%, transparent 40%),
+    radial-gradient(circle at 10% 90%, rgba(255,255,255,0.12) 0%, transparent 45%);
+  pointer-events: none;
+}
+.welcome-hero-inner { position: relative; z-index: 1; }
+.welcome-eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.78); margin-bottom: 10px; }
+.welcome-title { font-family: 'Lora', serif; font-size: 2rem; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
+.welcome-sub { font-size: 0.95rem; color: rgba(255,255,255,0.85); max-width: 580px; line-height: 1.55; }
+
+.page-wrap { max-width: 920px; margin: 0 auto; padding: 8px 20px 80px; }
+
+.sec { margin-bottom: 28px; }
+.sec-title { font-family: 'Lora', serif; font-size: 1.35rem; font-weight: 600; color: var(--ink); margin-bottom: 10px; line-height: 1.3; display: flex; align-items: center; gap: 10px; }
+.sec-title .sec-emoji { font-size: 1.4rem; }
+.sec-lead { font-size: 0.92rem; color: var(--ink-2); line-height: 1.6; margin-bottom: 14px; }
+
+.card {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 20px; margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.flow-step {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px 14px; position: relative;
+}
+.flow-step-icon { font-size: 24px; margin-bottom: 6px; }
+.flow-step-num { font-size: 10px; font-weight: 700; color: var(--brand-dk, #4e3db8); letter-spacing: 0.08em; }
+.flow-step-title { font-size: 14px; font-weight: 700; color: var(--ink); margin: 4px 0 6px; }
+.flow-step-text { font-size: 11.5px; color: var(--ink-2); line-height: 1.5; }
+.flow-step-link { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600; color: var(--brand, #6c5ce7); text-decoration: none; }
+.flow-step-link:hover { text-decoration: underline; }
+
+.page-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px 18px; margin-bottom: 12px; box-shadow: var(--shadow-sm);
+}
+.page-card-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: linear-gradient(135deg, #ede9fe 0%, #cffafe 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.page-card-body { flex: 1; min-width: 0; }
+.page-card-title { font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.page-card-route { font-family: 'DM Mono', monospace; font-size: 10.5px; color: var(--ink-3); margin-bottom: 6px; }
+.page-card-text { font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.page-card-text strong { color: var(--ink); }
+.page-card-open {
+  flex-shrink: 0; padding: 7px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; text-decoration: none;
+  background: var(--brand, #6c5ce7); color: #fff;
+}
+.page-card-open:hover { background: var(--brand-dk, #4e3db8); }
+
+.tip { background: #fef9e7; border-left: 4px solid #f5c518; border-radius: 8px; padding: 12px 14px; margin: 12px 0; font-size: 12.5px; color: #78350f; line-height: 1.55; }
+.tip strong { color: #92400e; }
+
+.boundary {
+  background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
+  padding: 16px 18px; margin: 14px 0;
+}
+.boundary-title { font-size: 13.5px; font-weight: 700; color: #991b1b; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.boundary-text { font-size: 12.5px; color: #7f1d1d; line-height: 1.55; }
+.boundary-text strong { color: #991b1b; }
+
+.glossary { display: grid; grid-template-columns: 1fr; gap: 0; background: #fff; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.gloss-row { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+.gloss-row:last-child { border: none; }
+.gloss-term { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.gloss-def { font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+.gloss-def code { font-family: 'DM Mono', monospace; font-size: 11.5px; padding: 1px 5px; background: var(--paper-2, #f3f4f6); border-radius: 4px; color: var(--brand-dk, #4e3db8); }
+
+.help-footer { background: linear-gradient(135deg, #1a1438 0%, #0c1028 100%); color: #fff; border-radius: 16px; padding: 24px 26px; margin-top: 22px; }
+.help-footer-title { font-family: 'Lora', serif; font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; }
+.help-footer-text { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.55; margin-bottom: 12px; }
+.help-footer-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.help-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 9px; background: rgba(255,255,255,0.12); color: #fff; text-decoration: none; border: 1px solid rgba(255,255,255,0.2); font-size: 12px; font-weight: 600; }
+.help-btn:hover { background: rgba(255,255,255,0.2); }
+
+@media (max-width: 600px) {
+  .welcome-hero { padding: 26px 20px 24px; margin: 12px; }
+  .welcome-title { font-size: 1.4rem; }
+  .page-wrap { padding: 6px 14px 60px; }
+  .page-card { flex-direction: column; }
+  .page-card-open { align-self: flex-start; }
+}
+</style>
+</head>
+<body style="display:none">
+  <!-- FIREBASE_ENV -->
+  <div id="navbar-container"></div>
+
+  <section class="welcome-hero">
+    <div class="welcome-hero-inner">
+      <p class="welcome-eyebrow">Students Hub · Welcome</p>
+      <h1 class="welcome-title">Hey 👋 — let's show you around</h1>
+      <p class="welcome-sub">This is your home for tests, growth, practice, and leaderboards. Read this page once. You can come back any time from your <strong>Profile</strong>.</p>
+    </div>
+  </section>
+
+  <main class="page-wrap">
+
+    <!-- What is this place -->
+    <section class="sec">
+      <h2 class="sec-title"><span class="sec-emoji">🎒</span> What is Students Hub?</h2>
+      <p class="sec-lead">A small website made <strong>just for you</strong>. It helps you do three things — and we built it so it works on your phone.</p>
+
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-step-icon">📝</div>
+          <div class="flow-step-num">THING 1</div>
+          <div class="flow-step-title">Take tests</div>
+          <div class="flow-step-text">Chapter tests when your teacher schedules them. EASE growth tests 3 times a year.</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-icon">📈</div>
+          <div class="flow-step-num">THING 2</div>
+          <div class="flow-step-title">See your growth</div>
+          <div class="flow-step-text">A line for each subject. The line goes up across the year if you grow.</div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-icon">🎮</div>
+          <div class="flow-step-num">THING 3</div>
+          <div class="flow-step-title">Practice for fun</div>
+          <div class="flow-step-text">Practice runs + a daily challenge + leaderboards + points. Stays separate from real tests.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- The pages -->
+    <section class="sec">
+      <h2 class="sec-title"><span class="sec-emoji">🗺️</span> The pages, simply explained</h2>
+      <p class="sec-lead">Tap a card to open the page. You can also use the top bar at any time.</p>
+
+      <div class="page-card">
+        <div class="page-card-icon">🏠</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Dashboard</div>
+          <div class="page-card-route">/</div>
+          <div class="page-card-text">Your home page. Shows your <strong>upcoming tests</strong>, your <strong>growth so far</strong>, your <strong>points</strong>, and a button if an EASE window is open right now.</div>
+        </div>
+        <a href="/" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">📝</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Tests</div>
+          <div class="page-card-route">/tests</div>
+          <div class="page-card-text">A list of <strong>chapter tests</strong> your teacher has set for your class. Open one when it is <strong>"Available now"</strong>. Tap on a past one to see your score and the right answers.</div>
+        </div>
+        <a href="/tests" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">📈</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Growth</div>
+          <div class="page-card-route">/growth</div>
+          <div class="page-card-text">A line chart for each subject (Math, English, Science). Each dot is one EASE window. <strong>Going up is good.</strong> The first 3 windows are setup — real growth claims start at window 4.</div>
+        </div>
+        <a href="/growth" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">🎯</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Practice</div>
+          <div class="page-card-route">/practice</div>
+          <div class="page-card-text">Self-paced practice. Pick a subject, pick a topic, pick a difficulty. Earn <strong>points</strong> and grow your <strong>streak</strong>. <strong>This does not change your test scores</strong> — it is for fun and revision only.</div>
+        </div>
+        <a href="/practice" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">🔥</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Daily Challenge</div>
+          <div class="page-card-route">/daily-challenge</div>
+          <div class="page-card-text">A new <strong>5-question challenge every day</strong>. Try to beat your classmates on the class leaderboard. New questions appear at midnight.</div>
+        </div>
+        <a href="/daily-challenge" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">🏆</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Leaderboard</div>
+          <div class="page-card-route">/leaderboard</div>
+          <div class="page-card-text">4 tabs: <strong>Class · Grade · School · Network</strong>. See where you rank. Resets each week + month so everyone has a fresh chance.</div>
+        </div>
+        <a href="/leaderboard" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">🎨</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Avatar</div>
+          <div class="page-card-route">/avatar</div>
+          <div class="page-card-text">Change your avatar style. <strong>Free — no spending or shop.</strong> Just pick what looks good to you.</div>
+        </div>
+        <a href="/avatar" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">📖</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Handbook</div>
+          <div class="page-card-route">/handbook</div>
+          <div class="page-card-text">Your Student Handbook. Reading guide for school rules, support, and how things work.</div>
+        </div>
+        <a href="/handbook" class="page-card-open">Open</a>
+      </div>
+
+      <div class="page-card">
+        <div class="page-card-icon">👤</div>
+        <div class="page-card-body">
+          <div class="page-card-title">Profile</div>
+          <div class="page-card-route">/profile</div>
+          <div class="page-card-text">Your name, school, class, and a <strong>Sign out</strong> button. You cannot edit your name or school from here — those come from your Google account and your teacher. If something is wrong, ask your teacher.</div>
+        </div>
+        <a href="/profile" class="page-card-open">Open</a>
+      </div>
+    </section>
+
+    <!-- The important boundary -->
+    <section class="sec">
+      <h2 class="sec-title"><span class="sec-emoji">🛡️</span> Two rules that matter</h2>
+
+      <div class="boundary">
+        <div class="boundary-title">🚫 Practice never changes your real test scores</div>
+        <div class="boundary-text">Practice runs, the daily challenge, and the leaderboard are <strong>for fun and revision</strong>. They earn you points and badges. <strong>But they NEVER change</strong> your chapter test results or your EASE growth line. Real tests = real scores. Practice = practice. We keep these separate on purpose — so you can experiment without stress.</div>
+      </div>
+
+      <div class="boundary">
+        <div class="boundary-title">🔒 No shop, no buying, no spending</div>
+        <div class="boundary-text">You can <strong>earn</strong> points, levels, tiers, and avatar styles. You <strong>cannot spend</strong> them. There is no shop. There are no things to buy. Everyone gets the same chance and the same look options. We did this on purpose, so the hub stays fair for every student.</div>
+      </div>
+
+      <div class="tip">
+        <strong>One more thing.</strong> When you take a test, the screen will block copy-paste and right-click. It will also notice if you switch tabs. That is normal for a real test — not a punishment.
+      </div>
+    </section>
+
+    <!-- Points + Levels + Tiers + Streak -->
+    <section class="sec">
+      <h2 class="sec-title"><span class="sec-emoji">⭐</span> How points work — the short version</h2>
+      <p class="sec-lead">Here is the very simple version. For the full guide, open <a href="/how-points-work" style="color:var(--brand);font-weight:600;">How Points Work</a>.</p>
+
+      <div class="card">
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Points</strong> — you earn them by submitting tests, doing practice runs, and finishing daily challenges.</li>
+          <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Level</strong> — your level goes up when you collect enough total points. There is a level table on the How Points Work page.</li>
+          <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Tier</strong> — Bronze → Silver → Gold → Platinum → Master. Tier moves up with your level.</li>
+          <li style="padding:8px 0;"><strong>Streak</strong> — how many days in a row you practised. <strong>3 days = +100 bonus</strong>. <strong>7 days = +250 bonus</strong>. Don't break your streak!</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Glossary -->
+    <section class="sec">
+      <h2 class="sec-title"><span class="sec-emoji">📚</span> Words you will see</h2>
+      <p class="sec-lead">Short, plain meanings for the words that show up most often.</p>
+
+      <div class="glossary">
+        <div class="gloss-row">
+          <div class="gloss-term">Chapter Test</div>
+          <div class="gloss-def">A short test on one unit (chapter) of your subject. Your teacher schedules it for your class. The score counts.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">EASE</div>
+          <div class="gloss-def">A growth test you take 3 times a year — once each term. It adapts to your level: if you get a question right, the next one gets harder. The score lets us see if you grew across the year.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">EASE Window</div>
+          <div class="gloss-def">The few weeks when an EASE test is <strong>open</strong>. You can take it any time inside the window. After the window closes, you cannot take it for that term.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">Practice Run</div>
+          <div class="gloss-def">A self-paced session you start yourself. Earns points. Never changes test scores.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">Streak</div>
+          <div class="gloss-def">Days in a row you practised. If you skip a day, the streak resets to 0.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">Tier</div>
+          <div class="gloss-def">A label for how far you have come overall: Bronze, Silver, Gold, Platinum, Master. It moves up with your level.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">Parent Share Link</div>
+          <div class="gloss-def">A link you can send to your parent so they see your test result. No login needed. <strong>You</strong> create the link from a result page, and you can delete it any time.</div>
+        </div>
+        <div class="gloss-row">
+          <div class="gloss-term">Flagged question</div>
+          <div class="gloss-def">If a question looks wrong to a teacher (broken image, unclear wording), an HQ observer can flag it. You will not see this — it's a behind-the-scenes safety net so test questions stay fair.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Help -->
+    <section class="sec">
+      <div class="help-footer">
+        <div class="help-footer-title">Stuck on something?</div>
+        <div class="help-footer-text">If something does not work, or feels wrong, tell your teacher. They can flag it for the HQ team. We fix it for everyone.</div>
+        <div class="help-footer-actions">
+          <a class="help-btn" href="/how-points-work">⭐ How Points Work</a>
+          <a class="help-btn" href="/handbook">📖 Student Handbook</a>
+          <a class="help-btn" href="/profile">👤 Profile</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="auth-guard.js"></script>
+  <script>
+    // Mount navbar (same pattern as every authed SH page)
+    fetch('/partials/navbar.html').then(r => r.text()).then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+    });
+  </script>
+</body>
+</html>

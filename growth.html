@@ -33,14 +33,59 @@
       display: flex; gap: 10px; margin-top: 18px;
     }
     .cta-row .btn { flex: 1; justify-content: center; }
+
+    /* ── New-user intro banner (dismissable) ─────────────────── */
+    .page-intro { display:none; background:linear-gradient(135deg,#ede9fe 0%,#cffafe 100%); border:1px solid #c4b5fd; border-radius:14px; padding:14px 16px 14px 16px; margin-bottom:18px; position:relative; }
+    .page-intro.show { display:flex; gap:12px; align-items:flex-start; }
+    .page-intro-icon { font-size:22px; flex-shrink:0; padding-top:1px; }
+    .page-intro-body { flex:1; min-width:0; padding-right:26px; }
+    .page-intro-title { font-size:13.5px; font-weight:700; color:#4e3db8; margin-bottom:3px; }
+    .page-intro-text { font-size:12.5px; color:var(--ink-2); line-height:1.5; }
+    .page-intro-text strong { color:#4e3db8; }
+    .page-intro-link { display:inline-block; margin-top:7px; font-size:11.5px; font-weight:600; color:#6c5ce7; text-decoration:none; }
+    .page-intro-link:hover { text-decoration:underline; }
+    .page-intro-dismiss { position:absolute; top:8px; right:8px; background:rgba(255,255,255,.7); border:1px solid #c4b5fd; border-radius:6px; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#4e3db8; font-size:14px; line-height:1; }
+    .page-intro-dismiss:hover { background:#fff; }
   </style>
 </head>
 <body style="display:none">
   <!-- FIREBASE_ENV -->
 
+  <!-- Intro banner show/dismiss -->
+  <script>
+  (function() {
+    const KEY_PREFIX = 'sh_intro_dismissed_';
+    window.__dismissIntro = function(slug) {
+      try { localStorage.setItem(KEY_PREFIX + slug, '1'); } catch (_) {}
+      const el = document.querySelector(`.page-intro[data-intro-key="${slug}"]`);
+      if (el) el.classList.remove('show');
+    };
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.page-intro[data-intro-key]').forEach(el => {
+        const slug = el.getAttribute('data-intro-key');
+        let dismissed = false;
+        try { dismissed = localStorage.getItem(KEY_PREFIX + slug) === '1'; } catch (_) {}
+        if (!dismissed) el.classList.add('show');
+      });
+    });
+  })();
+  </script>
+
   <div id="navbar-container"></div>
 
   <main class="page">
+    <div class="page-intro" data-intro-key="growth">
+      <div class="page-intro-icon">📈</div>
+      <div class="page-intro-body">
+        <div class="page-intro-title">First time on Growth?</div>
+        <div class="page-intro-text">
+          This page shows a <strong>line for each subject</strong> (Math, English, Science). Each dot is one <strong>EASE window</strong> (3 times a year). <strong>Going up is good</strong> — it means you grew. The first 3 windows are setup, so we wait until window 4 before we say "real growth". Don't worry if your line is short for now — every student starts here.
+        </div>
+        <a class="page-intro-link" href="/welcome">📖 See the full guide →</a>
+      </div>
+      <button class="page-intro-dismiss" type="button" aria-label="Dismiss intro" onclick="window.__dismissIntro('growth')">✕</button>
+    </div>
+
     <h1>Your growth journey</h1>
     <p style="color:var(--ink-3); margin-bottom:18px">EASE Growth measures how much you're learning across Math, English, and Science. Each window's score is on a 100–300 scale — higher is better, and growth is the change from window to window.</p>
 

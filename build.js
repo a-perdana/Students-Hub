@@ -49,6 +49,7 @@ const ROUTES = {
   'avatar.html':         'avatar',           // /avatar           → cosmetic avatar style+seed picker
   'how-points-work.html':'how-points-work',  // /how-points-work  → student-facing gamification guide
   'handbook.html':       'handbook',          // /handbook         → Student Handbook reader (school-facing network handbook)
+  'welcome.html':        'welcome',           // /welcome          → ESL-friendly first-time-user guide (2026-05-19)
 };
 
 // Internal href rewrites — same pattern as TH/AH/CH builds.
