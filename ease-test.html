@@ -170,7 +170,8 @@
     const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
     const ITEM_TARGET_DEFAULT = 25;
     const SE_STOP_DEFAULT = 0.4;
-    // Difficulty band → logit equivalent (Rasch-lite; calibration replaces this in Phase 3)
+    // Difficulty band → logit equivalent. Bootstrap bands for the Rasch 1PL engine;
+    // per-item calibratedLogit (from calibrateEaseItems, once pilotPhase=false) overrides these.
     const DIFF_LOGIT = { easy: -1.2, medium: 0, hard: 1.2 };
     const SE_INIT = 1.5;
     const BANK_CACHE_TTL_MS = 15 * 60 * 1000;
@@ -616,25 +617,47 @@
 
       if (it.type === 'mcq') {
         optsBox.hidden = false;
+        optsBox.setAttribute('role', 'radiogroup');
+        optsBox.setAttribute('aria-label', 'Answer choices');
         // Imported items ship optionsHtml; HQ-authored ship plain options.
         // Pick per-index — fall back to escaped text otherwise.
         const html = (it.options || []).map((o, i) => {
           const oHtml = (it.optionsHtml && it.optionsHtml[i])
             ? sanitiseCached(it.id + ':opt:' + i, it.optionsHtml[i])
             : escHtml(o);
+          // Roving tabindex: first option is the single Tab stop; arrows move.
           return `
-          <div class="qopt" data-i="${i}">
-            <span class="qopt-letter">${String.fromCharCode(65+i)}</span>
+          <div class="qopt" data-i="${i}"
+               role="radio" tabindex="${i === 0 ? '0' : '-1'}" aria-checked="false">
+            <span class="qopt-letter" aria-hidden="true">${String.fromCharCode(65+i)}</span>
             <span class="qopt-text">${oHtml}</span>
           </div>`;
         }).join('');
         optsBox.innerHTML = html;
-        optsBox.querySelectorAll('.qopt').forEach(el => {
-          el.addEventListener('click', () => {
-            optsBox.querySelectorAll('.qopt').forEach(x => x.classList.remove('selected'));
-            el.classList.add('selected');
-            currentChoice = Number(el.dataset.i);
-            document.getElementById('nextBtn').disabled = false;
+        const opts = Array.from(optsBox.querySelectorAll('.qopt'));
+        const selectOpt = (el) => {
+          opts.forEach(x => {
+            x.classList.remove('selected');
+            x.setAttribute('aria-checked', 'false');
+            x.tabIndex = -1;
+          });
+          el.classList.add('selected');
+          el.setAttribute('aria-checked', 'true');
+          el.tabIndex = 0;
+          el.focus();
+          currentChoice = Number(el.dataset.i);
+          document.getElementById('nextBtn').disabled = false;
+        };
+        opts.forEach((el, i) => {
+          el.addEventListener('click', () => selectOpt(el));
+          el.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault(); selectOpt(el);
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+              e.preventDefault(); selectOpt(opts[(i + 1) % opts.length]);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+              e.preventDefault(); selectOpt(opts[(i - 1 + opts.length) % opts.length]);
+            }
           });
         });
       } else if (it.type === 'numeric') {

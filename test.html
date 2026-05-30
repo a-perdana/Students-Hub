@@ -382,21 +382,47 @@
       const saved = answers[it.id];
       if (it.type === 'mcq') {
         optsBox.hidden = false;
+        optsBox.setAttribute('role', 'radiogroup');
+        optsBox.setAttribute('aria-label', 'Answer choices');
+        const selIdx = saved ? saved.answer : null;
         optsBox.innerHTML = (it.options || []).map((o, i) => {
           const oHtml = (it.optionsHtml && it.optionsHtml[i])
             ? sanitiseQuestionHtml(it.optionsHtml[i])
             : escHtml(o);
+          const isSel = selIdx === i;
+          // Roving tabindex: the selected option (or the first, if none) is the
+          // single Tab stop; arrow keys move between options within the group.
+          const tab = isSel || (selIdx === null && i === 0) ? '0' : '-1';
           return `
-          <div class="qopt ${saved && saved.answer === i ? 'selected' : ''}" data-i="${i}">
-            <span class="qopt-letter">${String.fromCharCode(65+i)}</span>
+          <div class="qopt ${isSel ? 'selected' : ''}" data-i="${i}"
+               role="radio" tabindex="${tab}" aria-checked="${isSel}">
+            <span class="qopt-letter" aria-hidden="true">${String.fromCharCode(65+i)}</span>
             <span class="qopt-text">${oHtml}</span>
           </div>`;
         }).join('');
-        optsBox.querySelectorAll('.qopt').forEach(el => {
-          el.addEventListener('click', () => {
-            optsBox.querySelectorAll('.qopt').forEach(x => x.classList.remove('selected'));
-            el.classList.add('selected');
-            saveAnswer(it, Number(el.dataset.i));
+        const opts = Array.from(optsBox.querySelectorAll('.qopt'));
+        const selectOpt = (el) => {
+          opts.forEach(x => {
+            x.classList.remove('selected');
+            x.setAttribute('aria-checked', 'false');
+            x.tabIndex = -1;
+          });
+          el.classList.add('selected');
+          el.setAttribute('aria-checked', 'true');
+          el.tabIndex = 0;
+          el.focus();
+          saveAnswer(it, Number(el.dataset.i));
+        };
+        opts.forEach((el, i) => {
+          el.addEventListener('click', () => selectOpt(el));
+          el.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault(); selectOpt(el);
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+              e.preventDefault(); selectOpt(opts[(i + 1) % opts.length]);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+              e.preventDefault(); selectOpt(opts[(i - 1 + opts.length) % opts.length]);
+            }
           });
         });
       } else if (it.type === 'numeric') {

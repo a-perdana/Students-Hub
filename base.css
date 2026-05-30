@@ -259,6 +259,15 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 0 0 3px rgba(108,92,231,.18);
 }
 
+/* ─── Keyboard focus ring (only for keyboard users, not mouse clicks) ── */
+a:focus-visible, button:focus-visible, .btn:focus-visible,
+[role="button"]:focus-visible, [role="radio"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--mor);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 /* ─── Badges + chips ─────────────────────────────────────────── */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
@@ -334,6 +343,10 @@ body.test-mode .topbar { display: none; }
 }
 .qopt:hover     { border-color: var(--mor); background: var(--mor-2); }
 .qopt.selected  { border-color: var(--mor); background: var(--mor-2); }
+.qopt:focus-visible {
+  outline: 3px solid var(--mor);
+  outline-offset: 2px;
+}
 .qopt-letter {
   width: 28px; height: 28px; border-radius: 50%;
   background: var(--paper); color: var(--ink-2);

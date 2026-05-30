@@ -219,7 +219,7 @@ Live and production-ready as of 2026-05-10. Loads a `chapter_test_attempts/{atte
 
 Live and production-ready as of 2026-05-10 — Phase 2. Distinct from `test.html` because it adapts in flight rather than walking a fixed item set.
 
-- **Engine: Rasch-lite (client-side).** Item difficulty band → logit (`easy −1.2`, `medium 0`, `hard +1.2`). Theta updates per item via Bayesian-ish step: `theta += se * (isCorrect ? (1 - pCorrect) : -pCorrect)`. SE shrinks `0.92×` per item.
+- **Engine: Rasch 1PL (client-side, MLE).** Item difficulty band → logit (`easy −1.2`, `medium 0`, `hard +1.2`), overridden by `calibratedLogit` once the weekly `calibrateEaseItems` Cloud Function flips `pilotPhase:false`. Theta updates per item via a **Newton-Raphson step with Fisher information**: `p = 1/(1+exp(-(θ − itemLogit)))` clamped to `[0.02, 0.98]` (so info never collapses to 0); `info = p·(1−p)`; step `dθ = (y − p)/info` bounded to ±1 logit/item (a single misclick can't catapult θ off-scale). SE shrinks via **variance accumulation**: `1/SE² ← 1/SE² + info`, then `SE = 1/√(…)` — a true Fisher-information shrink, NOT a fixed `0.92×` multiplier. (Code: `ease-test.html:678-695`.)
 - **Stop conditions.** Hit `itemCountTarget` (default 25) OR `answered ≥ 10 AND SE < seStopThreshold` (default 0.4). Both come from the `ease_test_windows/{windowId}` doc.
 - **Item selection.** `bank.filter(i => !usedItemIds.has(i.id))` then sort by `Math.abs(DIFF_LOGIT[i.difficulty] - theta)` ascending. Pick the closest to current theta.
 - **No going back.** UI explicitly states "every answer changes what comes next; there's no going back" — adaptive integrity.
