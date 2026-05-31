@@ -171,8 +171,20 @@
     const ITEM_TARGET_DEFAULT = 25;
     const SE_STOP_DEFAULT = 0.4;
     // Difficulty band → logit equivalent. Bootstrap bands for the Rasch 1PL engine;
-    // per-item calibratedLogit (from calibrateEaseItems, once pilotPhase=false) overrides these.
+    // Last-resort fallback only — see effectiveLogit() below for the full
+    // preference order (calibratedLogit > sourcePLogit > this band map).
     const DIFF_LOGIT = { easy: -1.2, medium: 0, hard: 1.2 };
+    // Single source of truth for an item's working logit. Preference, best → worst:
+    //   1. calibratedLogit  — earned from ≥30 real responses (calibrateEaseItems,
+    //                         only trusted once pilotPhase === false).
+    //   2. sourcePLogit     — import-time prior from latihan.id's observed
+    //                         correct-rate (scripts/ease/rebootstrap-difficulty-from-sourcep.js).
+    //   3. DIFF_LOGIT[band] — author-difficulty bootstrap, last resort.
+    function effectiveLogit(it) {
+      if (typeof it.calibratedLogit === 'number' && it.pilotPhase === false) return it.calibratedLogit;
+      if (typeof it.sourcePLogit === 'number') return it.sourcePLogit;
+      return DIFF_LOGIT[it.difficulty] ?? 0;
+    }
     const SE_INIT = 1.5;
     const BANK_CACHE_TTL_MS = 15 * 60 * 1000;
 
@@ -563,15 +575,18 @@
       // tie-break between two similarly-fitting items, small enough that
       // a far-off-difficulty item never beats a closer one on a fresh bank.
       //
-      // Logit source preference: once the weekly calibrateEaseItems Cloud
-      // Function flips `pilotPhase: false` and writes `calibratedLogit`,
-      // prefer that. Until then, fall back to the 3-band bootstrap.
+      // Logit source preference (best → worst):
+      //   1. calibratedLogit — earned from ≥30 real responses by the weekly
+      //      calibrateEaseItems Cloud Function (only once pilotPhase=false).
+      //   2. sourcePLogit — import-time prior derived from latihan.id's
+      //      observed correct-rate (scripts/ease/rebootstrap-difficulty-from-sourcep.js).
+      //      Real-data difficulty, far better than the 3-band label whose
+      //      bands are statistically indistinguishable (~0.70/0.68/0.66 p).
+      //   3. DIFF_LOGIT[difficulty] — author-band bootstrap, last resort.
       const EXPOSURE_WEIGHT = 0.15;
       const candidates = bank.filter(it => !usedItemIds.has(it.id));
       if (candidates.length === 0) return finalize(); // exhausted
-      const logitOf = (it) => (typeof it.calibratedLogit === 'number' && it.pilotPhase === false)
-        ? it.calibratedLogit
-        : (DIFF_LOGIT[it.difficulty] ?? 0);
+      const logitOf = (it) => effectiveLogit(it);
       candidates.sort((a, b) => {
         const aDist = Math.abs(logitOf(a) - theta);
         const bDist = Math.abs(logitOf(b) - theta);
@@ -699,10 +714,8 @@
       }
 
       // Rasch (1PL) MLE update — Newton-Raphson step + Fisher-information SE shrink.
-      // Phase 3: prefer calibratedLogit when the weekly batch has flipped pilotPhase=false; otherwise bootstrap band.
-      const itLogit = (typeof it.calibratedLogit === 'number' && it.pilotPhase === false)
-        ? it.calibratedLogit
-        : (DIFF_LOGIT[it.difficulty] ?? 0);
+      // Logit source preference: calibratedLogit > sourcePLogit > band (see selectNext).
+      const itLogit = effectiveLogit(it);
       const pRaw = 1 / (1 + Math.exp(-(theta - itLogit)));
       // Clamp p away from 0/1 so info doesn't collapse to 0 at the extremes
       // (would NaN the SE update and stall theta forever).
