@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Topic 6: Space physics — Eduversal Foundation Physics</title>
+<meta name="description" content="Out from the Earth's tilt to the Solar System, the life of stars, and the expanding Universe itself. 5 free self-paced Cambridge IGCSE Physics lessons.">
+<style>
+:root{
+  --navy:#1F4E5F; --navy-dark:#163A47; --teal:#2AA9A0; --teal-dark:#1F8880;
+  --teal-light:#E6F5F3; --core-bg:#DCE9F0; --core-border:#B7D2E0;
+  --supp-bg:#FDF1DC; --supp-border:#F0D9A6;
+  --bg:#F6F9FA; --card-bg:#FFFFFF; --text:#1F2A30; --muted:#5B6B76;
+  --border:#E1E8EB; --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 2px rgba(15,42,51,.06),0 4px 14px rgba(15,42,51,.06);
+  --shadow-lg:0 2px 6px rgba(15,42,51,.08),0 14px 34px rgba(15,42,51,.10);
+  --max-width:1080px;
+  font-size:17px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+img{max-width:100%}
+a{color:var(--teal-dark);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:var(--max-width);margin:0 auto;padding:0 20px}
+
+/* ---------- Top bar ---------- */
+.topbar{background:var(--navy);color:#fff;padding:14px 0;position:sticky;top:0;z-index:50;box-shadow:var(--shadow)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:#fff}
+.brand:hover{text-decoration:none;opacity:.9}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--teal);display:inline-block}
+.topbar nav a{color:#cfe3ea;margin-left:18px;font-size:.95rem}
+.topbar nav a:hover{color:#fff}
+.topbar nav a.active{color:#fff;font-weight:600}
+
+/* ---------- Breadcrumb ---------- */
+.breadcrumb{font-size:.88rem;color:var(--muted);margin:18px 0 4px}
+.breadcrumb a{color:var(--muted)}
+.breadcrumb a:hover{color:var(--teal-dark)}
+
+/* ---------- Hero ---------- */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 55%,#0F2C36 100%);
+  color:#fff;padding:56px 0 60px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(900px 380px at 78% -8%,rgba(42,169,160,.30),transparent 62%)}
+.hero .wrap{position:relative;z-index:1}
+.hero .eyebrow{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:#9FE3DC;background:rgba(42,169,160,.16);
+  border:1px solid rgba(42,169,160,.34);padding:5px 12px;border-radius:999px;margin-bottom:14px}
+.hero h1{margin:6px 0 12px;font-size:2.3rem;line-height:1.2;letter-spacing:-.01em}
+.hero .dek{color:#CFE3EA;font-size:1.08rem;max-width:660px;margin:0}
+.hero-stats{display:flex;flex-wrap:wrap;gap:26px;margin-top:30px}
+.hero-stat .n{font-size:1.7rem;font-weight:700;color:#fff;line-height:1.1}
+.hero-stat .l{font-size:.8rem;color:#9FB9C4;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{display:inline-block;font-weight:600;font-size:.95rem;padding:12px 22px;border-radius:var(--radius-sm);border:1px solid transparent;cursor:pointer}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-dark);text-decoration:none}
+.btn-ghost{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.28)}
+.btn-ghost:hover{background:rgba(255,255,255,.16);text-decoration:none}
+
+/* ---------- Page header (inner pages) ---------- */
+.page-header{padding:12px 0 22px}
+.page-header .eyebrow{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--teal-dark);background:var(--teal-light);
+  padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.page-header h1{margin:4px 0 8px;font-size:1.85rem;color:var(--navy-dark)}
+.page-header .dek{color:var(--muted);font-size:1.02rem;margin:0;max-width:720px}
+
+/* ---------- Section heads ---------- */
+.section-head{margin:44px 0 18px}
+.section-head h2{margin:0 0 6px;font-size:1.35rem;color:var(--navy-dark)}
+.section-head p{margin:0;color:var(--muted);font-size:.95rem}
+
+/* ---------- Cards ---------- */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 24px;box-shadow:var(--shadow);margin-bottom:18px}
+
+/* ---------- Subject grid ----------
+   4 subjects: 4-up on wide, 2-up on mid, 1-up on phones. auto-fit alone
+   left a lone card stranded on its own row at 1280px. */
+.subject-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:1000px){.subject-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.subject-grid{grid-template-columns:1fr}}
+.subject-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;
+  transition:transform .16s ease,box-shadow .16s ease;position:relative}
+a.subject-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);text-decoration:none}
+.subject-card.is-soon{opacity:.72;background:#FBFCFD}
+.subject-icon{font-size:2rem;line-height:1;margin-bottom:12px}
+.subject-card h3{margin:0 0 4px;font-size:1.2rem;color:var(--navy-dark)}
+.subject-code{font-size:.78rem;color:var(--muted);font-weight:600;letter-spacing:.03em}
+.subject-card p{color:var(--muted);font-size:.92rem;margin:10px 0 16px;flex:1}
+/* Wraps to two lines at 4-up column width rather than squashing the pill. */
+.subject-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.pill-live{background:var(--teal-light);color:var(--teal-dark);border:1px solid #BFE6E1}
+.pill-soon{background:#F1F4F6;color:var(--muted);border:1px solid var(--border)}
+.go{font-weight:600;font-size:.9rem;color:var(--teal-dark);white-space:nowrap}
+
+/* ---------- Topic grid ----------
+   4 topics: 2×2 on wide reads better than 3+1 stranded. */
+.topic-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media(max-width:700px){.topic-grid{grid-template-columns:1fr}}
+.topic-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column;
+  transition:transform .16s ease,box-shadow .16s ease}
+a.topic-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);text-decoration:none}
+.topic-card .t-icon{font-size:1.7rem;line-height:1;margin-bottom:10px}
+.topic-card h3{margin:0 0 6px;font-size:1.15rem;color:var(--navy-dark)}
+.topic-card .t-num{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--teal-dark)}
+.topic-card p{color:var(--muted);font-size:.92rem;margin:8px 0 16px;flex:1}
+.topic-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-block;font-size:.76rem;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:#F1F4F6;color:var(--muted);border:1px solid var(--border)}
+.chip-core{background:var(--core-bg);color:#1B4A60;border-color:var(--core-border)}
+.chip-supp{background:var(--supp-bg);color:#8A6008;border-color:var(--supp-border)}
+
+/* ---------- Lesson list ---------- */
+.lesson-list{display:grid;gap:12px}
+.lesson{display:flex;gap:16px;align-items:flex-start;background:var(--card-bg);
+  border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;
+  box-shadow:var(--shadow);transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease}
+a.lesson:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:#C9DCE4;text-decoration:none}
+.lesson-code{flex:0 0 auto;min-width:52px;height:52px;border-radius:10px;background:var(--navy);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;padding:0 8px}
+.lesson-body{flex:1;min-width:0}
+.lesson-body h4{margin:0 0 4px;font-size:1.05rem;color:var(--navy-dark)}
+.lesson-body p{margin:0 0 10px;color:var(--muted);font-size:.9rem}
+.lesson-meta{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.lesson-status{flex:0 0 auto;align-self:center;text-align:right;min-width:96px}
+.rag-mini{display:inline-flex;gap:3px;margin-bottom:5px}
+.rag-dot{width:9px;height:9px;border-radius:50%;background:#E3E9EC}
+.rag-dot.green{background:#3FA45B}.rag-dot.amber{background:#E0A33E}.rag-dot.red{background:#D2544E}
+.lesson-status .s-label{font-size:.74rem;color:var(--muted);display:block}
+
+/* ---------- Progress summary ---------- */
+.progress-band{background:linear-gradient(135deg,#EAF4F6 0%,#E6F5F3 100%);
+  border:1px solid #CFE5E7;border-radius:var(--radius);padding:22px 24px;margin-bottom:8px}
+.progress-band h3{margin:0 0 4px;font-size:1.08rem;color:var(--navy-dark)}
+.progress-band p{margin:0;color:var(--muted);font-size:.9rem}
+.pbar{height:10px;border-radius:999px;background:#fff;border:1px solid #D6E4E7;
+  overflow:hidden;display:flex;margin:14px 0 10px}
+.pseg{height:100%}
+.pseg.green{background:#3FA45B}.pseg.amber{background:#E0A33E}.pseg.red{background:#D2544E}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:50%;display:inline-block;font-style:normal}
+
+/* ---------- Info / notice ---------- */
+.notice{background:#FFFDF6;border:1px solid var(--supp-border);border-left:4px solid #E0A33E;
+  border-radius:var(--radius-sm);padding:14px 18px;color:#6A5320;font-size:.9rem;margin:18px 0}
+.notice strong{color:#4E3D12}
+
+/* ---------- Steps ---------- */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:6px}
+.step{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.step .n{width:28px;height:28px;border-radius:50%;background:var(--teal-light);color:var(--teal-dark);
+  font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.step h4{margin:0 0 5px;font-size:1rem;color:var(--navy-dark)}
+.step p{margin:0;color:var(--muted);font-size:.88rem}
+
+/* ---------- Footer ---------- */
+.site-footer{background:var(--navy-dark);color:#B8CED6;margin-top:56px;padding:36px 0 30px;font-size:.9rem}
+.site-footer .wrap{display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:center}
+.site-footer a{color:#9FE3DC}
+.site-footer .fine{font-size:.82rem;color:#8AA6B0;margin-top:6px}
+
+@media(max-width:640px){
+  .hero{padding:40px 0 44px}
+  .hero h1{font-size:1.75rem}
+  .hero-stats{gap:18px}
+  .lesson{flex-wrap:wrap}
+  .lesson-status{text-align:left;min-width:0;width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span> Eduversal Foundation</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="physics.html" class="active">Physics</a>
+    </nav>
+  </div>
+</header>
+
+
+<main class="wrap">
+  <p class="breadcrumb"><a href="index.html">Home</a> &rsaquo; <a href="physics.html">Physics</a> &rsaquo; Topic 6</p>
+
+  <section class="page-header">
+    <span class="eyebrow">Cambridge IGCSE Physics 0625 &middot; Topic 6</span>
+    <h1>🪐 Space physics</h1>
+    <p class="dek">Out from the Earth's tilt to the Solar System, the life of stars, and the expanding Universe itself.</p>
+    <div class="topic-meta" style="margin-top:14px">
+      <span class="chip">5 lessons</span>
+      <span class="chip chip-core">15 Core objectives</span>
+      <span class="chip chip-supp">15 Supplement objectives</span>
+    </div>
+  </section>
+
+  <div class="progress-band" data-progress-scope="6.1.1,6.1.2,6.2.1,6.2.2,6.2.3">
+    <h3>Your progress in this topic <span style="float:right;font-weight:700;color:var(--teal-dark)" data-progress-count>0 / 0</span></h3>
+    <p>Based on how you rated yourself in each lesson.</p>
+    <div class="pbar">
+      <div class="pseg green" data-seg-green style="width:0"></div>
+      <div class="pseg amber" data-seg-amber style="width:0"></div>
+      <div class="pseg red" data-seg-red style="width:0"></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#3FA45B"></i> Confident</span>
+      <span><i style="background:#E0A33E"></i> Getting there</span>
+      <span><i style="background:#D2544E"></i> Needs work</span>
+      <span><i style="background:#E3E9EC"></i> Not yet rated</span>
+    </div>
+    <p style="margin-top:10px" data-progress-text></p>
+  </div>
+
+  <div class="section-head">
+    <h2>Lessons</h2>
+    <p>Work through them in order, or jump to whichever you need.</p>
+  </div>
+  <div class="lesson-list">
+      <a class="lesson" href="24a-earth-day-night-seasons-standalone.html" data-lesson-los="6.1.1-C1,6.1.1-C2,6.1.1-C3,6.1.1-S4">
+        <div class="lesson-code">6.1.1</div>
+        <div class="lesson-body">
+          <h4>The Earth</h4>
+          <p>Why does the Sun rise and set? Why do we have seasons? Why does the Moon change shape? All three come down to the Earth spinning, orbiting, and tilting - meet the equation that describes how fast anything in orbit actually moves.</p>
+          <div class="lesson-meta">
+            <span class="chip chip-core">3 Core</span>
+            <span class="chip chip-supp">1 Supplement</span>
+            <span class="chip">12 questions</span>
+            <span class="chip">2 videos</span>
+            <span class="chip">3 simulations</span>
+          </div>
+        </div>
+        <div class="lesson-status">
+          <span class="rag-mini" data-rag-mini></span>
+          <span class="s-label" data-status-label>Not started</span>
+        </div>
+      </a>
+      <a class="lesson" href="24b-the-solar-system-standalone.html" data-lesson-los="6.1.2-C1,6.1.2-C2,6.1.2-C3,6.1.2-C4,6.1.2-C5,6.1.2-C6,6.1.2-S7,6.1.2-S8,6.1.2-S9,6.1.2-S10">
+        <div class="lesson-code">6.1.2</div>
+        <div class="lesson-body">
+          <h4>The Solar System</h4>
+          <p>From the Sun's iron grip of gravity to the accretion disc that built the planets: explore what's really out there, why the inner planets are rocky and the outer ones are gas giants, and how energy trades places as a comet swings past the Sun.</p>
+          <div class="lesson-meta">
+            <span class="chip chip-core">6 Core</span>
+            <span class="chip chip-supp">4 Supplement</span>
+            <span class="chip">12 questions</span>
+            <span class="chip">4 videos</span>
+            <span class="chip">4 simulations</span>
+          </div>
+        </div>
+        <div class="lesson-status">
+          <span class="rag-mini" data-rag-mini></span>
+          <span class="s-label" data-status-label>Not started</span>
+        </div>
+      </a>
+      <a class="lesson" href="25a-the-sun-as-a-star-standalone.html" data-lesson-los="6.2.1-C1,6.2.1-S2">
+        <div class="lesson-code">6.2.1</div>
+        <div class="lesson-body">
+          <h4>The Sun as a star</h4>
+          <p>Our nearest star up close: what the Sun is made of, what colours of light it actually radiates, and the nuclear fusion furnace at its core that has kept it shining for billions of years.</p>
+          <div class="lesson-meta">
+            <span class="chip chip-core">1 Core</span>
+            <span class="chip chip-supp">1 Supplement</span>
+            <span class="chip">12 questions</span>
+            <span class="chip">2 videos</span>
+            <span class="chip">1 simulation</span>
+          </div>
+        </div>
+        <div class="lesson-status">
+          <span class="rag-mini" data-rag-mini></span>
+          <span class="s-label" data-status-label>Not started</span>
+        </div>
+      </a>
+      <a class="lesson" href="25b-stars-life-cycle-standalone.html" data-lesson-los="6.2.2-C1,6.2.2-S2,6.2.2-S3">
+        <div class="lesson-code">6.2.2</div>
+        <div class="lesson-body">
+          <h4>Stars</h4>
+          <p>Zoom out to the Milky Way - a swirl of roughly 200 billion stars - then follow any one of them through its life story, from a cold cloud of gas to a red giant, a supernova, or even a black hole.</p>
+          <div class="lesson-meta">
+            <span class="chip chip-core">1 Core</span>
+            <span class="chip chip-supp">2 Supplement</span>
+            <span class="chip">12 questions</span>
+            <span class="chip">2 videos</span>
+            <span class="chip">2 simulations</span>
+          </div>
+        </div>
+        <div class="lesson-status">
+          <span class="rag-mini" data-rag-mini></span>
+          <span class="s-label" data-status-label>Not started</span>
+        </div>
+      </a>
+      <a class="lesson" href="25c-the-universe-standalone.html" data-lesson-los="6.2.3-C1,6.2.3-C2,6.2.3-C3,6.2.3-C4,6.2.3-S5,6.2.3-S6,6.2.3-S7,6.2.3-S8,6.2.3-S9,6.2.3-S10,6.2.3-S11">
+        <div class="lesson-code">6.2.3</div>
+        <div class="lesson-body">
+          <h4>The Universe</h4>
+          <p>The final scale jump: billions of galaxies, light stretched red by an expanding Universe, a microwave afterglow left over from the Big Bang, and an equation that lets you calculate the age of everything.</p>
+          <div class="lesson-meta">
+            <span class="chip chip-core">4 Core</span>
+            <span class="chip chip-supp">7 Supplement</span>
+            <span class="chip">12 questions</span>
+            <span class="chip">4 videos</span>
+            <span class="chip">3 simulations</span>
+          </div>
+        </div>
+        <div class="lesson-status">
+          <span class="rag-mini" data-rag-mini></span>
+          <span class="s-label" data-status-label>Not started</span>
+        </div>
+      </a>
+  </div>
+
+  <p style="margin:28px 0 0"><a href="physics.html">&larr; All Physics topics</a></p>
+</main>
+
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <strong style="color:#fff">Eduversal Foundation</strong> — free self-paced Cambridge IGCSE preparation.
+      <div class="fine">Your progress is saved in this browser only. No account, no sign-in, nothing sent to a server.</div>
+    </div>
+    <div class="fine">© Eduversal Education</div>
+  </div>
+</footer>
+
+<script>
+/* Reads the SAME localStorage blob the lesson pages write. No server, no login. */
+const EIFP_STORAGE_KEY="eifp-physics-progress-v1";
+const EIFP_LO_MAP={"3.1":["3.1-C1","3.1-C2","3.1-C3","3.1-C4","3.1-C5","3.1-C6","3.1-C7","3.1-C8","3.1-S9","3.1-S10"],"3.3":["3.3-C1","3.3-C2","3.3-C3","3.3-C4","3.3-C5","3.3-S6","3.3-S7","3.3-S8","3.3-S9","3.3-S10"],"4.1":["4.1-C1","4.1-C2","4.1-C3","4.1-C4","4.1-C5","4.1-C6","4.1-C7","4.1-C8","4.1-C9","4.1-S10","4.1-S11"],"4.2.1":["4.2.1-C1","4.2.1-C2","4.2.1-C3","4.2.1-C4","4.2.1-C5","4.2.1-C6","4.2.1-S7","4.2.1-S8","4.2.1-S9","4.2.1-S10"],"4.2.2":["4.2.2-C1","4.2.2-C2","4.2.2-C3","4.2.2-C4","4.2.2-S5","4.2.2-S6"],"4.2.3":["4.2.3-C1","4.2.3-C2","4.2.3-C3","4.2.3-C4","4.2.3-C5","4.2.3-S6","4.2.3-S7"],"4.2.4":["4.2.4-C1","4.2.4-C2","4.2.4-C3","4.2.4-S4","4.2.4-S5"],"4.2.5":["4.2.5-C1","4.2.5-C2","4.2.5-C3","4.2.5-C4"],"4.3.1":["4.3.1-C1","4.3.1-S2"],"4.3.2":["4.3.2-C1","4.3.2-C2","4.3.2-C3","4.3.2-C4","4.3.2-C5","4.3.2-C6","4.3.2-C7","4.3.2-S8","4.3.2-S9","4.3.2-S10"],"4.3.3":["4.3.3-C1","4.3.3-S2","4.3.3-S3"],"4.4":["4.4-C1","4.4-C2","4.4-C3","4.4-C4","4.4-C5"],"4.5.1":["4.5.1-C1","4.5.1-C2","4.5.1-C3","4.5.1-S4","4.5.1-S5"],"4.5.2":["4.5.2-S1","4.5.2-S2"],"4.5.3":["4.5.3-C1","4.5.3-C2","4.5.3-C3","4.5.3-S4","4.5.3-S5"],"4.5.4":["4.5.4-C1","4.5.4-S2","4.5.4-S3"],"4.5.5":["4.5.5-C1","4.5.5-S2"],"4.5.6":["4.5.6-C1","4.5.6-C2","4.5.6-C3","4.5.6-C4","4.5.6-C5","4.5.6-S6","4.5.6-S7","4.5.6-S8"],"5.1.1":["5.1.1-C1","5.1.1-C2","5.1.1-S3"],"5.1.2":["5.1.2-C1","5.1.2-C2","5.1.2-C3","5.1.2-C4","5.1.2-C5","5.1.2-S6","5.1.2-S7","5.1.2-S8"],"5.2.1":["5.2.1-C1","5.2.1-C2","5.2.1-C3","5.2.1-C4","5.2.1-S5"],"5.2.2":["5.2.2-C1","5.2.2-C2","5.2.2-S3","5.2.2-S4"],"5.2.3":["5.2.3-C1","5.2.3-C2","5.2.3-S3","5.2.3-S4","5.2.3-S5"],"5.2.4":["5.2.4-C1","5.2.4-S2","5.2.4-S3"],"5.2.5":["5.2.5-C1","5.2.5-C2","5.2.5-S3"],"6.1.1":["6.1.1-C1","6.1.1-C2","6.1.1-C3","6.1.1-S4"],"6.1.2":["6.1.2-C1","6.1.2-C2","6.1.2-C3","6.1.2-C4","6.1.2-C5","6.1.2-C6","6.1.2-S7","6.1.2-S8","6.1.2-S9","6.1.2-S10"],"6.2.1":["6.2.1-C1","6.2.1-S2"],"6.2.2":["6.2.2-C1","6.2.2-S2","6.2.2-S3"],"6.2.3":["6.2.3-C1","6.2.3-C2","6.2.3-C3","6.2.3-C4","6.2.3-S5","6.2.3-S6","6.2.3-S7","6.2.3-S8","6.2.3-S9","6.2.3-S10","6.2.3-S11"]};
+function eifpLoad(){try{const r=localStorage.getItem(EIFP_STORAGE_KEY);return r?JSON.parse(r):{}}catch(e){return{}}}
+function eifpKey(c,p){return c+"__"+p}
+/* Latest rating for an LO: prefer the "after" rating, fall back to "before". */
+function eifpRating(state,code){return state[eifpKey(code,"post")]||state[eifpKey(code,"pre")]||""}
+function eifpTally(codes,state){
+  let g=0,a=0,r=0;
+  codes.forEach(function(c){const v=eifpRating(state,c);
+    if(v==="green")g++;else if(v==="amber")a++;else if(v==="red")r++;});
+  return{green:g,amber:a,red:r,rated:g+a+r,total:codes.length};
+}
+document.addEventListener("DOMContentLoaded",function(){
+  const state=eifpLoad();
+
+  /* Per-lesson RAG dots */
+  document.querySelectorAll("[data-lesson-los]").forEach(function(el){
+    const codes=(el.getAttribute("data-lesson-los")||"").split(",").filter(Boolean);
+    const t=eifpTally(codes,state);
+    const dots=el.querySelector("[data-rag-mini]");
+    const label=el.querySelector("[data-status-label]");
+    if(dots){
+      dots.innerHTML="";
+      const order=[["green",t.green],["amber",t.amber],["red",t.red],["",t.total-t.rated]];
+      order.forEach(function(pair){for(let i=0;i<pair[1];i++){
+        const d=document.createElement("span");d.className="rag-dot"+(pair[0]?" "+pair[0]:"");dots.appendChild(d);}});
+    }
+    if(label){
+      label.textContent = t.rated===0 ? "Not started"
+        : (t.green===t.total ? "All confident" : t.green+"/"+t.total+" confident");
+    }
+  });
+
+  /* Aggregate band(s) */
+  document.querySelectorAll("[data-progress-scope]").forEach(function(band){
+    const groups=(band.getAttribute("data-progress-scope")||"").split(",").filter(Boolean);
+    let codes=[];
+    groups.forEach(function(g){codes=codes.concat(EIFP_LO_MAP[g]||[])});
+    const t=eifpTally(codes,state);
+    const q=function(s){return band.querySelector(s)};
+    const pc=function(n){return t.total?(n/t.total)*100+"%":"0%"};
+    if(q("[data-seg-green]"))q("[data-seg-green]").style.width=pc(t.green);
+    if(q("[data-seg-amber]"))q("[data-seg-amber]").style.width=pc(t.amber);
+    if(q("[data-seg-red]"))q("[data-seg-red]").style.width=pc(t.red);
+    const lbl=q("[data-progress-text]");
+    if(lbl){
+      lbl.textContent = t.rated===0
+        ? "You haven't rated any objectives yet — open a lesson and start with the warm-up check."
+        : t.green+" confident · "+t.amber+" getting there · "+t.red+" needs work · "+(t.total-t.rated)+" not yet rated";
+    }
+    const cnt=q("[data-progress-count]");
+    if(cnt)cnt.textContent=t.green+" / "+t.total;
+  });
+});
+</script>
+</body>
+</html>

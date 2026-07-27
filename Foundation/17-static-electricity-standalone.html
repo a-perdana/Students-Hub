@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4.2.1 Electric charge — Eduversal Foundation</title>
+<style>
+
+:root {
+  --navy: #1F4E5F;
+  --navy-dark: #163A47;
+  --teal: #2AA9A0;
+  --teal-dark: #1F8880;
+  --teal-light: #E6F5F3;
+  --core-bg: #DCE9F0;
+  --core-border: #B7D2E0;
+  --supp-bg: #FDF1DC;
+  --supp-border: #F0D9A6;
+  --gap-bg: #FCE4E4;
+  --bg: #F6F9FA;
+  --card-bg: #FFFFFF;
+  --text: #1F2A30;
+  --muted: #5B6B76;
+  --border: #E1E8EB;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgba(15, 42, 51, 0.06), 0 4px 14px rgba(15, 42, 51, 0.06);
+  --max-width: 880px;
+  font-size: 17px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; }
+img { max-width: 100%; }
+a { color: var(--teal-dark); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: var(--max-width); margin: 0 auto; padding: 0 20px; }
+.topbar { background: var(--navy); color: #fff; padding: 14px 0; position: sticky; top: 0; z-index: 50; box-shadow: var(--shadow); }
+.topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; color: #fff; }
+.brand:hover { text-decoration: none; opacity: 0.9; }
+.brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); display: inline-block; }
+.topbar nav a { color: #cfe3ea; margin-left: 18px; font-size: 0.95rem; }
+.topbar nav a:hover { color: #fff; }
+.breadcrumb { font-size: 0.88rem; color: var(--muted); margin: 18px 0 4px; }
+.breadcrumb a { color: var(--muted); }
+.breadcrumb a:hover { color: var(--teal-dark); }
+.page-header { padding: 10px 0 22px; }
+.eyebrow { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teal-dark); background: var(--teal-light); padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+.page-header h1 { margin: 4px 0 8px; font-size: 1.7rem; color: var(--navy-dark); }
+.page-header .dek { color: var(--muted); font-size: 1.02rem; margin: 0; }
+.section-nav { position: sticky; top: 58px; z-index: 40; background: rgba(246, 249, 250, 0.96); backdrop-filter: blur(4px); border-bottom: 1px solid var(--border); padding: 10px 0; margin-bottom: 8px; overflow-x: auto; }
+.section-nav .wrap { display: flex; gap: 8px; }
+.section-nav a { white-space: nowrap; font-size: 0.85rem; font-weight: 600; color: var(--navy); background: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; }
+.section-nav a:hover { text-decoration: none; border-color: var(--teal); color: var(--teal-dark); }
+.card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin: 22px 0; scroll-margin-top: 110px; }
+.card h2 { margin-top: 0; font-size: 1.25rem; color: var(--navy-dark); }
+.card h2 .step-no { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 0.8rem; margin-right: 8px; vertical-align: middle; }
+.card .card-hint { color: var(--muted); font-size: 0.92rem; margin-top: -6px; margin-bottom: 14px; }
+.howto { background: var(--teal-light); border: 1px solid #bfe4df; border-radius: var(--radius); padding: 16px 20px; margin: 18px 0; font-size: 0.95rem; color: #164a45; }
+.howto strong { color: var(--navy-dark); }
+.lo-progress { display: flex; align-items: center; gap: 12px; margin: 6px 0 18px; flex-wrap: wrap; }
+.lo-progress-bar { flex: 1; min-width: 140px; height: 8px; background: var(--border); border-radius: 999px; overflow: hidden; display: flex; }
+.lo-progress-seg { height: 100%; width: 0%; transition: width 0.25s ease; }
+.lo-progress-seg.green { background: #3fa373; }
+.lo-progress-seg.amber { background: #e8a93a; }
+.lo-progress-seg.red { background: #e2534f; }
+.lo-progress-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.rag-key { display: flex; gap: 14px; font-size: 0.8rem; color: var(--muted); margin: 0 0 14px; flex-wrap: wrap; }
+.rag-key span { display: inline-flex; align-items: center; gap: 5px; }
+.rag-key .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.rag-key .dot.red { background: #e2534f; }
+.rag-key .dot.amber { background: #e8a93a; }
+.rag-key .dot.green { background: #3fa373; }
+.lo-list { list-style: none; margin: 0; padding: 0; }
+.lo-item { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; background: #fff; flex-wrap: wrap; }
+.lo-item.core { border-left: 4px solid var(--core-border); }
+.lo-item.supplement { border-left: 4px solid var(--supp-border); }
+.lo-item .lo-text { flex: 1; min-width: 200px; font-size: 0.95rem; }
+.lo-item .lo-code { font-weight: 700; font-size: 0.8rem; color: var(--navy); margin-right: 6px; }
+.rag-group { display: flex; gap: 6px; flex-shrink: 0; }
+.rag-btn { width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--border); background: #fff; color: var(--muted); font-weight: 700; font-size: 0.78rem; cursor: pointer; font-family: inherit; }
+.rag-btn.rag-red { border-color: #f0c3c3; }
+.rag-btn.rag-amber { border-color: #f3dba8; }
+.rag-btn.rag-green { border-color: #b7ddc7; }
+.rag-btn.rag-red.active { background: #e2534f; border-color: #e2534f; color: #fff; }
+.rag-btn.rag-amber.active { background: #e8a93a; border-color: #e8a93a; color: #fff; }
+.rag-btn.rag-green.active { background: #3fa373; border-color: #3fa373; color: #fff; }
+.tier-tag { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 2px 8px; border-radius: 999px; margin-bottom: 10px; }
+.tier-tag.core { background: var(--core-bg); color: #2b5a75; border: 1px solid var(--core-border); }
+.tier-tag.supplement { background: var(--supp-bg); color: #8a6414; border: 1px solid var(--supp-border); }
+.phase-tag { display: inline-block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 9px; border-radius: 999px; vertical-align: middle; margin-left: 8px; }
+.phase-tag.phase-pre { background: #eaf1fb; color: #2b5a8a; border: 1px solid #c7dbf3; }
+.phase-tag.phase-post { background: #eaf7f0; color: #256b41; border: 1px solid #b7ddc7; }
+.phase-tag.phase-reflect { background: #f5eefb; color: #6a3e93; border: 1px solid #ddc7f3; }
+.reflect-field { margin-bottom: 16px; }
+.reflect-field label { display: block; font-weight: 600; font-size: 0.92rem; color: var(--navy-dark); margin-bottom: 6px; }
+.reflect-field .optional-tag { font-weight: 400; color: var(--muted); font-size: 0.82rem; }
+.reflect-field textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.92rem; resize: vertical; box-sizing: border-box; }
+.reflect-field textarea:focus { outline: none; border-color: var(--teal); }
+.reflect-status { font-size: 0.82rem; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+.reflect-note { font-size: 0.85rem; color: var(--muted); margin: 0; }
+.rag-compare-summary { font-size: 0.92rem; font-weight: 600; color: var(--navy-dark); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px; }
+.rag-compare-header { display: grid; grid-template-columns: 1fr 90px 24px 90px 140px; gap: 8px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); padding: 0 12px 6px; }
+.rag-compare-header > div:nth-child(2), .rag-compare-header > div:nth-child(4) { text-align: center; }
+.rag-compare-row { display: grid; grid-template-columns: 1fr 90px 24px 90px 140px; gap: 8px; align-items: center; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; background: #fff; }
+.rag-compare-text { font-size: 0.9rem; }
+.rag-compare-before, .rag-compare-after { text-align: center; }
+.rag-compare-arrow { text-align: center; color: var(--muted); }
+.rag-pill { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid transparent; }
+.rag-pill-red { background: #fbe4e3; color: #a33330; border-color: #f0c3c3; }
+.rag-pill-amber { background: #fcefd6; color: #8a6414; border-color: #f3dba8; }
+.rag-pill-green { background: #e0f2e8; color: #256b41; border-color: #b7ddc7; }
+.rag-pill-none { background: var(--bg); color: var(--muted); border-color: var(--border); }
+.rag-change { font-size: 0.82rem; font-weight: 600; }
+.rag-change.up { color: #256b41; }
+.rag-change.down { color: #a33330; }
+.rag-change.flat { color: var(--muted); }
+.rag-change.none { color: var(--muted); font-weight: 500; font-style: italic; }
+@media (max-width: 640px) {
+  .rag-compare-header { display: none; }
+  .rag-compare-row { grid-template-columns: 1fr; grid-template-areas: "text" "before" "after" "change"; text-align: left; }
+  .rag-compare-before::before { content: "Before: "; color: var(--muted); font-weight: 600; font-size: 0.75rem; }
+  .rag-compare-after::before { content: "After: "; color: var(--muted); font-weight: 600; font-size: 0.75rem; }
+  .rag-compare-before, .rag-compare-after { text-align: left; }
+  .rag-compare-arrow { display: none; }
+}
+.notes h3 { color: var(--navy-dark); font-size: 1.05rem; margin: 20px 0 8px; }
+.notes h3:first-child { margin-top: 0; }
+.notes table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 0.92rem; }
+.notes th, .notes td { border: 1px solid var(--border); padding: 7px 10px; text-align: left; }
+.notes th { background: var(--bg); color: var(--navy-dark); }
+.tip { background: var(--bg); border-left: 3px solid var(--teal); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 0.92rem; margin: 14px 0; }
+.tip strong { color: var(--teal-dark); }
+.media-primary { margin-bottom: 16px; }
+.video-frame { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius-sm); overflow: hidden; background: #000; border: 1px solid var(--border); }
+.video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.media-caption { font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+.video-frame.video-frame-local { background: linear-gradient(135deg, var(--teal-light), #ffffff); }
+.video-fallback-note { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center; }
+.video-fallback-note .vf-title { font-weight: 700; color: var(--navy-dark); font-size: 1.05rem; margin: 0; }
+.video-fallback-note p { margin: 0; color: var(--muted); font-size: 0.88rem; max-width: 380px; }
+.worksheet-note{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--supp-border);
+  background:#FFFDF6;border-radius:var(--radius-sm);padding:16px 18px}
+.worksheet-note .ws-icon{font-size:1.6rem;line-height:1}
+.worksheet-note .ws-title{font-weight:700;color:var(--navy-dark);margin-bottom:4px}
+.worksheet-note p{margin:0;font-size:.92rem;color:#6A5320}
+
+.download-card { display: flex; gap: 16px; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; background: linear-gradient(135deg, #fdf1dc55, #ffffff); }
+.download-card .dl-icon { font-size: 1.8rem; }
+.download-card .dl-body { flex: 1; }
+.download-card .dl-body .dl-title { font-weight: 700; color: var(--navy-dark); }
+.download-card .dl-body .dl-meta { font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+.download-card .dl-body p { margin: 4px 0 0; font-size: 0.92rem; }
+.submission-note { margin-top: 14px; font-size: 0.86rem; color: var(--muted); background: var(--bg); border-radius: var(--radius-sm); padding: 10px 14px; }
+.alt-card { display: flex; align-items: center; gap: 14px; border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg); }
+.alt-card .alt-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--teal-light); color: var(--teal-dark); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.alt-card .alt-body { flex: 1; }
+.alt-card .alt-body .alt-title { font-weight: 600; font-size: 0.95rem; }
+.alt-card .alt-body .alt-meta { font-size: 0.82rem; color: var(--muted); }
+.alt-card a.btn-small { flex-shrink: 0; }
+.sim-card { display: flex; gap: 16px; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; background: linear-gradient(135deg, var(--teal-light), #ffffff); }
+.sim-card .sim-icon { font-size: 1.8rem; }
+.sim-card .sim-body { flex: 1; }
+.sim-card .sim-body .sim-title { font-weight: 700; color: var(--navy-dark); }
+.sim-card .sim-body .sim-source { font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+.sim-card .sim-body p { margin: 4px 0 0; font-size: 0.92rem; }
+.sim-embed-toggle { margin-top: 12px; }
+.sim-embed-frame { width: 100%; height: 520px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 12px; display: none; }
+.sim-embed-frame.show { display: block; }
+.gap-note { border: 1px solid var(--supp-border); background: var(--supp-bg); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 0.9rem; color: #6b4e0d; }
+.btn { display: inline-flex; align-items: center; gap: 6px; background: var(--teal); color: #fff; font-weight: 600; padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer; font-size: 0.92rem; }
+.btn:hover { background: var(--teal-dark); text-decoration: none; }
+.btn-outline { display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--navy); font-weight: 600; padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); cursor: pointer; font-size: 0.88rem; }
+.btn-outline:hover { border-color: var(--teal); color: var(--teal-dark); text-decoration: none; }
+.btn-small { display: inline-flex; font-size: 0.82rem; font-weight: 600; color: #fff; background: var(--navy); padding: 6px 12px; border-radius: 999px; }
+.btn-small:hover { background: var(--navy-dark); text-decoration: none; }
+.q-list { margin: 0; padding: 0; list-style: none; }
+.q-item { border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 10px; overflow: hidden; background: #fff; }
+.q-item summary { cursor: pointer; padding: 12px 14px; font-weight: 600; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+.q-item summary::-webkit-details-marker { display: none; }
+.q-item summary .q-no { flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: #fff; background: var(--teal); border-radius: 999px; padding: 2px 9px; }
+.q-item[open] summary { border-bottom: 1px solid var(--border); background: var(--bg); }
+.q-item .q-answer { padding: 12px 14px; font-size: 0.94rem; background: var(--bg); }
+.q-item .q-answer strong { color: var(--teal-dark); }
+.figure { margin: 18px 0; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); text-align: center; }
+.figure svg { max-width: 100%; height: auto; }
+.figure figcaption { margin-top: 8px; font-size: 0.85rem; color: var(--muted); text-align: left; }
+.figure figcaption strong { color: var(--navy-dark); }
+.diagram-line { stroke: var(--navy); stroke-width: 2; fill: none; }
+.diagram-dash { stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 5 4; fill: none; }
+.diagram-accent { stroke: var(--teal-dark); stroke-width: 2.4; fill: none; }
+.diagram-fill { fill: var(--teal-light); stroke: var(--navy); stroke-width: 1.5; }
+.diagram-text { fill: var(--text); font-size: 12px; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.diagram-label { fill: var(--navy-dark); font-size: 12px; font-weight: 700; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+.diagram-arrowhead { fill: var(--teal-dark); }
+.flash-hint { font-size: 0.88rem; color: var(--muted); margin-top: -6px; }
+.flash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 10px; }
+@media (max-width: 780px) { .flash-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .flash-grid { grid-template-columns: 1fr; } }
+.flash-card { perspective: 1000px; height: 150px; cursor: pointer; }
+.flash-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.5s; transform-style: preserve-3d; }
+.flash-card.flipped .flash-card-inner { transform: rotateY(180deg); }
+.flash-card-front, .flash-card-back { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; padding: 14px; border-radius: var(--radius-sm); backface-visibility: hidden; border: 1px solid var(--border); }
+.flash-card-front { background: var(--navy); color: #fff; }
+.flash-card-front .flash-kicker { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: #9fc4cf; }
+.flash-card-front .flash-term { font-size: 1.05rem; font-weight: 700; }
+.flash-card-back { background: var(--teal-light); color: #164a45; transform: rotateY(180deg); font-size: 0.86rem; }
+.flash-tap-note { position: absolute; bottom: 6px; right: 10px; font-size: 0.65rem; opacity: 0.7; }
+.flash-controls { margin-top: 14px; }
+.quiz-intro { font-size: 0.92rem; color: var(--muted); margin-top: -6px; }
+.quiz-q { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 12px; background: #fff; }
+.quiz-q.correct { border-color: #6bbf8f; background: #f1faf4; }
+.quiz-q.incorrect { border-color: #e2a1a1; background: #fdf2f2; }
+.quiz-q-text { font-weight: 600; margin: 0 0 10px; display: flex; gap: 8px; align-items: baseline; }
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt { text-align: left; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); cursor: pointer; font-size: 0.92rem; font-family: inherit; }
+.quiz-opt:hover { border-color: var(--teal); }
+.quiz-opt.selected { border-color: var(--teal-dark); background: var(--teal-light); font-weight: 600; }
+.quiz-q.correct .quiz-opt.selected { border-color: #4f9e6e; background: #ddf2e4; }
+.quiz-q.incorrect .quiz-opt.selected { border-color: #cf6b6b; background: #fbe2e2; }
+.quiz-numeric-row { display: flex; align-items: center; gap: 8px; }
+.quiz-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; width: 140px; font-family: inherit; }
+.quiz-unit { color: var(--muted); font-size: 0.88rem; }
+.quiz-feedback { margin-top: 8px; font-size: 0.86rem; }
+.quiz-feedback.correct { color: #2f7a4d; }
+.quiz-feedback.incorrect { color: #b23a3a; }
+.mistake-tag-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.mistake-tag-label { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+.mistake-tag-btn { font-family: inherit; font-size: 0.78rem; font-weight: 600; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--border); background: #fff; color: var(--muted); cursor: pointer; }
+.mistake-tag-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+.mistake-tag-btn.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+.quiz-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.quiz-result { margin-top: 14px; padding: 14px 16px; border-radius: var(--radius-sm); font-size: 0.94rem; font-weight: 600; display: none; }
+.quiz-result.show { display: block; }
+.quiz-result.pass { background: #e4f5ea; color: #256b41; border: 1px solid #a8dcbe; }
+.quiz-result.fail { background: var(--supp-bg); color: #8a6414; border: 1px solid var(--supp-border); }
+.quiz-result.diagnostic { background: #eaf1fb; color: #2b5a8a; border: 1px solid #c7dbf3; }
+.status-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.status-pill { font-size: 0.82rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); }
+.status-pill.pass { background: #e4f5ea; color: #256b41; border-color: #a8dcbe; }
+.status-pill.pending { background: var(--supp-bg); color: #8a6414; border-color: var(--supp-border); }
+.glossary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 780px) { .glossary { grid-template-columns: 1fr; } }
+.term-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: #fff; }
+.term-card .term-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.term-card .term { font-weight: 700; color: var(--navy-dark); font-size: 1.02rem; }
+.term-card .pos { font-size: 0.72rem; color: var(--muted); font-style: italic; }
+.term-card .def { font-size: 0.88rem; color: var(--muted); margin-top: 2px; }
+.term-card .pron-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 6px; font-size: 0.86rem; }
+.term-card .ipa { color: var(--navy); font-family: "Cambria Math", Georgia, serif; }
+.term-card .say-it { color: var(--teal-dark); background: var(--teal-light); padding: 1px 8px; border-radius: 999px; font-weight: 600; font-size: 0.8rem; }
+.term-card .bi-translation { margin-top: 8px; font-size: 0.9rem; }
+.term-card .bi-translation .flag { margin-right: 4px; }
+.term-card .bi-translation strong { color: var(--navy-dark); }
+.term-card .watchout { margin-top: 8px; font-size: 0.82rem; color: #8a6414; background: var(--supp-bg); border-radius: var(--radius-sm); padding: 6px 10px; }
+.term-card .example { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 0.86rem; }
+.term-card .example .en { color: var(--text); }
+.term-card .example .id { color: var(--muted); font-style: italic; margin-top: 2px; }
+.glossary-note { font-size: 0.85rem; color: var(--muted); margin: 0 0 16px; }
+.subtopic-list { list-style: none; margin: 0; padding: 0; }
+.subtopic-row { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 10px; background: #fff; }
+.subtopic-row.active { border-color: var(--teal); }
+.subtopic-row.disabled { opacity: 0.55; }
+.subtopic-row .st-num { width: 34px; height: 34px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+.subtopic-row.disabled .st-num { background: var(--muted); }
+.subtopic-row .st-body { flex: 1; }
+.subtopic-row .st-title { font-weight: 600; }
+.subtopic-row .st-meta { font-size: 0.82rem; color: var(--muted); }
+.subtopic-row .st-progress { font-size: 0.8rem; font-weight: 700; color: var(--teal-dark); white-space: nowrap; }
+.badge-soon { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 3px 9px; border-radius: 999px; }
+.page-nav { display: flex; justify-content: space-between; gap: 12px; margin: 32px 0 12px; }
+.page-nav a, .page-nav span { flex: 1; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; font-size: 0.88rem; }
+.page-nav .label { display: block; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3px; }
+.page-nav .disabled { color: var(--muted); background: var(--bg); }
+footer.site-footer { margin-top: 50px; padding: 28px 0 50px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85rem; }
+.complete-bar { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; background: var(--navy); color: #fff; border-radius: var(--radius); padding: 18px 22px; margin: 26px 0; }
+.complete-bar p { margin: 0; font-size: 0.92rem; color: #cfe3ea; }
+.complete-bar strong { color: #fff; }
+
+</style>
+</head>
+<body>
+<!--
+  STANDALONE / EMBEDDABLE VERSION — Coursebook Chapter 17, syllabus subtopic 4.2.1.
+  Notes source: Cambridge IGCSE Physics Coursebook, 3rd edition (Sang, Follows & Tarpey), Coursebook Chapter 17.
+  LOs / videos / sims source: 0625_Topic4_Flipped_Learning_Resources.xlsx, subtopic 4.2.1.
+-->
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="dot"></span> Eduversal Foundation</a>
+    <nav><a href="physics.html">Physics</a>
+      <a href="topic-4.html">Topics</a></nav>
+  </div>
+</header>
+
+<nav class="section-nav">
+  <div class="wrap">
+    <a href="#warmup">Warm-up</a>
+    <a href="#lo">Objectives</a>
+    <a href="#notes">Notes</a>
+    <a href="#terms">Key terms</a>
+    <a href="#watch">Watch</a>
+    <a href="#theory-check">Theory check</a>
+    <a href="#try">Try it</a>
+    <a href="#practical-check">Practical check</a>
+    <a href="#flashcards">Flashcards</a>
+    <a href="#progress-compare">Progress</a>
+    <a href="#reflect">Reflect</a>
+    <a href="#assignment">Assignment</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <p class="breadcrumb"><a href="index.html">Home</a> &rsaquo; <a href="topic-4.html">Topic 4</a> &rsaquo; 4.2.1</p>
+
+  <section class="page-header">
+    <span class="eyebrow">Topic 4 &middot; Electricity and magnetism &mdash; Coursebook Chapter 17</span>
+    <h1>4.2.1 Electric charge</h1>
+    <p class="dek">Discover the physics behind static shocks and balloon tricks: two types of charge, how friction transfers electrons, why some materials conduct and others insulate, and the electric fields that surround every charge.</p>
+  </section>
+
+  <section class="card" id="warmup">
+    <h2><span class="step-no">1</span>Warm-up check</h2>
+    <div class="quiz" data-quiz="4.2.1-warmup" data-diagnostic="true">
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">W1</span> Two light, silver-coated balls X and Y hang from threads and are seen to repel each other (move apart). Which combination of charges on X and Y is possible?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Both neutral</button>
+          <button class="quiz-opt" data-idx="1">Both negative</button>
+          <button class="quiz-opt" data-idx="2">X negative, Y positive</button>
+          <button class="quiz-opt" data-idx="3">X positive, Y negative</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">W2</span> What is the correct unit of electric charge?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Ampere</button>
+          <button class="quiz-opt" data-idx="1">Coulomb</button>
+          <button class="quiz-opt" data-idx="2">Newton</button>
+          <button class="quiz-opt" data-idx="3">Volt</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="3">
+        <p class="quiz-q-text"><span class="q-no">W3</span> A PVC (plastic) rod is rubbed with a nylon cloth, and electrons are transferred between them. Which row correctly describes the charges on the rod and cloth afterwards, and the effect they have on each other?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Same charge; repel</button>
+          <button class="quiz-opt" data-idx="1">Same charge; attract</button>
+          <button class="quiz-opt" data-idx="2">Opposite charge; repel</button>
+          <button class="quiz-opt" data-idx="3">Opposite charge; attract</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="3">
+        <p class="quiz-q-text"><span class="q-no">W4</span> A student has a copper rod, a PVC rod, an aluminium rod and a glass rod. Which two rods would hold a charge when rubbed with an appropriate cloth?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Aluminium and PVC</button>
+          <button class="quiz-opt" data-idx="1">Glass and copper</button>
+          <button class="quiz-opt" data-idx="2">Aluminium and copper</button>
+          <button class="quiz-opt" data-idx="3">Glass and PVC</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="2">
+        <p class="quiz-q-text"><span class="q-no">W5</span> A plastic rod is rubbed with a cloth and the rod becomes positively charged. What happens to the plastic rod, and what is the resulting charge on the cloth?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Rod gains electrons; cloth becomes negative</button>
+          <button class="quiz-opt" data-idx="1">Rod gains electrons; cloth becomes positive</button>
+          <button class="quiz-opt" data-idx="2">Rod loses electrons; cloth becomes negative</button>
+          <button class="quiz-opt" data-idx="3">Rod loses electrons; cloth becomes positive</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="0">
+        <p class="quiz-q-text"><span class="q-no">W6</span> A student rubs a plastic rod with a cloth and the rod becomes negatively charged. Which statement about the rod is correct?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">It gains electrons from the cloth and is attracted by a positively charged object</button>
+          <button class="quiz-opt" data-idx="1">It gains electrons from the cloth and is repelled by a positively charged object</button>
+          <button class="quiz-opt" data-idx="2">It loses electrons to the cloth and is attracted by a negatively charged object</button>
+          <button class="quiz-opt" data-idx="3">It loses electrons to the cloth and is repelled by a negatively charged object</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="3">
+        <p class="quiz-q-text"><span class="q-no">W7</span> A plastic rod is rubbed with a cloth and becomes negatively charged. What has happened during the charging process?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Protons have been transferred from the rod to the cloth</button>
+          <button class="quiz-opt" data-idx="1">Electrons have been transferred from the rod to the cloth</button>
+          <button class="quiz-opt" data-idx="2">Protons have been transferred from the cloth to the rod</button>
+          <button class="quiz-opt" data-idx="3">Electrons have been transferred from the cloth to the rod</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-actions">
+        <button class="btn quiz-submit">Check my answers</button>
+        <button class="btn-outline quiz-retry" hidden>Try again</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+  </section>
+
+  <section class="card" id="lo">
+    <h2><span class="step-no">2</span>Learning objectives <span class="phase-tag phase-pre">Before you start</span></h2>
+    <p class="card-hint">Rate yourself honestly — this is for you, not a grade. You'll rate yourself
+      again at the end. Saved on this device.</p>
+    <div class="lo-checklist" data-rag-phase="pre">
+    <div class="rag-key">
+      <span><span class="dot red"></span> Red — I don't understand this yet</span>
+      <span><span class="dot amber"></span> Amber — getting there</span>
+      <span><span class="dot green"></span> Green — I'm confident</span>
+    </div>
+    <div class="lo-progress">
+      <div class="lo-progress-bar">
+        <div class="lo-progress-seg green" data-seg-green></div>
+        <div class="lo-progress-seg amber" data-seg-amber></div>
+        <div class="lo-progress-seg red" data-seg-red></div>
+      </div>
+      <div class="lo-progress-label" data-progress-label>Not yet self-assessed</div>
+      <button class="btn-outline" data-rag-reset type="button">Reset my self-assessment</button>
+    </div>
+    <ul class="lo-list" data-lo-list="4.2.1">
+      <li class="lo-item core" data-lo-code="4.2.1-C1">
+        <div class="lo-text"><span class="lo-code">4.2.1-C1</span>State that there are positive and negative charges.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C1">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C2">
+        <div class="lo-text"><span class="lo-code">4.2.1-C2</span>State that positive charges repel other positive charges, negative charges repel other negative charges, but positive charges attract negative charges.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C2">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C3">
+        <div class="lo-text"><span class="lo-code">4.2.1-C3</span>Describe simple experiments to show the production of electrostatic charges by friction and to show the detection of electrostatic charges.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C3">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C4">
+        <div class="lo-text"><span class="lo-code">4.2.1-C4</span>Explain that charging of solids by friction involves only a transfer of negative charge (electrons).</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C4">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C5">
+        <div class="lo-text"><span class="lo-code">4.2.1-C5</span>Describe an experiment to distinguish between electrical conductors and insulators.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C5">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C6">
+        <div class="lo-text"><span class="lo-code">4.2.1-C6</span>Recall and use a simple electron model to explain the difference between electrical conductors and insulators, and give typical examples.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C6">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S7">
+        <div class="lo-text"><span class="lo-code">4.2.1-S7</span>State that charge is measured in coulombs.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S7">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S8">
+        <div class="lo-text"><span class="lo-code">4.2.1-S8</span>Describe an electric field as a region in which an electric charge experiences a force.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S8">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S9">
+        <div class="lo-text"><span class="lo-code">4.2.1-S9</span>State that the direction of an electric field at a point is the direction of the force on a positive charge at that point.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S9">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S10">
+        <div class="lo-text"><span class="lo-code">4.2.1-S10</span>Describe simple electric field patterns, including the direction of the field: (a) around a point charge (b) around a charged conducting sphere (c) between two oppositely charged parallel conducting plates (end effects will not be examined).</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S10">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+    </ul>
+    </div>
+  </section>
+
+  <section class="card notes" id="notes">
+    <h2><span class="step-no">3</span>Notes</h2>
+<span class="tier-tag core">Core</span>
+<ul>
+  <li>Two types of charge: <strong>positive</strong> and <strong>negative</strong>. Like charges
+    <strong>repel</strong>; unlike charges <strong>attract</strong> (same rule as magnet poles, but
+    a different phenomenon — rubbing a rod doesn't magnetise it).</li>
+  <li><strong>Charging by friction only transfers electrons</strong> (negative charge) — never
+    positive charge. Gain electrons &rarr; negative. Lose electrons &rarr; positive. Two different
+    materials rubbed together end up oppositely charged (e.g. polythene rod rubbed with cloth: rod
+    negative, cloth positive).</li>
+</ul>
+<table>
+  <tr><th>Conductors</th><th>Insulators</th></tr>
+  <tr><td>Free electrons can move — charge doesn't stay put. E.g. copper, gold.</td>
+      <td>Electrons fixed in place — charge stays put. E.g. glass, plastic, amber.</td></tr>
+</table>
+<div class="tip"><strong>Test a material:</strong> put it in a circuit with a cell and lamp — lamp
+  lights = conductor; doesn't light = insulator.</div>
+
+<span class="tier-tag supplement" style="margin-top:14px;">Supplement (Extended only)</span>
+<p>Charge is measured in <strong>coulombs (C)</strong>; one electron/proton carries
+  1.6&times;10<sup>-19</sup> C. A charged object is surrounded by an <strong>electric field</strong>
+  (field lines point away from + charge, towards &minus; charge — direction of force on a + charge
+  placed there): radiate outward/inward around a point charge or sphere; straight and parallel
+  between two oppositely charged plates.</p>
+
+<p class="card-hint">Full explanations and worked examples: Coursebook Chapter 17.</p>
+
+  </section>
+
+  <section class="card" id="terms">
+    <h2><span class="step-no">4</span>Key terms</h2>
+    <p class="glossary-note">Pronunciation reference: British Received Pronunciation (RP). <span class="ipa">/ə/</span> = the soft "uh" sound in an unstressed syllable — this sound doesn't exist in Bahasa Indonesia.</p>
+    <div class="glossary">
+      <div class="term-card">
+        <div class="term-row"><span class="term">Electric charge</span><span class="pos">noun</span></div>
+        <div class="def">A basic property of matter that can be positive or negative and causes electric forces.</div>
+        <div class="pron-row"><span class="ipa">/ɪˈlektrɪk tʃɑːdʒ/</span><span class="say-it">ee-LEK-trik charj</span></div>
+        <div class="bi-translation"><span class="flag">🇮🇩</span><strong>muatan listrik</strong></div>
+        <div class="example">
+          <div class="en">"A balloon can pick up electric charge by rubbing it on hair."</div>
+          <div class="id">"Balon dapat memperoleh muatan listrik dengan menggosoknya pada rambut."</div>
+        </div>
+      </div>
+
+      <div class="term-card">
+        <div class="term-row"><span class="term">Electron</span><span class="pos">noun</span></div>
+        <div class="def">A tiny, negatively charged particle found in every atom, on the outside of the nucleus.</div>
+        <div class="pron-row"><span class="ipa">/ɪˈlektrɒn/</span><span class="say-it">ee-LEK-tron</span></div>
+        <div class="bi-translation"><span class="flag">🇮🇩</span><strong>elektron</strong></div>
+        <div class="example">
+          <div class="en">"Rubbing transfers electrons from one material to another."</div>
+          <div class="id">"Menggosok memindahkan elektron dari satu bahan ke bahan lain."</div>
+        </div>
+      </div>
+
+      <div class="term-card">
+        <div class="term-row"><span class="term">Electrical conductor</span><span class="pos">noun</span></div>
+        <div class="def">A material, usually a metal, that contains free electrons and allows charge to flow through it easily.</div>
+        <div class="pron-row"><span class="ipa">/ɪˈlektrɪkəl kənˈdʌktə/</span><span class="say-it">ee-LEK-trik-uhl kuhn-DUK-tuh</span></div>
+        <div class="bi-translation"><span class="flag">🇮🇩</span><strong>konduktor listrik</strong></div>
+        <div class="example">
+          <div class="en">"Copper is a good electrical conductor."</div>
+          <div class="id">"Tembaga adalah konduktor listrik yang baik."</div>
+        </div>
+      </div>
+
+      <div class="term-card">
+        <div class="term-row"><span class="term">Electrical insulator</span><span class="pos">noun</span></div>
+        <div class="def">A material whose electrons are fixed in place, so it does not allow charge to flow through it.</div>
+        <div class="pron-row"><span class="ipa">/ɪˈlektrɪkəl ˈɪnsjʊleɪtə/</span><span class="say-it">ee-LEK-trik-uhl IN-syoo-lay-tuh</span></div>
+        <div class="bi-translation"><span class="flag">🇮🇩</span><strong>isolator listrik</strong></div>
+        <div class="example">
+          <div class="en">"Plastic is an electrical insulator, so it can be charged by friction."</div>
+          <div class="id">"Plastik adalah isolator listrik, sehingga dapat dimuati melalui gesekan."</div>
+        </div>
+      </div>
+
+      <div class="term-card">
+        <div class="term-row"><span class="term">Coulomb</span><span class="pos">noun</span></div>
+        <div class="def">The SI unit of electric charge, symbol C.</div>
+        <div class="pron-row"><span class="ipa">/ˈkuːlɒm/</span><span class="say-it">KOO-lom</span></div>
+        <div class="bi-translation"><span class="flag">🇮🇩</span><strong>coulomb</strong></div>
+        <div class="watchout">The 'l' is silent-ish and it doesn't rhyme with 'bomb' quite as strongly as it looks — say "KOO-lom".</div>
+        <div class="example">
+          <div class="en">"Charge is measured in coulombs."</div>
+          <div class="id">"Muatan diukur dalam satuan coulomb."</div>
+        </div>
+      </div>
+
+      <div class="term-card">
+        <div class="term-row"><span class="term">Electric field</span><span class="pos">noun</span></div>
+        <div class="def">A region of space around a charged object in which another charge would experience a force.</div>
+        <div class="pron-row"><span class="ipa">/ɪˈlektrɪk fiːld/</span><span class="say-it">ee-LEK-trik feeld</span></div>
+        <div class="bi-translation"><span class="flag">🇮🇩</span><strong>medan listrik</strong></div>
+        <div class="example">
+          <div class="en">"An electric field surrounds every charged object."</div>
+          <div class="id">"Medan listrik mengelilingi setiap benda bermuatan."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="watch">
+    <h2><span class="step-no">5</span>Watch</h2>
+<p class="card-hint">One core video pair covers charging by friction and
+  conductors/insulators. A second pair, required for the supplement content, covers electric
+  fields and their patterns.</p>
+
+<h3 style="margin-top:0;">Static electricity: charging and conductors (4.2.1-C1 to C6)</h3>
+<div class="media-primary">
+  <div class="video-frame">
+    <iframe src="https://www.youtube.com/embed/d7_dMHwqpgM" title="GCSE Physics - Static Electricity | Build-up of Charge on Insulating Materials" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <p class="media-caption">Primary video &middot; Cognito &middot; "Static Electricity" &middot;
+    <a href="https://www.youtube.com/watch?v=d7_dMHwqpgM" target="_blank" rel="noopener">Watch on YouTube &#8599;</a></p>
+</div>
+<div class="alt-card">
+  <div class="alt-icon">&#9654;</div>
+  <div class="alt-body">
+    <div class="alt-title">Alternative video &mdash; preview first (see note)</div>
+    <div class="alt-meta">LearnScienceWithB &middot; "What Is Static Electricity? (KS3)"</div>
+  </div>
+  <a class="btn-small" href="https://www.youtube.com/watch?v=Dn78UMpcZF4" target="_blank" rel="noopener">Watch &#8599;</a>
+</div>
+<div class="alt-card" style="border-color:#e2b93b;">
+  <div class="alt-icon">&#9888;</div>
+  <div class="alt-body">
+    <div class="alt-title">Sourcing note</div>
+    <div class="alt-meta">Despite the "(BBC Bitesize)" wording in its title, this alternative video is uploaded by a third-party channel (LearnScienceWithB), NOT an official BBC channel, and is pitched at KS3 (slightly below IGCSE) level. Preview before assigning to students.</div>
+  </div>
+</div>
+
+<h3>Electric fields (4.2.1-S7 to S10)</h3>
+<div class="media-primary">
+  <div class="video-frame">
+    <iframe src="https://www.youtube.com/embed/_v4ugAwV59U" title="GCSE Physics - Electric Fields" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <p class="media-caption">Primary video &middot; Cognito &middot; "Electric Fields" &middot;
+    <a href="https://www.youtube.com/watch?v=_v4ugAwV59U" target="_blank" rel="noopener">Watch on YouTube &#8599;</a></p>
+</div>
+<div class="alt-card">
+  <div class="alt-icon">&#9654;</div>
+  <div class="alt-body">
+    <div class="alt-title">Alternative video</div>
+    <div class="alt-meta">Freesciencelessons &middot; "Electric Fields (Triple)"</div>
+  </div>
+  <a class="btn-small" href="https://www.youtube.com/watch?v=rPbx_XrrKLQ" target="_blank" rel="noopener">Watch &#8599;</a>
+</div>
+  </section>
+
+  <section class="card" id="theory-check">
+    <h2><span class="step-no">6</span>Theory check</h2>
+    <p class="quiz-intro">Aim for <strong>100%</strong> — if you miss any, press "Try again" and
+      have another go before moving on.</p>
+    <div class="quiz" data-quiz="4.2.1-theory">
+
+      <div class="quiz-q" data-type="mcq" data-correct="0">
+        <p class="quiz-q-text"><span class="q-no">T1</span> A negatively charged rod is held close to (but not touching) an earthed metal sphere. What happens?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Electrons in the sphere are repelled and flow away to earth, leaving the sphere with a net positive charge nearest the rod</button>
+          <button class="quiz-opt" data-idx="1">Electrons flow from the rod into the sphere, leaving the sphere negatively charged overall</button>
+          <button class="quiz-opt" data-idx="2">Nothing happens because the sphere is earthed</button>
+          <button class="quiz-opt" data-idx="3">Protons in the sphere move towards the rod, leaving the sphere positively charged</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">T2</span> Which is the best definition of an electric field?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">A region in which a magnetic pole experiences a force</button>
+          <button class="quiz-opt" data-idx="1">A region in which an electric charge experiences a force</button>
+          <button class="quiz-opt" data-idx="2">The path taken by electrons moving through a conductor</button>
+          <button class="quiz-opt" data-idx="3">The force between two point charges</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">T3</span> What is meant by the direction of an electric field at a point?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">The direction a compass needle would point if placed there</button>
+          <button class="quiz-opt" data-idx="1">The direction of the force on a positive charge placed at that point</button>
+          <button class="quiz-opt" data-idx="2">The direction electrons are moving in a nearby wire</button>
+          <button class="quiz-opt" data-idx="3">The direction of the electric current flowing through the field</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="0">
+        <p class="quiz-q-text"><span class="q-no">T4</span> In terms of a simple electron model, which statement correctly distinguishes conductors from insulators?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Conductors contain free/delocalised electrons that can move; insulators do not, so charges in insulators are fixed in place</button>
+          <button class="quiz-opt" data-idx="1">Conductors have no electrons at all; insulators have many electrons</button>
+          <button class="quiz-opt" data-idx="2">Conductors and insulators both allow electrons to move freely, but at different speeds</button>
+          <button class="quiz-opt" data-idx="3">Insulators contain free electrons; conductors have electrons fixed in place</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">T5</span> Which best describes the electric field pattern around an isolated positive point charge?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Straight, parallel lines pointing in one direction only</button>
+          <button class="quiz-opt" data-idx="1">At least four evenly spaced straight lines with arrows pointing radially outward from the charge</button>
+          <button class="quiz-opt" data-idx="2">Circular lines going around the charge, like magnetic field lines around a wire</button>
+          <button class="quiz-opt" data-idx="3">No field lines at all, since a single point charge has no field</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="numeric" data-answer="6.25" data-tolerance="0.1" data-unit="×10^18 electrons">
+        <p class="quiz-q-text"><span class="q-no">T6</span> An electron carries a charge of 1.6 × 10⁻¹⁹ C. Calculate the number of electrons needed to give a total charge of 1 coulomb. Enter your answer as a plain number times 10^18 (e.g. enter 6.25 for 6.25 × 10^18).</p>
+        <div class="quiz-numeric-row">
+          <input class="quiz-input" type="number" step="any" placeholder="e.g. 6.25">
+          <span class="quiz-unit">×10^18 electrons</span>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-actions">
+        <button class="btn quiz-submit">Check my answers</button>
+        <button class="btn-outline quiz-retry" hidden>Try again</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+  </section>
+
+  <section class="card" id="try">
+    <h2><span class="step-no">7</span>Try it yourself</h2>
+<p class="card-hint">Two simulation pairs: one for friction charging, one for electric
+  fields around charges and plates.</p>
+<div class="sim-card">
+  <div class="sim-icon">&#9889;</div>
+  <div class="sim-body">
+    <div class="sim-title">John Travoltage</div>
+    <div class="sim-source">PhET Colorado</div>
+    <p>Rub a foot on a carpet to build up charge, then watch electrons jump &mdash; a fun, direct
+      model of friction charging and discharge (spark).</p>
+  </div>
+</div>
+<div class="sim-embed-toggle">
+  <a class="btn-outline" href="https://phet.colorado.edu/en/simulations/john-travoltage" target="_blank" rel="noopener">Open in a new tab &#8599;</a>
+</div>
+<div class="sim-card">
+  <div class="sim-icon">&#127880;</div>
+  <div class="sim-body">
+    <div class="sim-title">Balloons and Static Electricity</div>
+    <div class="sim-source">PhET Colorado</div>
+    <p>Rub a balloon on a sweater and see the charge build up and transfer &mdash; and how it
+      attracts or repels other charged objects.</p>
+  </div>
+</div>
+<div class="sim-embed-toggle">
+  <a class="btn-outline" href="https://phet.colorado.edu/en/simulations/balloons-and-static-electricity" target="_blank" rel="noopener">Open in a new tab &#8599;</a>
+</div>
+<div class="sim-card">
+  <div class="sim-icon">&#10133;</div>
+  <div class="sim-body">
+    <div class="sim-title">Charges and Fields</div>
+    <div class="sim-source">PhET Colorado</div>
+    <p>Place point charges and see the electric field lines and equipotential lines they create.</p>
+  </div>
+</div>
+<div class="sim-embed-toggle">
+  <a class="btn-outline" href="https://phet.colorado.edu/en/simulations/charges-and-fields" target="_blank" rel="noopener">Open in a new tab &#8599;</a>
+</div>
+<div class="sim-card">
+  <div class="sim-icon">&#128268;</div>
+  <div class="sim-body">
+    <div class="sim-title">Capacitor Lab: Basics</div>
+    <div class="sim-source">PhET Colorado</div>
+    <p>See the (nearly) uniform, parallel field lines between two oppositely charged plates.</p>
+  </div>
+</div>
+<div class="sim-embed-toggle">
+  <a class="btn-outline" href="https://phet.colorado.edu/en/simulations/capacitor-lab-basics" target="_blank" rel="noopener">Open in a new tab &#8599;</a>
+</div>
+  </section>
+
+  <section class="card" id="practical-check">
+    <h2><span class="step-no">8</span>Practical check</h2>
+    <p class="quiz-intro">Aim for 100% before moving on.</p>
+    <div class="quiz" data-quiz="4.2.1-practical">
+
+      <div class="quiz-q" data-type="mcq" data-correct="3">
+        <p class="quiz-q-text"><span class="q-no">P1</span> A student is testing several materials to find out which are electrical conductors and which are electrical insulators, by connecting each one into a simple circuit with a cell and a lamp. Which of these materials would you expect to be an insulator (the lamp would NOT light)?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">Copper wire</button>
+          <button class="quiz-opt" data-idx="1">Iron nail</button>
+          <button class="quiz-opt" data-idx="2">Aluminium clamp</button>
+          <button class="quiz-opt" data-idx="3">Plastic stirrup</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">P2</span> A painter is spray-painting a metal fence. The nozzle of the sprayer is negatively charged, so the paint droplets leaving it also become negatively charged. What happens to the droplets as they leave the nozzle, and why does this make painting more efficient?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">The droplets attract each other and clump together, giving a thicker coat</button>
+          <button class="quiz-opt" data-idx="1">The droplets repel each other and spread out into a fine, even mist, reducing wasted paint</button>
+          <button class="quiz-opt" data-idx="2">The droplets become neutral and fall straight down under gravity</button>
+          <button class="quiz-opt" data-idx="3">The droplets are attracted back into the nozzle, so none is wasted</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="1">
+        <p class="quiz-q-text"><span class="q-no">P3</span> A student rubs a balloon so it becomes positively charged, and places it on an insulating sheet on an electronic balance. He then brings a charged plastic rod close to the balloon (without touching it), and the balance reading increases. What does this tell you about the charge on the plastic rod?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">The rod is uncharged</button>
+          <button class="quiz-opt" data-idx="1">The rod is positively charged (like charges repel, pushing the balloon down onto the balance)</button>
+          <button class="quiz-opt" data-idx="2">The rod is negatively charged (opposite charges attract, pulling the balloon down)</button>
+          <button class="quiz-opt" data-idx="3">It is impossible to tell the rod's charge from this observation</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-q" data-type="mcq" data-correct="0">
+        <p class="quiz-q-text"><span class="q-no">P4</span> A student combs their hair with a plastic comb, and the comb becomes negatively charged. Afterwards, individual hairs are observed to repel each other and stand on end. What does this tell you?</p>
+        <div class="quiz-options">
+          <button class="quiz-opt" data-idx="0">The hairs have all become negatively charged, like the comb, so they repel each other</button>
+          <button class="quiz-opt" data-idx="1">The hairs have become magnetised by the comb</button>
+          <button class="quiz-opt" data-idx="2">The hairs are all neutral and repel each other due to air resistance</button>
+          <button class="quiz-opt" data-idx="3">The comb has transferred protons to the hair</button>
+        </div>
+        <div class="quiz-feedback"></div>
+      </div>
+
+      <div class="quiz-actions">
+        <button class="btn quiz-submit">Check my answers</button>
+        <button class="btn-outline quiz-retry" hidden>Try again</button>
+      </div>
+      <div class="quiz-result"></div>
+    </div>
+  </section>
+
+  <section class="card" id="flashcards">
+    <h2><span class="step-no">9</span>Flashcards</h2>
+    <p class="flash-hint">Tap a card to flip it.</p>
+    <div class="flash-grid">
+      <div class="flash-card"><div class="flash-card-inner">
+        <div class="flash-card-front"><span class="flash-kicker">Rule</span><span class="flash-term">Charge interactions</span></div>
+        <div class="flash-card-back">Like charges repel (+,+ or -,-); unlike charges attract (+,-).</div>
+      </div></div>
+
+      <div class="flash-card"><div class="flash-card-inner">
+        <div class="flash-card-front"><span class="flash-kicker">Key idea</span><span class="flash-term">Charging by friction</span></div>
+        <div class="flash-card-back">Only electrons transfer — never protons. Gain electrons = negative; lose electrons = positive.</div>
+      </div></div>
+
+      <div class="flash-card"><div class="flash-card-inner">
+        <div class="flash-card-front"><span class="flash-kicker">Materials</span><span class="flash-term">Conductors vs insulators</span></div>
+        <div class="flash-card-back">Conductors (metals): free electrons move, charge doesn't stay. Insulators: electrons fixed, charge stays put.</div>
+      </div></div>
+
+      <div class="flash-card"><div class="flash-card-inner">
+        <div class="flash-card-front"><span class="flash-kicker">Unit</span><span class="flash-term">Coulomb (C)</span></div>
+        <div class="flash-card-back">The unit of electric charge. An electron carries -1.6×10⁻¹⁹ C.</div>
+      </div></div>
+
+      <div class="flash-card"><div class="flash-card-inner">
+        <div class="flash-card-front"><span class="flash-kicker">Supplement</span><span class="flash-term">Electric field</span></div>
+        <div class="flash-card-back">A region where a charge feels a force. Field lines point away from + charges, towards - charges.</div>
+      </div></div>
+
+      <div class="flash-card"><div class="flash-card-inner">
+        <div class="flash-card-front"><span class="flash-kicker">Supplement</span><span class="flash-term">Field patterns</span></div>
+        <div class="flash-card-back">Point charge/sphere: radiating lines. Parallel plates: straight, parallel lines from + to - plate.</div>
+      </div></div>
+    </div>
+    <div class="flash-controls">
+      <button class="btn-outline" data-flash-reset>Flip all back over</button>
+    </div>
+  </section>
+
+  <section class="card" id="lo-post">
+    <h2>&#9989; Rate yourself again <span class="phase-tag phase-post">After you finish</span></h2>
+    <p class="card-hint">Same objectives as the top of the page — rate yourself again now that you've
+      finished.</p>
+    <div class="lo-checklist" data-rag-phase="post">
+    <div class="rag-key">
+      <span><span class="dot red"></span> Red — I don't understand this yet</span>
+      <span><span class="dot amber"></span> Amber — getting there</span>
+      <span><span class="dot green"></span> Green — I'm confident</span>
+    </div>
+    <div class="lo-progress">
+      <div class="lo-progress-bar">
+        <div class="lo-progress-seg green" data-seg-green></div>
+        <div class="lo-progress-seg amber" data-seg-amber></div>
+        <div class="lo-progress-seg red" data-seg-red></div>
+      </div>
+      <div class="lo-progress-label" data-progress-label>Not yet self-assessed</div>
+      <button class="btn-outline" data-rag-reset type="button">Reset my self-assessment</button>
+    </div>
+    <ul class="lo-list" data-lo-list="4.2.1">
+      <li class="lo-item core" data-lo-code="4.2.1-C1">
+        <div class="lo-text"><span class="lo-code">4.2.1-C1</span>State that there are positive and negative charges.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C1">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C2">
+        <div class="lo-text"><span class="lo-code">4.2.1-C2</span>State that positive charges repel other positive charges, negative charges repel other negative charges, but positive charges attract negative charges.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C2">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C3">
+        <div class="lo-text"><span class="lo-code">4.2.1-C3</span>Describe simple experiments to show the production of electrostatic charges by friction and to show the detection of electrostatic charges.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C3">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C4">
+        <div class="lo-text"><span class="lo-code">4.2.1-C4</span>Explain that charging of solids by friction involves only a transfer of negative charge (electrons).</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C4">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C5">
+        <div class="lo-text"><span class="lo-code">4.2.1-C5</span>Describe an experiment to distinguish between electrical conductors and insulators.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C5">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item core" data-lo-code="4.2.1-C6">
+        <div class="lo-text"><span class="lo-code">4.2.1-C6</span>Recall and use a simple electron model to explain the difference between electrical conductors and insulators, and give typical examples.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-C6">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S7">
+        <div class="lo-text"><span class="lo-code">4.2.1-S7</span>State that charge is measured in coulombs.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S7">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S8">
+        <div class="lo-text"><span class="lo-code">4.2.1-S8</span>Describe an electric field as a region in which an electric charge experiences a force.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S8">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S9">
+        <div class="lo-text"><span class="lo-code">4.2.1-S9</span>State that the direction of an electric field at a point is the direction of the force on a positive charge at that point.</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S9">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+      <li class="lo-item supplement" data-lo-code="4.2.1-S10">
+        <div class="lo-text"><span class="lo-code">4.2.1-S10</span>Describe simple electric field patterns, including the direction of the field: (a) around a point charge (b) around a charged conducting sphere (c) between two oppositely charged parallel conducting plates (end effects will not be examined).</div>
+        <div class="rag-group" role="group" aria-label="Self-rating for 4.2.1-S10">
+          <button class="rag-btn rag-red" data-rag="red" title="Red — not confident yet">R</button>
+          <button class="rag-btn rag-amber" data-rag="amber" title="Amber — getting there">A</button>
+          <button class="rag-btn rag-green" data-rag="green" title="Green — confident">G</button>
+        </div>
+      </li>
+    </ul>
+    </div>
+  </section>
+
+  <section class="card" id="progress-compare">
+    <h2>&#128202; Your progress: before vs after</h2>
+    <div class="rag-compare" data-rag-compare="4.2.1"></div>
+  </section>
+
+  <section class="card" id="reflect">
+    <h2>&#128257; Reflect <span class="phase-tag phase-reflect">Wrap-up</span></h2>
+    <div class="reflect-block" data-reflect="4.2.1">
+      <div class="reflect-field">
+        <label for="reflect-4.2.1-helped">One thing that helped me understand this topic was&hellip;</label>
+        <textarea id="reflect-4.2.1-helped" data-reflect-field="helped" rows="2"></textarea>
+      </div>
+      <div class="reflect-field">
+        <label for="reflect-4.2.1-tricky">The part I found trickiest was&hellip; (and why)</label>
+        <textarea id="reflect-4.2.1-tricky" data-reflect-field="tricky" rows="2"></textarea>
+      </div>
+      <div class="reflect-field">
+        <label for="reflect-4.2.1-question">One question I still have for my teacher <span class="optional-tag">(optional)</span></label>
+        <textarea id="reflect-4.2.1-question" data-reflect-field="question" rows="2"></textarea>
+      </div>
+      <div class="reflect-status" data-reflect-saved>Not saved yet</div>
+      <p class="reflect-note">&#128204; Saved on this device for now.</p>
+    </div>
+  </section>
+
+  <div class="complete-bar">
+    <div>
+      <p data-ready-banner data-requires="4.2.1-theory,4.2.1-practical">⏳ Score 100% on both checks above before moving on.</p>
+      <div class="status-row">
+        <span class="status-pill pending" data-status-pill="4.2.1-theory" data-label="Theory check">○ Theory check</span>
+        <span class="status-pill pending" data-status-pill="4.2.1-practical" data-label="Practical check">○ Practical check</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="card" id="assignment">
+    <h2><span class="step-no">10</span>Consolidation assignment</h2>
+    <div class="worksheet-note">
+      <div class="ws-icon">📄</div>
+      <div class="ws-body">
+        <div class="ws-title">Worksheet 17A: Static electricity</div>
+        <p>This consolidation worksheet is based on the Cambridge IGCSE&trade; Physics
+          Coursebook and is handed out by your teacher — we are not able to publish it
+          here. <strong>If you are studying at an Eduversal partner school, ask your
+          physics teacher for it.</strong> If you are studying on your own, the quizzes,
+          flashcards and simulations above already cover the same objectives.</p>
+      </div>
+    </div>
+<p class="submission-note">📌 <strong>Working on your own?</strong> You do not need this worksheet to finish the lesson — rate yourself in step 8 above and check your before/after progress in step 11.</p>
+  </section>
+
+  <nav class="page-nav">
+    <a href="16-magnetism-standalone.html"><span class="label">Previous</span>4.1 Magnetism</a>
+    <span class="disabled"><span class="label">Next</span>4.2.2 Electric current (coming soon)</span>
+  </nav>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    Eduversal IGCSE Foundation Programme (EIFP) &middot; Self-study pilot &middot; Source: Cambridge
+    IGCSE Physics 0625 syllabus for examination in 2026, 2027 and 2028; notes based on Cambridge
+    IGCSE™ Physics Coursebook, 3rd edition (Sang, Follows &amp; Tarpey), Coursebook Chapter 17.
+  </div>
+</footer>
+
+<script>
+
+const EIFP_STORAGE_KEY = "eifp-physics-progress-v1";
+const EIFP_LO_MAP = {
+  "4.2.1": ["4.2.1-C1", "4.2.1-C2", "4.2.1-C3", "4.2.1-C4", "4.2.1-C5", "4.2.1-C6", "4.2.1-S7", "4.2.1-S8", "4.2.1-S9", "4.2.1-S10"]
+};
+
+function eifpLoadProgress() {
+  try { const raw = localStorage.getItem(EIFP_STORAGE_KEY); return raw ? JSON.parse(raw) : {}; }
+  catch (e) { return {}; }
+}
+function eifpSaveProgress(state) {
+  try { localStorage.setItem(EIFP_STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+function eifpRagKey(code, phase) { return code + "__" + phase; }
+function eifpGroupProgress(groupId) {
+  const codes = EIFP_LO_MAP[groupId] || [];
+  const state = eifpLoadProgress();
+  const green = codes.filter((c) => {
+    const rag = state[eifpRagKey(c, "post")] || state[eifpRagKey(c, "pre")];
+    return rag === "green";
+  }).length;
+  return { done: green, total: codes.length };
+}
+function eifpRenderChecklistInstance(container) {
+  const list = container.querySelector("[data-lo-list]");
+  if (!list) return;
+  const phase = container.getAttribute("data-rag-phase") || "pre";
+  const state = eifpLoadProgress();
+  const items = Array.from(list.querySelectorAll(".lo-item"));
+  const segGreen = container.querySelector("[data-seg-green]");
+  const segAmber = container.querySelector("[data-seg-amber]");
+  const segRed = container.querySelector("[data-seg-red]");
+  const label = container.querySelector("[data-progress-label]");
+  let g = 0, a = 0, r = 0;
+  items.forEach((item) => {
+    const code = item.getAttribute("data-lo-code");
+    const status = state[eifpRagKey(code, phase)] || "";
+    item.setAttribute("data-rag-status", status);
+    item.querySelectorAll(".rag-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.getAttribute("data-rag") === status);
+    });
+    if (status === "green") g++; else if (status === "amber") a++; else if (status === "red") r++;
+  });
+  const total = items.length;
+  if (segGreen) segGreen.style.width = total ? (g / total) * 100 + "%" : "0%";
+  if (segAmber) segAmber.style.width = total ? (a / total) * 100 + "%" : "0%";
+  if (segRed) segRed.style.width = total ? (r / total) * 100 + "%" : "0%";
+  if (label) {
+    const rated = g + a + r;
+    if (rated === 0) label.textContent = "Not yet self-assessed";
+    else if (g === total) label.textContent = "🟢 All " + total + " objectives rated green";
+    else label.textContent = g + " green · " + a + " amber · " + r + " red · " + (total - rated) + " not yet rated";
+  }
+}
+const EIFP_RAG_RANK = { red: 1, amber: 2, green: 3 };
+const EIFP_RAG_LABEL = { red: "Red", amber: "Amber", green: "Green" };
+function eifpBuildLoTextMap(groupId) {
+  const map = {};
+  document.querySelectorAll(".lo-item[data-lo-code]").forEach((item) => {
+    const code = item.getAttribute("data-lo-code");
+    if (map[code]) return;
+    const textEl = item.querySelector(".lo-text");
+    if (!textEl) return;
+    const clone = textEl.cloneNode(true);
+    const codeTag = clone.querySelector(".lo-code");
+    if (codeTag) codeTag.remove();
+    map[code] = clone.textContent.trim();
+  });
+  return map;
+}
+function eifpRenderComparison(container) {
+  const groupId = container.getAttribute("data-rag-compare");
+  const codes = EIFP_LO_MAP[groupId] || [];
+  if (!codes.length) return;
+  const state = eifpLoadProgress();
+  const textMap = eifpBuildLoTextMap(groupId);
+  let improved = 0, same = 0, dropped = 0, incomplete = 0;
+  const rows = codes.map((code) => {
+    const pre = state[eifpRagKey(code, "pre")] || "";
+    const post = state[eifpRagKey(code, "post")] || "";
+    let changeHtml = '<span class="rag-change none">Not yet comparable</span>';
+    if (pre && post) {
+      const delta = EIFP_RAG_RANK[post] - EIFP_RAG_RANK[pre];
+      if (delta > 0) { improved++; changeHtml = '<span class="rag-change up">&#9650; Improved</span>'; }
+      else if (delta < 0) { dropped++; changeHtml = '<span class="rag-change down">&#9660; Dropped</span>'; }
+      else { same++; changeHtml = '<span class="rag-change flat">No change</span>'; }
+    } else if (pre && !post) { incomplete++; changeHtml = '<span class="rag-change none">Rate again below</span>'; }
+    else if (!pre && post) { incomplete++; changeHtml = '<span class="rag-change none">No "before" rating</span>'; }
+    else { incomplete++; }
+    const pillHtml = (rag) => rag ? '<span class="rag-pill rag-pill-' + rag + '">' + EIFP_RAG_LABEL[rag] + "</span>" : '<span class="rag-pill rag-pill-none">—</span>';
+    return ('<div class="rag-compare-row">' + '<div class="rag-compare-text">' + (textMap[code] || code) + "</div>" +
+      '<div class="rag-compare-before">' + pillHtml(pre) + "</div>" + '<div class="rag-compare-arrow">&rarr;</div>' +
+      '<div class="rag-compare-after">' + pillHtml(post) + "</div>" + '<div class="rag-compare-change">' + changeHtml + "</div>" + "</div>");
+  }).join("");
+  const rated = improved + same + dropped;
+  let summary;
+  if (rated === 0 && incomplete === codes.length) summary = "Rate yourself at both the top and bottom of the page to see your progress here.";
+  else {
+    const parts = [];
+    if (improved) parts.push("🎉 " + improved + " improved");
+    if (same) parts.push(same + " stayed the same");
+    if (dropped) parts.push(dropped + " dropped");
+    if (incomplete) parts.push(incomplete + " not yet comparable");
+    summary = parts.join(" · ");
+  }
+  container.innerHTML = '<div class="rag-compare-summary">' + summary + "</div>" +
+    '<div class="rag-compare-header">' + "<div></div><div>Before</div><div></div><div>After</div><div>Change</div>" + "</div>" + rows;
+}
+function eifpSyncAllChecklists() {
+  document.querySelectorAll(".lo-checklist").forEach(eifpRenderChecklistInstance);
+  document.querySelectorAll("[data-rag-compare]").forEach(eifpRenderComparison);
+}
+function eifpInitChecklist() {
+  document.querySelectorAll(".lo-checklist").forEach((container) => {
+    const list = container.querySelector("[data-lo-list]");
+    if (!list) return;
+    const phase = container.getAttribute("data-rag-phase") || "pre";
+    list.querySelectorAll(".lo-item").forEach((item) => {
+      const code = item.getAttribute("data-lo-code");
+      item.querySelectorAll(".rag-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const rag = btn.getAttribute("data-rag");
+          const current = eifpLoadProgress();
+          current[eifpRagKey(code, phase)] = rag;
+          eifpSaveProgress(current);
+          eifpSyncAllChecklists();
+        });
+      });
+    });
+  });
+  eifpSyncAllChecklists();
+}
+function eifpInitResetButton() {
+  document.querySelectorAll("[data-rag-reset]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const container = btn.closest(".lo-checklist");
+      const list = container ? container.querySelector("[data-lo-list]") : document.querySelector("[data-lo-list]");
+      if (!list || !container) return;
+      const phase = container.getAttribute("data-rag-phase") || "pre";
+      const groupId = list.getAttribute("data-lo-list");
+      const codes = EIFP_LO_MAP[groupId] || [];
+      const current = eifpLoadProgress();
+      codes.forEach((code) => { delete current[eifpRagKey(code, phase)]; });
+      eifpSaveProgress(current);
+      eifpSyncAllChecklists();
+    });
+  });
+}
+function eifpInitOverviewBadges() {
+  document.querySelectorAll("[data-progress-badge]").forEach((el) => {
+    const groupId = el.getAttribute("data-progress-badge");
+    const { done, total } = eifpGroupProgress(groupId);
+    if (total === 0) return;
+    el.textContent = done + " / " + total + " green";
+    el.classList.remove("badge-soon");
+    if (done === total) { el.style.background = "#DCE9F0"; el.style.color = "#2b5a75"; el.style.borderColor = "#B7D2E0"; }
+  });
+}
+function eifpInitVideoFallback() {
+  if (window.location.protocol !== "file:") return;
+  document.querySelectorAll(".video-frame").forEach((frame) => {
+    const wrapper = frame.closest(".media-primary") || frame.parentElement;
+    const watchLink = wrapper ? wrapper.querySelector('a[href*="youtube.com/watch"]') : null;
+    const href = watchLink ? watchLink.getAttribute("href") : "#";
+    frame.classList.add("video-frame-local");
+    frame.innerHTML = '<div class="video-fallback-note">' + '<p class="vf-title">📺 Local preview mode</p>' +
+      "<p>YouTube can't play embedded videos from a file opened directly on your computer. " +
+      "This works normally once the page is hosted on a real web address — for now, use the link below.</p>" +
+      '<a class="btn" target="_blank" rel="noopener" href="' + href + '">Watch on YouTube ↗</a>' + "</div>";
+  });
+}
+function eifpInitSimToggles() {
+  document.querySelectorAll("[data-sim-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetSel = btn.getAttribute("data-sim-toggle");
+      const frame = document.querySelector(targetSel);
+      if (!frame) return;
+      const showing = frame.classList.toggle("show");
+      if (showing && !frame.src) frame.src = frame.getAttribute("data-src");
+      btn.textContent = showing ? "Hide simulation" : "Try it here on this page";
+    });
+  });
+}
+function eifpInitFlashcards() {
+  document.querySelectorAll(".flash-card").forEach((card) => {
+    card.addEventListener("click", () => card.classList.toggle("flipped"));
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("role", "button");
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); card.classList.toggle("flipped"); }
+    });
+  });
+  const resetBtn = document.querySelector("[data-flash-reset]");
+  if (resetBtn) resetBtn.addEventListener("click", () => {
+    document.querySelectorAll(".flash-card.flipped").forEach((c) => c.classList.remove("flipped"));
+  });
+}
+const EIFP_QUIZ_KEY = "eifp-quiz-progress-v1";
+function eifpLoadQuizState() {
+  try { const raw = localStorage.getItem(EIFP_QUIZ_KEY); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+}
+function eifpSaveQuizState(state) { try { localStorage.setItem(EIFP_QUIZ_KEY, JSON.stringify(state)); } catch (e) {} }
+const EIFP_MISTAKE_KEY = "eifp-mistake-log-v1";
+function eifpLoadMistakes() {
+  try { const raw = localStorage.getItem(EIFP_MISTAKE_KEY); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+}
+function eifpSaveMistakes(state) { try { localStorage.setItem(EIFP_MISTAKE_KEY, JSON.stringify(state)); } catch (e) {} }
+function eifpInitQuizzes() {
+  document.querySelectorAll(".quiz").forEach((quizEl) => {
+    const quizId = quizEl.getAttribute("data-quiz");
+    const isDiagnostic = quizEl.getAttribute("data-diagnostic") === "true";
+    const questions = Array.from(quizEl.querySelectorAll(".quiz-q"));
+    const submitBtn = quizEl.querySelector(".quiz-submit");
+    const retryBtn = quizEl.querySelector(".quiz-retry");
+    const resultEl = quizEl.querySelector(".quiz-result");
+    questions.forEach((q) => {
+      if (q.getAttribute("data-type") === "mcq") {
+        q.querySelectorAll(".quiz-opt").forEach((opt) => {
+          opt.addEventListener("click", () => {
+            q.querySelectorAll(".quiz-opt").forEach((o) => o.classList.remove("selected"));
+            opt.classList.add("selected");
+          });
+        });
+      }
+    });
+    function grade() {
+      let correctCount = 0;
+      questions.forEach((q) => {
+        const type = q.getAttribute("data-type");
+        const feedback = q.querySelector(".quiz-feedback");
+        let isCorrect = false; let correctText = "";
+        if (type === "mcq") {
+          const correctIdx = q.getAttribute("data-correct");
+          const selected = q.querySelector(".quiz-opt.selected");
+          const correctOpt = q.querySelector('.quiz-opt[data-idx="' + correctIdx + '"]');
+          correctText = correctOpt ? correctOpt.textContent.trim() : "";
+          isCorrect = !!selected && selected.getAttribute("data-idx") === correctIdx;
+        } else if (type === "numeric") {
+          const answer = parseFloat(q.getAttribute("data-answer"));
+          const tolerance = parseFloat(q.getAttribute("data-tolerance") || "0");
+          const unit = q.getAttribute("data-unit") || "";
+          const input = q.querySelector(".quiz-input");
+          const val = input ? parseFloat(input.value) : NaN;
+          correctText = answer + (unit ? " " + unit : "");
+          isCorrect = !isNaN(val) && Math.abs(val - answer) <= tolerance;
+        }
+        q.classList.toggle("correct", isCorrect);
+        q.classList.toggle("incorrect", !isCorrect);
+        if (feedback) {
+          feedback.className = "quiz-feedback " + (isCorrect ? "correct" : "incorrect");
+          if (isCorrect) feedback.textContent = "Correct.";
+          else if (isDiagnostic) feedback.textContent = "Answer: " + correctText;
+          else {
+            const qNoEl = q.querySelector(".q-no");
+            const qNo = qNoEl ? qNoEl.textContent.trim() : String(questions.indexOf(q) + 1);
+            const mistakeKey = quizId + ":" + qNo;
+            feedback.innerHTML = "Not quite — correct answer: " + correctText +
+              '<div class="mistake-tag-group" data-mistake-key="' + mistakeKey + '">' +
+              '<span class="mistake-tag-label">What kind of mistake was this? (optional)</span>' +
+              '<button type="button" class="mistake-tag-btn" data-mistake-type="concept">Concept</button>' +
+              '<button type="button" class="mistake-tag-btn" data-mistake-type="formula">Formula</button>' +
+              '<button type="button" class="mistake-tag-btn" data-mistake-type="careless">Careless</button>' + "</div>";
+          }
+        }
+        if (isCorrect) correctCount++;
+      });
+      quizEl.querySelectorAll(".mistake-tag-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const group = btn.closest(".mistake-tag-group");
+          if (!group) return;
+          const key = group.getAttribute("data-mistake-key");
+          group.querySelectorAll(".mistake-tag-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const mistakes = eifpLoadMistakes();
+          mistakes[key] = btn.getAttribute("data-mistake-type");
+          eifpSaveMistakes(mistakes);
+        });
+      });
+      const total = questions.length;
+      if (isDiagnostic) {
+        if (resultEl) {
+          resultEl.className = "quiz-result show diagnostic";
+          resultEl.textContent = correctCount + " / " + total + " — that's completely fine at this stage, you haven't studied this yet. Scroll down and rate yourself honestly on the checklist below.";
+        }
+      } else {
+        const state = eifpLoadQuizState();
+        if (resultEl) {
+          resultEl.classList.add("show");
+          if (correctCount === total) {
+            resultEl.className = "quiz-result show pass";
+            resultEl.textContent = "🎉 " + correctCount + " / " + total + " — 100%! You're ready to move on.";
+            state[quizId] = true;
+          } else {
+            resultEl.className = "quiz-result show fail";
+            resultEl.textContent = correctCount + " / " + total + " correct. Review the ones marked ✗ above, then try again — aim for 100% before moving on.";
+            state[quizId] = false;
+          }
+        }
+        eifpSaveQuizState(state);
+        eifpRefreshReadyStatus();
+      }
+      if (submitBtn) submitBtn.hidden = true;
+      if (retryBtn) retryBtn.hidden = false;
+    }
+    function reset() {
+      questions.forEach((q) => {
+        q.classList.remove("correct", "incorrect");
+        q.querySelectorAll(".quiz-opt").forEach((o) => o.classList.remove("selected"));
+        const input = q.querySelector(".quiz-input");
+        if (input) input.value = "";
+        const feedback = q.querySelector(".quiz-feedback");
+        if (feedback) { feedback.textContent = ""; feedback.className = "quiz-feedback"; }
+      });
+      if (resultEl) { resultEl.classList.remove("show", "pass", "fail"); resultEl.textContent = ""; }
+      if (submitBtn) submitBtn.hidden = false;
+      if (retryBtn) retryBtn.hidden = true;
+    }
+    if (submitBtn) submitBtn.addEventListener("click", grade);
+    if (retryBtn) retryBtn.addEventListener("click", reset);
+  });
+}
+function eifpRefreshReadyStatus() {
+  const state = eifpLoadQuizState();
+  document.querySelectorAll("[data-status-pill]").forEach((pill) => {
+    const quizId = pill.getAttribute("data-status-pill");
+    const passed = state[quizId] === true;
+    pill.textContent = (passed ? "✓ " : "○ ") + pill.getAttribute("data-label");
+    pill.classList.toggle("pass", passed);
+    pill.classList.toggle("pending", !passed);
+  });
+  const readyBanner = document.querySelector("[data-ready-banner]");
+  if (readyBanner) {
+    const requiredQuizzes = (readyBanner.getAttribute("data-requires") || "").split(",").filter(Boolean);
+    const allPassed = requiredQuizzes.length > 0 && requiredQuizzes.every((id) => state[id] === true);
+    readyBanner.textContent = allPassed ? "✅ Both checks passed at 100% — you're ready to move on to the next subtopic." : "⏳ Score 100% on both checks above before moving on. Repeat them as many times as you need — that's normal.";
+    readyBanner.classList.toggle("pass", allPassed);
+    readyBanner.classList.toggle("pending", !allPassed);
+  }
+}
+const EIFP_REFLECT_KEY = "eifp-reflection-v1";
+function eifpLoadReflection() {
+  try { const raw = localStorage.getItem(EIFP_REFLECT_KEY); return raw ? JSON.parse(raw) : {}; } catch (e) { return {}; }
+}
+function eifpSaveReflection(state) { try { localStorage.setItem(EIFP_REFLECT_KEY, JSON.stringify(state)); } catch (e) {} }
+function eifpInitReflection() {
+  document.querySelectorAll("[data-reflect]").forEach((block) => {
+    const groupId = block.getAttribute("data-reflect");
+    const saved = eifpLoadReflection()[groupId] || {};
+    const statusEl = block.querySelector("[data-reflect-saved]");
+    let saveTimer = null;
+    const fields = Array.from(block.querySelectorAll("[data-reflect-field]"));
+    fields.forEach((field) => {
+      const key = field.getAttribute("data-reflect-field");
+      if (saved[key]) field.value = saved[key];
+      field.addEventListener("input", () => {
+        if (statusEl) statusEl.textContent = "Saving…";
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          const current = eifpLoadReflection();
+          if (!current[groupId]) current[groupId] = {};
+          current[groupId][key] = field.value;
+          eifpSaveReflection(current);
+          if (statusEl) statusEl.textContent = "✓ Saved on this device";
+        }, 500);
+      });
+    });
+    const hasSavedContent = fields.some((f) => saved[f.getAttribute("data-reflect-field")]);
+    if (statusEl && hasSavedContent) statusEl.textContent = "✓ Saved on this device";
+  });
+}
+function eifpSafeRun(fn) {
+  try { fn(); } catch (err) { console.error("EIFP site: " + fn.name + " failed:", err); }
+}
+document.addEventListener("DOMContentLoaded", () => {
+  eifpSafeRun(eifpInitChecklist);
+  eifpSafeRun(eifpInitResetButton);
+  eifpSafeRun(eifpInitOverviewBadges);
+  eifpSafeRun(eifpInitSimToggles);
+  eifpSafeRun(eifpInitVideoFallback);
+  eifpSafeRun(eifpInitFlashcards);
+  eifpSafeRun(eifpInitQuizzes);
+  eifpSafeRun(eifpRefreshReadyStatus);
+  eifpSafeRun(eifpInitReflection);
+});
+
+</script>
+</body>
+</html>

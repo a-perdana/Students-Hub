@@ -163,4 +163,41 @@ if (fs.existsSync(partialsSrc)) {
   });
 }
 
+// ─────────────────────────────────────────────────────────────────
+// Foundation — PUBLIC self-paced IGCSE prep (2026-07-27)
+// ─────────────────────────────────────────────────────────────────
+// Copied VERBATIM to dist/foundation/. Deliberately NOT run through
+// ROUTES / LINK_REWRITES / firebase-env inlining:
+//
+//   • No auth.       These pages must render for anyone, signed in or
+//                    not. They never load auth-guard.js, so they are
+//                    not subject to the students/{uid} status gate —
+//                    and they must never be added to ROUTES, which
+//                    would pull in the Firebase bootstrap.
+//   • No Firebase.   Zero SDK, zero config, nothing to substitute.
+//   • Relative links. The lesson/hub pages link to each other by
+//                    literal .html filename inside this one folder.
+//                    LINK_REWRITES targets hub routes (index.html →
+//                    "/") and would break every one of them.
+//
+// Progress is localStorage-only (key: eifp-physics-progress-v1) — no
+// student data ever leaves the browser, which is what lets this ship
+// publicly without touching the SH auth model.
+//
+// Regenerate the hub pages after adding lessons:
+//   cd Foundation && node _build-hub.js
+const foundationSrc  = path.join(__dirname, 'Foundation');
+const foundationDist = path.join(distDir, 'foundation');
+if (fs.existsSync(foundationSrc)) {
+  if (!fs.existsSync(foundationDist)) fs.mkdirSync(foundationDist, { recursive: true });
+  let n = 0;
+  fs.readdirSync(foundationSrc).forEach(file => {
+    // Skip the generator scripts — build tooling, not site content.
+    if (file.startsWith('_') || !file.endsWith('.html')) return;
+    fs.copyFileSync(path.join(foundationSrc, file), path.join(foundationDist, file));
+    n++;
+  });
+  console.log(`Copied: dist/foundation/ (${n} public pages, no auth)`);
+}
+
 console.log('Build completed successfully!');
