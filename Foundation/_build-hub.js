@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ==========================================================================
-   Eduversal Foundation — hub page generator
+   Self-Paced IGCSE Foundation — hub page generator
    --------------------------------------------------------------------------
    Reads every *-standalone.html lesson page in this folder, extracts its
    title / eyebrow / dek / LO codes straight from the markup, and writes:
@@ -93,12 +93,13 @@ function readLessons() {
     .map((file) => {
       const html = fs.readFileSync(path.join(DIR, file), 'utf8');
 
-      // Strip the site-name suffix from "<code> <name> — <site>". Matches both
-      // the original "— EIFP Physics Self-Study" and the rebranded
-      // "— Eduversal Foundation" (see _patch-lessons.js), so the generator
-      // keeps working whichever order the two scripts are run in.
+      // Strip the site-name suffix from "<code> <name> — <site>". Accepts all
+      // three historical names (original "EIFP Physics Self-Study", the
+      // interim "Eduversal Foundation", and the current "Self-Paced IGCSE
+      // Foundation") so the generator keeps working on any lesson file
+      // regardless of which rebrand pass it has been through.
       const rawTitle = grab(/<title>(.*?)<\/title>/s, html);
-      const title    = decode(rawTitle.replace(/\s*—\s*(EIFP Physics Self-Study|Eduversal Foundation)\s*$/, ''));
+      const title    = decode(rawTitle.replace(/\s*—\s*(EIFP Physics Self-Study|Eduversal Foundation|Self-Paced IGCSE Foundation)\s*$/, ''));
       const eyebrow = decode(grab(/<span class="eyebrow">(.*?)<\/span>/s, html));
       const dek     = decode(grab(/<p class="dek">(.*?)<\/p>/s, html).replace(/<[^>]*>/g, ''));
 
@@ -175,9 +176,30 @@ a:hover{text-decoration:underline}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:#fff}
 .brand:hover{text-decoration:none;opacity:.9}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--teal);display:inline-block}
-.topbar nav a{color:#cfe3ea;margin-left:18px;font-size:.95rem}
+.topbar nav{display:flex;gap:18px;flex:0 0 auto}
+.topbar nav a{color:#cfe3ea;font-size:.95rem;white-space:nowrap}
 .topbar nav a:hover{color:#fff}
 .topbar nav a.active{color:#fff;font-weight:600}
+/* The brand is long ("Self-Paced IGCSE Foundation"). At 360px the full name
+   plus both nav links does not fit (measured ≈408px of content in a 360px
+   bar), so it wrapped and clipped "Physics". Rather than shrink the type to
+   an unreadable size, drop the "Self-Paced " prefix below 560px — the two
+   spans swap via CSS, so the full name still ships in the HTML for SEO and
+   for anyone on a wider screen. */
+.brand .brand-short{display:none}
+@media(max-width:560px){
+  .topbar{padding:11px 0}
+  .brand{font-size:.95rem;gap:7px;min-width:0;white-space:nowrap}
+  .brand .brand-full{display:none}
+  .brand .brand-short{display:inline}
+  .topbar nav{gap:14px}
+  .topbar nav a{font-size:.9rem}
+}
+@media(max-width:360px){
+  .brand{font-size:.88rem}
+  .topbar nav{gap:11px}
+  .topbar nav a{font-size:.85rem}
+}
 
 /* ---------- Breadcrumb ---------- */
 .breadcrumb{font-size:.88rem;color:var(--muted);margin:18px 0 4px}
@@ -547,7 +569,7 @@ function shell({ title, desc, activeNav, body, script, breadcrumb }) {
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="index.html"><span class="dot"></span> Eduversal Foundation</a>
+    <a class="brand" href="index.html"><span class="dot"></span> <span class="brand-full">Self-Paced IGCSE Foundation</span><span class="brand-short">IGCSE Foundation</span></a>
     <nav>
       <a href="index.html"${activeNav === 'home' ? ' class="active"' : ''}>Home</a>
       <a href="physics.html"${activeNav === 'physics' ? ' class="active"' : ''}>Physics</a>
@@ -560,7 +582,7 @@ ${body}
 <footer class="site-footer">
   <div class="wrap">
     <div>
-      <strong style="color:#fff">Eduversal Foundation</strong> — free self-paced Cambridge IGCSE preparation.
+      <strong style="color:#fff">Self-Paced IGCSE Foundation</strong> — free Cambridge IGCSE preparation, at your own pace.
       <div class="fine">Your progress is saved in this browser only. No account, no sign-in, nothing sent to a server.</div>
     </div>
     <div class="fine">© Eduversal Education</div>
@@ -713,7 +735,7 @@ ${subjectCards}
 `;
 
 fs.writeFileSync(path.join(DIR, 'index.html'), shell({
-  title: 'Eduversal Foundation — Free self-paced Cambridge IGCSE preparation',
+  title: 'Self-Paced IGCSE Foundation — Free Cambridge IGCSE preparation',
   desc: 'Free, self-paced Cambridge IGCSE preparation from the Eduversal partner school network. Physics available now; Mathematics, Biology and Chemistry coming soon.',
   activeNav: 'home',
   body: indexBody,
@@ -815,7 +837,7 @@ ${ls.map(lessonRow).join('\n')}
 `;
 
 fs.writeFileSync(path.join(DIR, 'physics.html'), shell({
-  title: 'Physics — Eduversal Foundation',
+  title: 'Physics — Self-Paced IGCSE Foundation',
   desc: `Free self-paced Cambridge IGCSE Physics (0625): ${lessons.length} lessons covering waves, electricity and magnetism, nuclear physics and space physics.`,
   activeNav: 'physics',
   body: physicsBody,
@@ -864,7 +886,7 @@ ${ls.map(lessonRow).join('\n')}
 `;
 
   fs.writeFileSync(path.join(DIR, `topic-${t}.html`), shell({
-    title: `Topic ${meta.num}: ${meta.name} — Eduversal Foundation Physics`,
+    title: `Topic ${meta.num}: ${meta.name} — Self-Paced IGCSE Foundation`,
     desc: `${meta.blurb} ${ls.length} free self-paced Cambridge IGCSE Physics lessons.`,
     activeNav: 'physics',
     body,
@@ -873,7 +895,7 @@ ${ls.map(lessonRow).join('\n')}
 });
 
 /* ---------- Report ---------- */
-console.log('Eduversal Foundation — hub pages built\n');
+console.log('Self-Paced IGCSE Foundation — hub pages built\n');
 console.log(`  index.html      programme landing (${SUBJECTS.length} subjects, ${SUBJECTS.filter(s => s.status === 'live').length} live)`);
 console.log(`  physics.html    ${lessons.length} lessons · ${totalLOs} LOs · ${totalQ} questions · ${totalVid} videos · ${totalSim} PhET sims`);
 Object.keys(TOPICS).forEach((t) => {

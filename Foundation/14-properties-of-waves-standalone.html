@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>3.1 General properties of waves — Eduversal Foundation</title>
+<title>3.1 General properties of waves — Self-Paced IGCSE Foundation</title>
 <style>
 /* ==========================================================================
-   Eduversal Foundation Site — shared styles
+   Self-Paced IGCSE Foundation Site — shared styles
    Palette: Eduversal navy / teal, per the department's existing materials.
    ========================================================================== */
 
@@ -73,6 +73,20 @@ a:hover { text-decoration: underline; }
 .topbar nav a:hover { color: #fff; }
 
 /* ---------- Breadcrumb ---------- */
+/* brand-fit */
+.brand .brand-short { display: none; }
+@media (max-width: 560px) {
+  .topbar { padding: 11px 0; }
+  .brand { font-size: 0.95rem; gap: 7px; min-width: 0; white-space: nowrap; }
+  .brand .brand-full { display: none; }
+  .brand .brand-short { display: inline; }
+  .topbar nav a { margin-left: 14px; font-size: 0.9rem; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .brand { font-size: 0.88rem; }
+  .topbar nav a { margin-left: 11px; font-size: 0.85rem; }
+}
+
 .breadcrumb {
   font-size: 0.88rem;
   color: var(--muted);
@@ -913,7 +927,7 @@ footer.site-footer {
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="index.html"><span class="dot"></span> Eduversal Foundation</a>
+    <a class="brand" href="index.html"><span class="dot"></span> <span class="brand-full">Self-Paced IGCSE Foundation</span><span class="brand-short">IGCSE Foundation</span></a>
     <nav>
       <a href="physics.html">Physics</a>
       <a href="topic-3.html">Topics</a>
@@ -1860,7 +1874,7 @@ footer.site-footer {
 
 <script>
 /* ==========================================================================
-   Eduversal Foundation Site — shared behaviour
+   Self-Paced IGCSE Foundation Site — shared behaviour
    - LO progress is tracked per learning-objective code and saved in the
      browser's localStorage, so it survives closing the tab/computer but
      stays private to that one device/browser (no server, no login).

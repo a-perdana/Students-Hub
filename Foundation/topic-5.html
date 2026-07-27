@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Topic 5: Nuclear physics — Eduversal Foundation Physics</title>
+<title>Topic 5: Nuclear physics — Self-Paced IGCSE Foundation</title>
 <meta name="description" content="Inside the atom — the nucleus, isotopes, three kinds of radiation, decay equations, half-life and staying safe around it all. 7 free self-paced Cambridge IGCSE Physics lessons.">
 <style>
 :root{
@@ -31,9 +31,30 @@ a:hover{text-decoration:underline}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:#fff}
 .brand:hover{text-decoration:none;opacity:.9}
 .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--teal);display:inline-block}
-.topbar nav a{color:#cfe3ea;margin-left:18px;font-size:.95rem}
+.topbar nav{display:flex;gap:18px;flex:0 0 auto}
+.topbar nav a{color:#cfe3ea;font-size:.95rem;white-space:nowrap}
 .topbar nav a:hover{color:#fff}
 .topbar nav a.active{color:#fff;font-weight:600}
+/* The brand is long ("Self-Paced IGCSE Foundation"). At 360px the full name
+   plus both nav links does not fit (measured ≈408px of content in a 360px
+   bar), so it wrapped and clipped "Physics". Rather than shrink the type to
+   an unreadable size, drop the "Self-Paced " prefix below 560px — the two
+   spans swap via CSS, so the full name still ships in the HTML for SEO and
+   for anyone on a wider screen. */
+.brand .brand-short{display:none}
+@media(max-width:560px){
+  .topbar{padding:11px 0}
+  .brand{font-size:.95rem;gap:7px;min-width:0;white-space:nowrap}
+  .brand .brand-full{display:none}
+  .brand .brand-short{display:inline}
+  .topbar nav{gap:14px}
+  .topbar nav a{font-size:.9rem}
+}
+@media(max-width:360px){
+  .brand{font-size:.88rem}
+  .topbar nav{gap:11px}
+  .topbar nav a{font-size:.85rem}
+}
 
 /* ---------- Breadcrumb ---------- */
 .breadcrumb{font-size:.88rem;color:var(--muted);margin:18px 0 4px}
@@ -318,7 +339,7 @@ a.lesson:hover{transform:translateX(3px);box-shadow:var(--shadow-lg);
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="index.html"><span class="dot"></span> Eduversal Foundation</a>
+    <a class="brand" href="index.html"><span class="dot"></span> <span class="brand-full">Self-Paced IGCSE Foundation</span><span class="brand-short">IGCSE Foundation</span></a>
     <nav>
       <a href="index.html">Home</a>
       <a href="physics.html" class="active">Physics</a>
@@ -500,7 +521,7 @@ a.lesson:hover{transform:translateX(3px);box-shadow:var(--shadow-lg);
 <footer class="site-footer">
   <div class="wrap">
     <div>
-      <strong style="color:#fff">Eduversal Foundation</strong> — free self-paced Cambridge IGCSE preparation.
+      <strong style="color:#fff">Self-Paced IGCSE Foundation</strong> — free Cambridge IGCSE preparation, at your own pace.
       <div class="fine">Your progress is saved in this browser only. No account, no sign-in, nothing sent to a server.</div>
     </div>
     <div class="fine">© Eduversal Education</div>

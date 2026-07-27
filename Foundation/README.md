@@ -1,4 +1,4 @@
-# Eduversal Foundation — public self-paced IGCSE prep
+# Self-Paced IGCSE Foundation — public IGCSE prep
 
 Free, **public, no-sign-in** self-study programme for the Eduversal partner school
 network. Deployed at `studentshub.eduversal.org/foundation/`.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>4.3.2 Series and parallel circuits — Eduversal Foundation</title>
+<title>4.3.2 Series and parallel circuits — Self-Paced IGCSE Foundation</title>
 <style>
 
 :root {
@@ -41,6 +41,20 @@ a:hover { text-decoration: underline; }
 .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); display: inline-block; }
 .topbar nav a { color: #cfe3ea; margin-left: 18px; font-size: 0.95rem; }
 .topbar nav a:hover { color: #fff; }
+/* brand-fit */
+.brand .brand-short { display: none; }
+@media (max-width: 560px) {
+  .topbar { padding: 11px 0; }
+  .brand { font-size: 0.95rem; gap: 7px; min-width: 0; white-space: nowrap; }
+  .brand .brand-full { display: none; }
+  .brand .brand-short { display: inline; }
+  .topbar nav a { margin-left: 14px; font-size: 0.9rem; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .brand { font-size: 0.88rem; }
+  .topbar nav a { margin-left: 11px; font-size: 0.85rem; }
+}
+
 .breadcrumb { font-size: 0.88rem; color: var(--muted); margin: 18px 0 4px; }
 .breadcrumb a { color: var(--muted); }
 .breadcrumb a:hover { color: var(--teal-dark); }
@@ -288,7 +302,7 @@ footer.site-footer { margin-top: 50px; padding: 28px 0 50px; border-top: 1px sol
 
 <header class="topbar">
   <div class="wrap">
-    <a class="brand" href="index.html"><span class="dot"></span> Eduversal Foundation</a>
+    <a class="brand" href="index.html"><span class="dot"></span> <span class="brand-full">Self-Paced IGCSE Foundation</span><span class="brand-short">IGCSE Foundation</span></a>
     <nav><a href="physics.html">Physics</a>
       <a href="topic-4.html">Topics</a></nav>
   </div>

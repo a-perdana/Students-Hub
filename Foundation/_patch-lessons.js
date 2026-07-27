@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /* ==========================================================================
-   Eduversal Foundation — lesson page patcher
+   Self-Paced IGCSE Foundation — lesson page patcher
    --------------------------------------------------------------------------
    Makes the 30 teacher-authored lesson pages safe and coherent for a PUBLIC
    audience, without touching any of their teaching content.
 
    Four changes, all idempotent (re-running changes nothing):
 
-     1. Brand   "EIFP Physics Self-Study" → "Eduversal Foundation"
-                (top bar + <title> suffix)
+     1. Brand   "EIFP Physics Self-Study" / "Eduversal Foundation"
+                → "Self-Paced IGCSE Foundation" (top bar + <title> suffix)
 
      2. Nav     Adds a "Physics" link beside "Topics" so a visitor who lands
                 on a deep link can climb back up to the subject page.
@@ -46,9 +46,12 @@ files.forEach((file) => {
   let html = before;
   const hits = [];
 
-  /* ---- 1. Brand ---- */
-  if (html.includes('EIFP Physics Self-Study')) {
-    html = html.replace(/EIFP Physics Self-Study/g, 'Eduversal Foundation');
+  /* ---- 1. Brand ----
+     Two historical names collapse to the current one. Listing both keeps
+     this idempotent AND lets it fix a page from either earlier pass. */
+  if (/EIFP Physics Self-Study|Eduversal Foundation/.test(html)) {
+    html = html.replace(/EIFP Physics Self-Study|Eduversal Foundation/g,
+                        'Self-Paced IGCSE Foundation');
     hits.push('brand');
   }
 
@@ -84,6 +87,37 @@ files.forEach((file) => {
     </div>
 `);
     hits.push('worksheet');
+  }
+
+  /* ---- 1b. Narrow-phone brand sizing ----
+     "Self-Paced IGCSE Foundation" is longer than the old name and wrapped to
+     two lines under ~520px, shoving the nav links out of line. Lesson pages
+     carry their own inlined CSS, so the fix has to be injected here rather
+     than inherited from the hub stylesheet. */
+  if (html.includes('Self-Paced IGCSE Foundation') && !html.includes('/* brand-fit */')) {
+    // Wrap the brand text in swappable spans (full name / short name).
+    html = html.replace(
+      /(<a class="brand" href="index\.html"><span class="dot"><\/span>)\s*Self-Paced IGCSE Foundation(<\/a>)/,
+      '$1 <span class="brand-full">Self-Paced IGCSE Foundation</span>' +
+      '<span class="brand-short">IGCSE Foundation</span>$2');
+
+    html = html.replace(/(\n\.breadcrumb\s*\{)/,
+`
+/* brand-fit */
+.brand .brand-short { display: none; }
+@media (max-width: 560px) {
+  .topbar { padding: 11px 0; }
+  .brand { font-size: 0.95rem; gap: 7px; min-width: 0; white-space: nowrap; }
+  .brand .brand-full { display: none; }
+  .brand .brand-short { display: inline; }
+  .topbar nav a { margin-left: 14px; font-size: 0.9rem; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .brand { font-size: 0.88rem; }
+  .topbar nav a { margin-left: 11px; font-size: 0.85rem; }
+}
+$1`);
+    if (html.includes('/* brand-fit */')) hits.push('brand-fit');
   }
 
   /* ---- 3b. Worksheet note styles (once per page) ---- */
