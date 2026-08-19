@@ -102,7 +102,8 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      collection, query, where, getDocs, limit
+      collection, query, where, getDocs, limit,
+      doc, setDoc, deleteDoc, Timestamp
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -132,6 +133,13 @@
           const o = w.opensAt && w.opensAt.toDate ? w.opensAt.toDate().getTime() : 0;
           const c = w.closesAt && w.closesAt.toDate ? w.closesAt.toDate().getTime() : Infinity;
           return now >= o && now <= c;
+        });
+        // If two windows are somehow open at once, prefer the one closing
+        // soonest rather than an arbitrary pick (SH audit L9).
+        open.sort((a, b) => {
+          const ca = a.closesAt?.toDate?.()?.getTime() || Infinity;
+          const cb = b.closesAt?.toDate?.()?.getTime() || Infinity;
+          return ca - cb;
         });
         openWin = open[0] || null;
       } catch (_) {}
@@ -163,6 +171,20 @@
       const box = document.getElementById('cardsBox');
       const cards = SUBJ.map(s => renderSubject(s, growth[s], submittedThisWindow.has(s), openWin && (openWin.subjects || []).includes(s)));
       box.innerHTML = cards.join('') || '<div class="empty"><div class="empty-title">No EASE data yet</div>Once you take your first EASE window, your growth journey appears here.</div>';
+
+      // Parent-share wiring (SH audit M4 — makes /shared's EASE branch
+      // reachable; report.html covers chapter attempts, this covers EASE).
+      box.addEventListener('click', async (ev) => {
+        const shareBtn = ev.target.closest('[data-share-subj]');
+        const copyBtn = ev.target.closest('[data-copy-subj]');
+        const revokeBtn = ev.target.closest('[data-revoke-subj]');
+        if (shareBtn) await generateShareFor(shareBtn.dataset.shareSubj);
+        if (copyBtn) {
+          const inp = document.getElementById('shareLink-' + copyBtn.dataset.copySubj);
+          inp.select(); document.execCommand('copy'); inp.blur();
+        }
+        if (revokeBtn) await revokeShareFor(revokeBtn.dataset.revokeSubj);
+      });
 
       // CTA
       if (openWin && pendingSubjects.length > 0) {
@@ -231,8 +253,80 @@
               </div>
             </div>
           ` : ''}
+          ${ws.length > 0 ? `
+            <div style="margin-top:12px;">
+              <button class="btn btn-secondary" data-share-subj="${subj}" id="shareBtn-${subj}" style="font-size:.82rem;">🔗 Share with parent</button>
+              <div id="shareResult-${subj}" hidden style="margin-top:8px;">
+                <div style="display:flex; gap:6px;">
+                  <input id="shareLink-${subj}" readonly style="flex:1; font-size:.78rem; padding:6px 8px; border:1px solid var(--border); border-radius:8px;">
+                  <button class="btn btn-secondary" data-copy-subj="${subj}" style="font-size:.78rem;">Copy</button>
+                  <button class="btn btn-secondary" data-revoke-subj="${subj}" style="font-size:.78rem;">Revoke</button>
+                </div>
+                <div style="font-size:.72rem; color:var(--ink-3); margin-top:4px;">Anyone with this link can see this subject's latest EASE result. It expires in 30 days — you can revoke it any time.</div>
+              </div>
+              <div id="shareErr-${subj}" hidden style="margin-top:6px; font-size:.78rem; color:var(--danger, #dc2626);"></div>
+            </div>
+          ` : ''}
         </div>
       `;
+    }
+
+    // ── Parent share (EASE session) ────────────────────────────────
+    // Token doc carries sessionId (not attemptId), so /shared renders
+    // the EASE report branch. Latest submitted session for the subject.
+    const shareTokens = {};   // subj → token (for revoke within this page-load)
+    async function generateShareFor(subj) {
+      const errEl = document.getElementById('shareErr-' + subj);
+      errEl.hidden = true;
+      try {
+        const snap = await getDocs(query(
+          collection(window.db, 'ease_sessions'),
+          where('studentUid', '==', window.currentUser.uid),
+          where('subjectId', '==', subj),
+          where('status', '==', 'submitted')
+        ));
+        const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        sessions.sort((a, b) => (b.submittedAt?.toMillis?.() || 0) - (a.submittedAt?.toMillis?.() || 0));
+        if (!sessions.length) {
+          errEl.textContent = 'No submitted EASE session to share yet.';
+          errEl.hidden = false;
+          return;
+        }
+        const token = randomToken();
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        await setDoc(doc(window.db, 'parent_share_tokens', token), {
+          studentUid: window.currentUser.uid,
+          sessionId: sessions[0].id,
+          expiresAt: Timestamp.fromDate(expiresAt),
+          createdAt: Timestamp.fromDate(new Date()),
+        });
+        shareTokens[subj] = token;
+        document.getElementById('shareLink-' + subj).value = window.location.origin + '/shared?token=' + token;
+        document.getElementById('shareResult-' + subj).hidden = false;
+        document.getElementById('shareBtn-' + subj).hidden = true;
+      } catch (e) {
+        errEl.textContent = 'Could not create share link: ' + (e.message || e.code);
+        errEl.hidden = false;
+      }
+    }
+    async function revokeShareFor(subj) {
+      const token = shareTokens[subj];
+      if (!token) return;
+      try {
+        await deleteDoc(doc(window.db, 'parent_share_tokens', token));
+        delete shareTokens[subj];
+        document.getElementById('shareResult-' + subj).hidden = true;
+        document.getElementById('shareBtn-' + subj).hidden = false;
+      } catch (e) {
+        const errEl = document.getElementById('shareErr-' + subj);
+        errEl.textContent = 'Revoke failed: ' + (e.message || e.code);
+        errEl.hidden = false;
+      }
+    }
+    function randomToken() {
+      const arr = new Uint8Array(24);
+      crypto.getRandomValues(arr);
+      return Array.from(arr).map(b => b.toString(36).padStart(2, '0')).join('').slice(0, 32);
     }
 
     function formatWindowLabel(w) {

@@ -310,6 +310,13 @@
             const c = w.closesAt && w.closesAt.toDate ? w.closesAt.toDate().getTime() : Infinity;
             return now >= o && now <= c;
           });
+        // If two windows are somehow open at once, prefer the one closing
+        // soonest rather than an arbitrary pick (SH audit L9).
+        candidates.sort((a, b) => {
+          const ca = a.closesAt?.toDate?.()?.getTime() || Infinity;
+          const cb = b.closesAt?.toDate?.()?.getTime() || Infinity;
+          return ca - cb;
+        });
         openWindow = candidates[0] || null;
       } catch (e) { console.error('[ease] windows error', e); }
 
@@ -753,7 +760,7 @@
           updatedAt: serverTimestamp(),
         });
       } catch (e) {
-        alert('Could not save your answer: ' + (e.message || e.code));
+        flashInlineError('Could not save your answer: ' + (e.message || e.code) + ' — check your connection and try again.');
         return;
       }
       pickNext();
@@ -811,8 +818,24 @@
         document.getElementById('doneState').hidden = false;
         document.getElementById('doneScore').textContent = `Your EASE ${subjectId} score: ${clamped}`;
       } catch (e) {
-        alert('Submit failed: ' + (e.message || e.code));
+        flashInlineError('Submit failed: ' + (e.message || e.code) + ' — please try again.');
       }
+    }
+
+    // Non-blocking inline error strip (CH bans alert(); SH aligns — SH audit L7).
+    let _flashTimer = null;
+    function flashInlineError(msg) {
+      let el = document.getElementById('inlineErrStrip');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'inlineErrStrip';
+        el.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:999;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:10px 16px;border-radius:10px;font-size:.86rem;box-shadow:0 4px 14px rgba(0,0,0,.12);max-width:90vw;';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.hidden = false;
+      if (_flashTimer) clearTimeout(_flashTimer);
+      _flashTimer = setTimeout(() => { el.hidden = true; }, 6000);
     }
 
     function formatTs(ts) {
