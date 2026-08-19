@@ -313,7 +313,7 @@
       const pills = [];
       const sections = Array.isArray(hb.sections) ? hb.sections : [];
       pills.push(`<span class="pill">${sections.length} sections</span>`);
-      if (hb.publishedOn) pills.push(`<span class="pill">Published ${hb.publishedOn}</span>`);
+      if (hb.publishedOn) pills.push(`<span class="pill">Published ${escapeHtml(hb.publishedOn)}</span>`);
       if (hb.language) pills.push(`<span class="pill">Language: ${escapeHtml(hb.language)}</span>`);
       meta.innerHTML = pills.join('');
 

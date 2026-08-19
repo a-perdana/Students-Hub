@@ -228,10 +228,12 @@
     };
 
     function dateKey(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      // Challenges rotate server-side at 00:00 Asia/Jakarta — derive the
+      // doc-id date in that zone, not the device's local zone, or a
+      // wrong-timezone device looks up yesterday's / tomorrow's challenge.
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(d);
     }
 
     window.addEventListener('authReady', async (ev) => {
@@ -392,7 +394,11 @@
           where('challengeId', '==', c.id),
           where('status', '==', 'submitted'),
           orderBy('submittedAt', 'asc'),
-          limit(20)
+          // Fetch the whole class's finishers, not the first 20 by submit
+          // time — a limit(20) cut here silently dropped late high-scorers
+          // from the board. 100 covers any realistic class size; the
+          // client-side (score DESC, time ASC) sort below does the ranking.
+          limit(100)
         );
         const snap = await getDocs(q);
         if (snap.empty) {

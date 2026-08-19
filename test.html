@@ -585,8 +585,15 @@
             if (!ok.has(attr.name)) child.removeAttribute(attr.name);
           }
           if (child.tagName === 'IMG') {
-            const src = child.getAttribute('src') || '';
-            if (!/^https?:\/\//i.test(src)) child.removeAttribute('src');
+            let src = child.getAttribute('src') || '';
+            // Upstream latihan.id items sometimes ship relative /storage/…
+            // paths — rebase onto the CDN rather than stripping the image.
+            if (/^\/storage\//i.test(src)) {
+              src = 'https://latihan.id' + src;
+              child.setAttribute('src', src);
+            }
+            // https only — plain http would be mixed content on the hub.
+            if (!/^https:\/\//i.test(src)) child.removeAttribute('src');
             child.setAttribute('loading', 'lazy');
           }
           walk(child);

@@ -267,14 +267,14 @@
     <!-- Points + Levels + Tiers + Streak -->
     <section class="sec">
       <h2 class="sec-title"><span class="sec-emoji">⭐</span> How points work — the short version</h2>
-      <p class="sec-lead">Here is the very simple version. For the full guide, open <a href="/how-points-work" style="color:var(--brand);font-weight:600;">How Points Work</a>.</p>
+      <p class="sec-lead">Here is the very simple version. For the full guide, open <a href="/how-points-work" style="color:var(--brand, #6c5ce7);font-weight:600;">How Points Work</a>.</p>
 
       <div class="card">
         <ul style="list-style:none;padding:0;margin:0;">
           <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Points</strong> — you earn them by submitting tests, doing practice runs, and finishing daily challenges.</li>
           <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Level</strong> — your level goes up when you collect enough total points. There is a level table on the How Points Work page.</li>
-          <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Tier</strong> — Bronze → Silver → Gold → Platinum → Master. Tier moves up with your level.</li>
-          <li style="padding:8px 0;"><strong>Streak</strong> — how many days in a row you practised. <strong>3 days = +100 bonus</strong>. <strong>7 days = +250 bonus</strong>. Don't break your streak!</li>
+          <li style="padding:8px 0;border-bottom:1px solid var(--border);"><strong>Tier</strong> — Apprentice → Scholar → Mentor → Master → Cambridge Fellow. Tier moves up with your level.</li>
+          <li style="padding:8px 0;"><strong>Streak</strong> — how many days in a row you practised. <strong>7 days = +100 bonus</strong>. <strong>30 days = +250 bonus</strong>. Don't break your streak!</li>
         </ul>
       </div>
     </section>
@@ -307,7 +307,7 @@
         </div>
         <div class="gloss-row">
           <div class="gloss-term">Tier</div>
-          <div class="gloss-def">A label for how far you have come overall: Bronze, Silver, Gold, Platinum, Master. It moves up with your level.</div>
+          <div class="gloss-def">A label for how far you have come overall: Apprentice, Scholar, Mentor, Master, Cambridge Fellow. It moves up with your level.</div>
         </div>
         <div class="gloss-row">
           <div class="gloss-term">Parent Share Link</div>
@@ -339,6 +339,11 @@
     // Mount navbar (same pattern as every authed SH page)
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
     });
   </script>
 </body>

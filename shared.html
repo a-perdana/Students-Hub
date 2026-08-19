@@ -8,6 +8,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
+  <script>
+    window.MathJax = {
+      // No `$…$` — math word problems use $ as currency / variable.
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+      svg: { fontCache: 'global' },
+      options: { renderActions: { addMenu: [] } },
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   <style>
     .score-hero {
       background: linear-gradient(135deg, var(--mor) 0%, var(--cyan) 100%);
@@ -104,21 +113,36 @@
       const resp = {};
       (a.responses || []).forEach(r => { resp[r.itemId] = r; });
 
-      document.getElementById('itemListBox').innerHTML = `
+      const listBox = document.getElementById('itemListBox');
+      listBox.innerHTML = `
         <h3>Question by question</h3>
         ${items.map((it, i) => {
           const r = resp[it.id];
           const ok = r && r.isCorrect;
-          let userAnswer = '(no answer)';
-          if (r) userAnswer = it.type === 'mcq' ? (it.options || [])[Number(r.answer)] || '' : String(r.answer || '');
+          // Prefer the rich stemHtml / optionsHtml via the sanitiser —
+          // parents see the same rendered question the student saw
+          // (root CLAUDE.md #31).
+          const stemHtml = it.stemHtml ? sanitiseQuestionHtml(it.stemHtml) : escHtml(it.stem);
+          let userAnswer = escHtml('(no answer)');
+          if (r) {
+            if (it.type === 'mcq') {
+              const idx = Number(r.answer);
+              userAnswer = (it.optionsHtml && it.optionsHtml[idx])
+                ? sanitiseQuestionHtml(it.optionsHtml[idx])
+                : escHtml((it.options || [])[idx] || '');
+            } else {
+              userAnswer = escHtml(String(r.answer || ''));
+            }
+          }
           return `
             <div class="ir ${ok ? 'is-correct' : 'is-wrong'}">
-              <div class="ir-stem">Q${i+1}. ${escHtml(it.stem)}</div>
-              <div class="ir-meta">Answer: <strong>${escHtml(userAnswer)}</strong> ${ok ? '· ✓' : '· ✗'}</div>
+              <div class="ir-stem">Q${i+1}. ${stemHtml}</div>
+              <div class="ir-meta">Answer: <strong>${userAnswer}</strong> ${ok ? '· ✓' : '· ✗'}</div>
             </div>
           `;
         }).join('')}
       `;
+      typesetMath(listBox);
       reveal();
     }
 
@@ -150,6 +174,46 @@
       e.innerHTML = `<div class="empty-title">Couldn't load</div>${escHtml(msg)}`;
     }
     function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // Allowlist HTML sanitiser for imported question content — mirrored
+    // from test.html; keep the two in sync.
+    const _SANITISE_ALLOWED = new Set(['P','SPAN','IMG','BR','STRONG','EM','B','I','U','UL','OL','LI','TABLE','TR','TD','TH','TBODY','THEAD','SUP','SUB','DIV']);
+    const _SANITISE_ATTRS = { IMG: new Set(['src','alt','width','height','loading']), '*': new Set([]) };
+    function sanitiseQuestionHtml(html) {
+      if (!html) return '';
+      const tpl = document.createElement('template');
+      tpl.innerHTML = String(html);
+      function walk(node) {
+        for (const child of [...node.childNodes]) {
+          if (child.nodeType !== 1) continue;
+          if (!_SANITISE_ALLOWED.has(child.tagName)) {
+            child.replaceWith(document.createTextNode(child.textContent || ''));
+            continue;
+          }
+          const ok = _SANITISE_ATTRS[child.tagName] || _SANITISE_ATTRS['*'];
+          for (const attr of [...child.attributes]) {
+            if (!ok.has(attr.name)) child.removeAttribute(attr.name);
+          }
+          if (child.tagName === 'IMG') {
+            let src = child.getAttribute('src') || '';
+            if (/^\/storage\//i.test(src)) {
+              src = 'https://latihan.id' + src;
+              child.setAttribute('src', src);
+            }
+            if (!/^https:\/\//i.test(src)) child.removeAttribute('src');
+            child.setAttribute('loading', 'lazy');
+          }
+          walk(child);
+        }
+      }
+      walk(tpl.content);
+      return tpl.innerHTML;
+    }
+    function typesetMath(el) {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([el]).catch(() => {});
+      }
+    }
   </script>
 </body>
 </html>

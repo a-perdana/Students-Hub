@@ -167,9 +167,10 @@
         .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (a.name || '').localeCompare(b.name || ''));
 
       if (filtered.length === 0) {
+        const gradesLbl = ALLOWED_GRADES.join(' or ');
         document.getElementById('loadState').innerHTML =
           '<div class="empty-title">No classes found yet</div>' +
-          'Your school hasn\'t set up Grade 7 or 8 classes for the pilot. ' +
+          'Your school hasn\'t set up Grade ' + gradesLbl + ' classes for the pilot. ' +
           'Ask your teacher to create your class first.';
         return;
       }

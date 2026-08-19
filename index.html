@@ -598,10 +598,11 @@
     const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
 
     function dateKey(d) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      return `${y}-${m}-${dd}`;
+      // Challenge ids are minted at 00:00 Asia/Jakarta — match that zone
+      // rather than the device clock (same fix as daily-challenge.html).
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(d);
     }
     const TODAY = dateKey(new Date());
 
@@ -940,6 +941,18 @@
 
         const box = document.getElementById('growthSummary');
         const parts = [];
+        // Open-window CTA — the reason the ease_test_windows query above runs.
+        if (openWin) {
+          const winLbl = openWin.window ? `${windowLabel(openWin.window)} window is open` : 'A test window is open';
+          parts.push(`<div class="grow-row">
+            <span class="grow-glyph">🟢</span>
+            <div class="grow-meta">
+              <div class="grow-name">${escHtml(winLbl)}</div>
+              <div class="grow-sub">Take your EASE growth test now</div>
+            </div>
+            <div><a href="/ease-test" style="display:inline-block;background:var(--mor);color:#fff;font-weight:600;font-size:.85rem;padding:8px 14px;border-radius:10px;text-decoration:none;">Start →</a></div>
+          </div>`);
+        }
         Object.entries(have).forEach(([s, g]) => {
           const w = (g.windows || []).slice(-1)[0];
           if (!w) return;

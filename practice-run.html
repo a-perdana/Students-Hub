@@ -429,6 +429,11 @@
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
+      document.querySelectorAll('#navbar-container script').forEach(old => {
+        const s = document.createElement('script');
+        s.textContent = old.textContent;
+        old.replaceWith(s);
+      });
     });
 
     window.addEventListener('authReady', async (ev) => {
@@ -814,9 +819,14 @@
 
       // Optimistic placeholder until Cloud Function's pointsAwarded
       // writeback lands (usually 1-3s). pollForPoints() flips the chip
-      // to the canonical value when the trigger has fired.
-      const estPts = state.correctCount * POINTS_PER_CORRECT_HINT
-        + (state.bestStreak >= 5 ? 20 : state.bestStreak >= 3 ? 10 : 0);
+      // to the canonical value when the trigger has fired. Mirrors the
+      // awardPracticeAttemptPoints formula (base + per-correct + run
+      // streak + perfect); only the first-of-day +25 is left out because
+      // the client can't cheaply know it — the poll corrects upward.
+      const estPts = (CHALLENGE_ID ? 50 : 20)
+        + state.correctCount * POINTS_PER_CORRECT_HINT
+        + (state.bestStreak >= 5 ? 20 : state.bestStreak >= 3 ? 10 : 0)
+        + (state.correctCount === state.items.length ? 30 : 0);
       document.getElementById('donePoints').textContent = '+0…';
       pollForPoints(state.attemptId);
 
