@@ -100,7 +100,7 @@ For full schema + collection catalogue, see [`docs/architecture/FIRESTORE_SCHEMA
 
 **Globals after `authReady`:** `window.firebaseApp`, `window.auth`, `window.db`, `window.currentUser`, `window.studentProfile`. Plus helpers `window.signInWithGoogle()` and `window.signOutStudent()`.
 
-**`authReady` event detail:** `{ signedIn: boolean, status?: string, schoolId?: string }`.
+**`authReady` event detail:** `{ signedIn: boolean, status?: string, schoolId?: string, gradeLevel?: number, stage?: string }` — `index.html` consumes `gradeLevel`; check `auth-guard.js` for the authoritative shape.
 
 **`signed_out_OK` set** (auth-guard internal): `['/login', '/shared']`. These pages render even with no auth. The shared `/shared?token=…` route is for parents (no login needed).
 
@@ -174,13 +174,24 @@ Bump this when expanding the pilot to other grades.
 | `profile.html` | `/profile` | active | Read-only profile + sign-out |
 | `shared.html` | `/shared?token=…` | NONE | Parent share link landing. Token-gated `get`; renders chapter attempt OR EASE session report based on which field the token doc carries. Phase 2. |
 | `how-points-work.html` | `/how-points-work` | active | Student-facing gamification guide (formulas, level table, tier ladder, what we DON'T do panel). |
-| `practice.html` | `/practice` | active | Practice picker — subject + topic + difficulty filters → launches `/practice-run` on a `practice_assessments` bundle. |
+| `practice.html` | `/practice` | active | Practice picker — subject + topic + difficulty filters → launches `/practice-run`, which samples `practice_questions` directly (`practice_assessments` bundles feed only the daily challenge today). |
 | `practice-run.html` | `/practice-run` (`?assessment=` or `?challenge=`) | active | Solo runner. Same item-rendering pipeline as `test.html` but for `practice_questions`. Writes to `practice_attempts/{attemptId}`. Triggers `awardPracticeAttemptPoints` Cloud Function on submit. Daily challenge mode via `?challenge=`. |
 | `daily-challenge.html` | `/daily-challenge` | active | Today's 5-question challenge (id rotated server-side at 00:00 Asia/Jakarta by `rotateDailyChallenges`) + per-class leaderboard for the day. |
 | `leaderboard.html` | `/leaderboard` | active | Mathletics-style 4-tab board: Class / Grade / School / Network. Reads `school_leaderboards/{boardId}` (Cloud-Function-maintained). |
 | `avatar.html` | `/avatar` | active | Cosmetic style + seed picker. Writes avatar fields onto `students/{uid}`. **No spending shop intentionally** — see `memory/project_sh_gamification_economy.md`. |
+| `welcome.html` | `/welcome` | active | Student onboarding tour — what each surface is, gamification short version, glossary. |
+| `handbook.html` | `/handbook` | active | Handbook reader (school-facing kinds; mirrors the CH/AH/TH reader). |
 
-17 pages total. Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
+19 root pages total (**55 deployed pages including the Foundation module below**). Resist the urge to add ödev / messaging / announcement pages — those break the hub's mission.
+
+### Foundation module (`Foundation/` — 36 public pages, NO auth)
+
+**Self-Paced IGCSE Foundation** (formerly "Eduversal IGCSE Foundation Programme (EIFP)" — renamed on hub pages in commit `34afef8`; the 30 lesson footers were aligned 2026-08-19). A fully static, public self-study site copied verbatim into `dist/foundation/` by a dedicated `build.js` block:
+
+- `/foundation/` landing + `physics` + 4 topic pages + 30 standalone lessons (Physics 0625 live; Math/Bio/Chem "soon").
+- **Zero Firebase, zero analytics, no auth-guard — public by design.** Progress lives in localStorage only, under 4 `eifp-*` keys. **The `eifp-` key prefix is intentionally retained** — renaming it would wipe every student's saved progress.
+- Exposed via `vercel.json` 302 redirects `/learn` + `/physics`. The authenticated hub never links to it.
+- Full details in `Foundation/README.md`.
 
 ### HQ Observer Strip (2026-05-13) — all 3 runners
 
@@ -259,10 +270,10 @@ Owner (student) can revoke by deleting the token doc — owner-delete path in ru
 | `ease_responses/{responseId}` | Per-item adaptive trail row. Student appends own response while session is `in_progress`. **Immutable** after creation. | active student (own row append only) |
 | `ease_growth/{uid}_{subjectId}` | Cross-window aggregate. Student writes own doc on submit (current MVP); Phase 3 Cloud Function will recompute server-side. | active student (own doc); admin/staff read |
 | `parent_share_tokens/{token}` | Token-gated shared attempt reads. Token IS the credential (`get` allow-listed in lint `PUBLIC_COLLECTIONS`); `list:false` even for admin. Owner can revoke (delete). | active student creates own; owner-delete |
-| `practice_questions` (read) · `practice_assessments` (read) | Gamification source banks. Both **read-only** here — composed in CH (`/practice-bank-admin`, `/practice-assessment-author`). Active students can read for `/practice` + `/practice-run` + `/daily-challenge`. **NEVER writes to `chapter_mastery` / `ease_growth`** (root CLAUDE.md #33 + #38). | CH coordinator (writes); active student (reads only) |
+| `practice_questions` (read) · `practice_assessments` (read) | Gamification source banks, composed in CH (`/practice-bank-admin`, `/practice-assessment-author`). Active students read for `/practice` + `/practice-run` + `/daily-challenge`. **One sanctioned student-side write**: HQ observers (via `partials/observer-strip.js` Star/endorse) write `endorseCount`/`endorsedBy` back onto `practice_questions` and create `practice_question_endorsements` docs. **Note (2026-08-19):** `/practice` currently tallies `practice_questions` directly and `practice-run` writes `assessmentId: null` — `practice_assessments` bundles are consumed only by the server-rotated daily challenge, not by free practice. **NEVER writes to `chapter_mastery` / `ease_growth`** (root CLAUDE.md #33 + #38). | CH coordinator (writes); active student (reads; observer endorse) |
 | `practice_attempts/{attemptId}` | Created by student on practice/daily-challenge run. Self-update while `status:'in_progress'`; immutable after submit. Triggers `awardPracticeAttemptPoints` Cloud Function. | active student (own row only) |
 | `daily_challenges/{date}` | Today's 5-Q bundle pointer. Rotated 00:00 Asia/Jakarta by `rotateDailyChallenges`. Read-only here. | Cloud Function only |
-| `student_points/{uid}` | Per-student running totals: points / level / tier / streak / badges. **Cloud-Function-only writes** — `awardChapterTestPoints`, `awardEaseSessionPoints`, `awardPracticeAttemptPoints` triggers credit this. Self-read OK. | Cloud Function (write) · self (read) |
+| `student_points/{uid}` | Per-student running totals: points / level / tier / streak / badges. **Cloud-Function-only writes with ONE rule-sanctioned carve-out**: the owner may flip `lastStreakMilestone.seen` false→true (used by `index.html` to dismiss the milestone toast). Everything else is CF-only — `awardChapterTestPoints`, `awardEaseSessionPoints`, `awardPracticeAttemptPoints` triggers credit this. Self-read OK. | Cloud Function (write) · self (read + milestone-seen flip) |
 | `school_leaderboards/{boardId}` | 4-tab leaderboard aggregates (class/grade/school/network × weekly/monthly/all-time). **Cloud-Function-only writes** — maintained by `rebuildLeaderboards` cron + `resetLeaderboardWindows` window-rollover cron. Self-read OK. | Cloud Function (write) · active student (read) |
 
 **Timestamp:** `createdAt` (serverTimestamp). NEVER `timestamp`.
@@ -272,13 +283,14 @@ Owner (student) can revoke by deleting the token doc — owner-delete path in ru
 ## Build & Deployment
 
 `node build.js` → `dist/`. What it does:
-1. Reads source HTML files in `ROUTES` map (10 entries)
+1. Reads source HTML files in `ROUTES` map (19 entries — recount with `node -e` on the map rather than trusting this number)
 2. Inlines `partials/firebase-env.html` where `<!-- FIREBASE_ENV -->` appears
 3. Substitutes `__FIREBASE_*__` placeholders from Vercel env vars
 4. Strips the local-dev `<script src="firebase-config.js">` tag
 5. Rewrites internal `.html` href → clean URLs via `LINK_REWRITES`
 6. Writes `dist/<slug>/index.html` (or `dist/index.html` for `''` slug)
 7. Copies `auth-guard.js`, `base.css`, `partials/` (minus `firebase-env.html`)
+8. Copies `Foundation/` verbatim into `dist/foundation/` (36 public pages, no auth, no env substitution)
 
 **Vercel env vars required:** `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`. NO mail-service vars (Students Hub doesn't send mail).
 
