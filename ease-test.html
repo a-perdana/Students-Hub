@@ -453,7 +453,7 @@
         session = { id: sessionId };
         theta = 0; se = SE_INIT; answered = 0;
       }
-      await loadBank();
+      if (!(await loadBank())) return;
       goLive();
       pickNext();
     }
@@ -482,7 +482,7 @@
       // Need window for stop conditions
       const wSnap = await getDoc(doc(window.db, 'ease_test_windows', s.windowId));
       openWindow = wSnap.exists() ? { id: wSnap.id, ...wSnap.data() } : { itemCountTarget: ITEM_TARGET_DEFAULT, seStopThreshold: SE_STOP_DEFAULT };
-      await loadBank();
+      if (!(await loadBank())) return;
       goLive();
       pickNext();
     }
@@ -498,9 +498,10 @@
       if (cached) {
         bank = cached;
         if (bank.length === 0) {
-          return showError('No items', 'No EASE items have been authored for this subject and grade band yet.');
+          showError('No items', 'No EASE items have been authored for this subject and grade band yet.');
+          return false;
         }
-        return;
+        return true;
       }
       let snap;
       if (g != null) {
@@ -526,8 +527,10 @@
         : raw;
       writeBankCache(subjectId, g, bank);
       if (bank.length === 0) {
-        return showError('No items', 'No EASE items have been authored for this subject and grade band yet.');
+        showError('No items', 'No EASE items have been authored for this subject and grade band yet.');
+        return false;
       }
+      return true;
     }
 
     function goLive() {
@@ -757,6 +760,14 @@
     }
 
     async function finalize() {
+      // A session with zero answered items has no measurement in it — submitting
+      // it would write a fabricated theta=0 (RIT 200) window entry into
+      // ease_growth. Reachable when the item bank is empty or exhausts on
+      // resume before the first answer.
+      if (answered === 0) {
+        if (kiosk) kiosk.exit();
+        return showError('No items available', 'This test could not run because no questions are available for your subject and grade band. Nothing was submitted — please tell your teacher.');
+      }
       // Map theta to RIT-equivalent 100-300 scale: 100 = theta -3, 300 = theta +3
       const ritScore = Math.round(200 + (theta * 33));
       const clamped = Math.max(100, Math.min(300, ritScore));
