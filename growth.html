@@ -222,12 +222,12 @@
         dots = `<circle cx="${x}" cy="${y}" r="5" fill="var(--mor)"/>`;
       }
 
-      // Phase 3 (2026-05-11) cross-window comparability notice. Item bank
-      // calibration runs in a server-side batch (Phase 3 backlog). Until
-      // window 4 lands per subject, growth deltas reflect the bootstrap
-      // logit bands (easy=−1.2, medium=0, hard=+1.2) — accurate within a
-      // window, NOT across windows. UI should not claim "you grew X
-      // points" with confidence yet.
+      // Cross-window comparability notice. Until window 4 lands per
+      // subject, growth deltas reflect pre-calibration difficulty priors
+      // (calibratedLogit > sourcePLogit > 3-band bootstrap) — accurate
+      // within a window, NOT across windows. UI should not claim "you
+      // grew X points" with confidence yet. calibrateEaseItems (weekly
+      // CF) flips items to calibratedLogit as real response data lands.
       const isPilotNorm = ws.length < 4;
       const normBadge = isPilotNorm
         ? `<span class="norm-badge" title="EASE items are still being calibrated. Cross-window growth comparisons stabilise from window 4 onward.">Window-specific norm</span>`

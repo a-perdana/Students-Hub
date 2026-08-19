@@ -81,8 +81,8 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      doc, getDoc, setDoc, serverTimestamp,
-      collection, query, where, getDocs, orderBy
+      doc, setDoc, serverTimestamp,
+      collection, query, where, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     document.getElementById('signOutLink').addEventListener('click', e => {

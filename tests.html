@@ -157,8 +157,7 @@
         const closes = a.closesAt && a.closesAt.toDate ? a.closesAt.toDate().getTime() : Infinity;
         const submitted = a.status === 'submitted' || a.status === 'scored' || a.status === 'flagged';
         if (submitted || a.status === 'cancelled' || now > closes) past.push(a);
-        else if (now >= opens) upcoming.push(a);
-        else upcoming.push(a); // not yet open shows as upcoming-but-locked
+        else upcoming.push(a); // open now, or not-yet-open (shows as upcoming-but-locked)
       });
 
       const upBox = document.getElementById('paneUpcoming');

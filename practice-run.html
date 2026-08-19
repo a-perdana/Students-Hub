@@ -452,7 +452,8 @@
         () => { window.location.href = window.location.href; });
 
       // ─── HQ observer strip wiring ─────────────────────────────
-      // students/{uid}.is_hq_observer is a CH-managed flag. We only
+      // students/{uid}.is_hq_observer is stamped by SH auth-guard for
+      // @eduversal.org accounts (CH console can set it manually). We only
       // expose the runner identity overlay when it's true. Helper
       // lives in /partials/observer-strip.js — loaded before this
       // module so window.installObserverStrip is available.
@@ -693,6 +694,7 @@
       document.getElementById('feedback').classList.remove('show');
       document.getElementById('btnNext').disabled = true;
       state.locked = false;
+      state.qShownAt = Date.now();
 
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([stem, opts]).catch(()=>{});
@@ -711,7 +713,7 @@
         itemId: it.id,
         answer: letter,
         isCorrect,
-        timeSpentMs: 0, // not tracking in MVP
+        timeSpentMs: state.qShownAt ? Date.now() - state.qShownAt : 0,
         answeredAt: new Date().toISOString(),
       });
       if (isCorrect) {

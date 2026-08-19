@@ -465,7 +465,7 @@
         itemId: it.id, seq: it.seq, answer: ans, isCorrect,
         marks: it.marks || 1, type: it.type,
       };
-      // Best-effort persist (debounced not implemented for MVP)
+      // Best-effort persist (debounced 500ms below)
       persistProgress();
     }
 
@@ -534,9 +534,10 @@
       const passThreshold = test.passThresholdPct || 60;
       const passed = rawScorePct >= passThreshold;
 
-      // Check whether any non-auto-gradeable items exist (none in MVP — short text uses exact match)
-      const hasUnGradable = false;
-      const finalStatus = hasUnGradable ? 'flagged' : 'scored';
+      // Every item type auto-grades (short text uses exact match), so the
+      // status is always 'scored' — a 'flagged' manual-review path would
+      // only appear with a non-auto-gradeable item type.
+      const finalStatus = 'scored';
 
       // Flush any pending lockdown events before submitting, so they make
       // it into the immutable post-submit doc.
