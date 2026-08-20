@@ -242,8 +242,13 @@
     //   1. Try `school_leaderboards/{scope}_{scopeId}_{period}` aggregate doc
     //      (Cloud-Function-maintained, top 100 inline).
     //   2. If aggregate missing, fall back to a live query on student_points
-    //      filtered by scope (classId / gradeLevel / schoolId / network=all)
-    //      and ordered by the matching points field.
+    //      scoped to the signed-in student's OWN school (classId / gradeLevel /
+    //      schoolId — every query pins schoolId) and ordered by the matching
+    //      points field. The NETWORK tab never falls back to a live query —
+    //      network-wide rankings are served exclusively by the Cloud-Function
+    //      aggregate; if it's missing we show the empty state rather than
+    //      letting a student enumerate the whole network's student_points
+    //      (privacy — audit finding M8, 2026-08-19).
     // The fallback makes the page functional even before the Cloud Function
     // is deployed — useful during Phase 1 of gamification rollout.
     async function renderBoard() {
@@ -323,6 +328,10 @@
       return '';
     }
     function emptyScopeMsg(scope) {
+      // Network rankings come only from the hourly Cloud-Function aggregate
+      // (no live fallback — see fetchLive), so "empty" usually means the
+      // board hasn't been built yet, not that nobody has scored.
+      if (scope === 'network') return 'Network rankings are prepared centrally and will appear here once published.';
       return 'No points scored in this scope yet. Be the first!';
     }
     function periodLabel(period) {
@@ -356,12 +365,18 @@
         period === 'weekly'  ? 'weeklyPoints'  :
         period === 'monthly' ? 'monthlyPoints' :
                                'totalPoints';
+      // Network scope NEVER live-queries student_points — the Cloud-Function
+      // aggregate is the only sanctioned source for network-wide rankings
+      // (audit M8: an unscoped fallback let any student list the entire
+      // network's point-holders). Missing aggregate ⇒ empty state.
+      if (scope === 'network') return [];
+      // Every remaining scope is pinned to the student's own school.
+      if (!p || !p.schoolId) return [];
       try {
         let q;
-        if (scope === 'class')        q = query(collection(window.db, 'student_points'), where('classId', '==', scopeId), orderBy(field, 'desc'), limit(50));
+        if (scope === 'class')        q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), where('classId', '==', scopeId), orderBy(field, 'desc'), limit(50));
         else if (scope === 'grade')   q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), where('gradeLevel', '==', Number(scopeId)), orderBy(field, 'desc'), limit(50));
-        else if (scope === 'school')  q = query(collection(window.db, 'student_points'), where('schoolId', '==', scopeId), orderBy(field, 'desc'), limit(50));
-        else if (scope === 'network') q = query(collection(window.db, 'student_points'), orderBy(field, 'desc'), limit(50));
+        else if (scope === 'school')  q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), orderBy(field, 'desc'), limit(50));
         else return [];
         const snap = await getDocs(q);
         const out = snap.docs.map((d, i) => ({ rank: i + 1, studentUid: d.id, ...d.data() }));
