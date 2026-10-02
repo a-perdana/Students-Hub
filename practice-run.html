@@ -590,7 +590,7 @@
       const stemHasImg = /<img/i.test(it.stemHtml || '');
       if (!stemHasImg && (it.diagramUrl || it.diagramStoragePath)) {
         const img = document.createElement('img');
-        img.alt = '';
+        img.alt = it.diagramAlt || 'Question diagram';
         img.loading = 'lazy';
         img.style.maxWidth = '100%';
         img.style.marginTop = '10px';
