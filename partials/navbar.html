@@ -51,7 +51,13 @@
     }
     if (activeKey) {
       const link = document.querySelector('#topbarNav a[data-nav="' + activeKey + '"]');
-      if (link) link.classList.add('active');
+      if (link) {
+        link.classList.add('active');
+        // Phone layout scrolls the nav sideways — keep the current page in view.
+        if (window.matchMedia('(max-width: 760px)').matches) {
+          link.scrollIntoView({ block: 'nearest', inline: 'center' });
+        }
+      }
     }
 
     function paintAvatar() {

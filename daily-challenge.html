@@ -195,7 +195,7 @@
         <span style="font-size:.78rem; color:var(--ink-3)" id="lbScope">your grade</span>
       </div>
       <div id="lbBody">
-        <div class="empty" style="padding:14px 0; font-size:.88rem">Waiting for classmates to finish…</div>
+        <div class="empty" style="padding:14px 0; font-size:.88rem">Waiting for the first finisher…</div>
       </div>
     </section>
   </main>
@@ -324,7 +324,7 @@
       if (!c) {
         box.innerHTML = `
           <h3>${SUBJ_GLYPH[subj]} ${SUBJ_LABEL[subj]} challenge isn't live today</h3>
-          <p class="lead">HQ rotates challenges per subject. Check back tomorrow — or jump into free practice in the meantime.</p>
+          <p class="lead">A new challenge starts every day once there are enough questions for your grade. Check back tomorrow — or try free practice now.</p>
           <a href="/practice" class="btn btn-secondary">Free practice →</a>
         `;
         return;
@@ -394,16 +394,15 @@
       scopeLabel.textContent = 'Grade ' + p.gradeLevel + ' · ' + (p.school || 'your school');
 
       try {
+        // daily_challenge_results (2026-10-02): a name + score row per
+        // finisher, written by the points function. Students can only read
+        // their own practice_attempts, so the board reads this instead.
+        // 300 covers a whole grade at one school; the client-side
+        // (score DESC, time ASC) sort below does the ranking.
         const q = query(
-          collection(window.db, 'practice_attempts'),
-          where('schoolId', '==', p.schoolId),
+          collection(window.db, 'daily_challenge_results'),
           where('challengeId', '==', c.id),
-          where('status', '==', 'submitted'),
-          orderBy('submittedAt', 'asc'),
-          // Fetch every finisher, not the first 20 by submit time — a
-          // limit(20) cut silently dropped late high-scorers. 300 covers a
-          // whole grade at one school; the client-side (score DESC, time
-          // ASC) sort below does the ranking.
+          where('schoolId', '==', p.schoolId),
           limit(300)
         );
         const snap = await getDocs(q);

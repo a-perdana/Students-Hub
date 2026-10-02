@@ -272,9 +272,10 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      collection, query, where, orderBy, limit, getDocs, getCountFromServer,
+      collection, query, where, orderBy, limit, getDocs,
       doc, updateDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
@@ -352,9 +353,13 @@
         state.grade = Number(sel.value);
         window.studentProfile.gradeLevel = state.grade;
         renderGradeChip();
-        updateDoc(doc(window.db, 'students', window.currentUser.uid), {
-          gradeLevel: state.grade, gradePickedAt: serverTimestamp(),
-        }).catch(e => console.warn('[practice] observer grade save failed', e.message));
+        try {
+          await updateDoc(doc(window.db, 'students', window.currentUser.uid), {
+            gradeLevel: state.grade, gradePickedAt: serverTimestamp(),
+          });
+        } catch (e) { console.warn('[practice] observer grade save failed', e.message); }
+        poolStats = null;
+        poolStatsPromise = null;
         state.topicGroup = null;
         await loadCounts(state.subjectId);
         renderTopicChips();
@@ -363,27 +368,30 @@
       });
     }
 
-    function poolQuery(subj, extra = []) {
-      return query(
-        collection(window.db, 'practice_questions'),
-        where('subjectId', '==', subj),
-        where('status', '==', 'active'),
-        where('gradeLevels', 'array-contains', state.grade),
-        ...extra
-      );
+    // Pool counts come from the practicePoolStats Cloud Function — since
+    // 2026-10-02 students cannot read practice_questions (every doc holds
+    // its answer key). One call returns every subject for the grade.
+    let poolStats = null;
+    let poolStatsPromise = null;   // shared by concurrent callers
+    function fetchPoolStats() {
+      if (!state.grade) return Promise.resolve();
+      if (!poolStatsPromise) {
+        const fns = getFunctions(window.firebaseApp, 'asia-southeast1');
+        poolStatsPromise = httpsCallable(fns, 'practicePoolStats')({})
+          .then(r => { poolStats = r.data; })
+          .catch(e => { console.warn('[practice] pool stats failed', e.message); poolStatsPromise = null; });
+      }
+      return poolStatsPromise;
     }
 
     async function loadSubjectCounts() {
+      if (!poolStats) await fetchPoolStats();
       for (const subj of SUBJECTS) {
         const el = document.getElementById('count-' + subj);
         if (!state.grade) { el.textContent = 'No grade set'; continue; }
-        try {
-          const n = (await getCountFromServer(poolQuery(subj))).data().count;
-          el.textContent = n === 0 ? 'Coming soon' : (n + ' questions ready');
-        } catch (e) {
-          console.warn('[practice] count failed', subj, e.message);
-          el.textContent = '—';
-        }
+        if (!poolStats) { el.textContent = '—'; continue; }
+        const n = poolStats.subjects?.[subj]?.total || 0;
+        el.textContent = n === 0 ? 'Coming soon' : (n + ' questions ready');
       }
     }
 
@@ -399,26 +407,11 @@
     }
 
     async function loadCounts(subj) {
-      // Best-effort metadata aggregator: fetch up to 1000 active items for
-      // this subject + the student's grade and tally topicGroup + difficulty
-      // client-side. If one grade's pool grows past ~5k we need a Cloud
-      // Function aggregate doc.
       state.counts = { byTopic: {}, byDifficulty: {}, total: 0 };
       if (!state.grade) return;
-      try {
-        const snap = await getDocs(poolQuery(subj, [limit(1000)]));
-        const byT = {}, byD = {};
-        snap.forEach(d => {
-          const v = d.data();
-          const t = v.topicGroup || 'mixed';
-          const diff = v.difficulty || 'medium';
-          byT[t] = (byT[t] || 0) + 1;
-          byD[diff] = (byD[diff] || 0) + 1;
-        });
-        state.counts = { byTopic: byT, byDifficulty: byD, total: snap.size };
-      } catch (e) {
-        console.warn('[practice] count load failed', e);
-      }
+      if (!poolStats) await fetchPoolStats();
+      const s = poolStats?.subjects?.[subj];
+      if (s) state.counts = { byTopic: s.byTopic || {}, byDifficulty: s.byDifficulty || {}, total: s.total || 0 };
     }
 
     function renderTopicChips() {

@@ -180,7 +180,18 @@
       border-color: var(--danger);
     }
     .qopt.is-wrong .letter { background: var(--danger); color: #fff; border-color: var(--danger); }
-    .qopt.is-correct-untouched { border-style: dashed; }
+    .qopt.is-correct-untouched {
+      background: var(--ok-bg);
+      border-color: var(--ok);
+      border-style: dashed;
+    }
+    .qopt.is-correct-untouched .letter { background: var(--ok); color: #fff; border-color: var(--ok); }
+    .qopt.is-pending { opacity: .7; }
+    .fb-explain {
+      display: block; margin-top: 6px;
+      color: var(--ink-2); font-weight: 400; line-height: 1.5;
+    }
+    .fb-explain:empty { display: none; }
 
     /* Feedback band — appears after answer */
     .feedback {
@@ -278,7 +289,7 @@
 
     <div id="loadState" class="empty">
       <div class="empty-title">Loading questions…</div>
-      Pulling 10 from the bank.
+      Picking questions for your grade.
     </div>
 
     <div id="errorState" class="empty" hidden>
@@ -295,6 +306,7 @@
         <div class="text">
           <strong id="fbTitle">Correct!</strong>
           <span id="fbBody"></span>
+          <span class="fb-explain" id="fbExplain"></span>
         </div>
       </div>
       <div class="run-foot">
@@ -394,6 +406,13 @@
       increment, arrayUnion, arrayRemove,
       serverTimestamp, documentId
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
+
+    // Since 2026-10-02 the server picks the questions and grades every
+    // answer (Central Hub functions: startPracticeRun / answerPracticeItem).
+    // The client never sees an answer key until the student has answered,
+    // and it never writes the attempt — practice_attempts is server-only.
+    let callStart = null, callAnswer = null;
 
     // Optimistic estimate while waiting for Cloud Function's
     // pointsAwarded writeback (canonical value lives on the attempt
@@ -419,7 +438,7 @@
     };
 
     const state = {
-      items: [],          // ordered list of practice_questions docs
+      items: [],          // ordered list of items (no answer keys) from startPracticeRun
       idx: 0,
       attemptId: null,    // practice_attempts doc id (set after first create)
       responses: [],
@@ -499,8 +518,11 @@
       window.__obsStripUpdate = obs.update;
 
       try {
-        await loadItems();
-        await createAttempt();
+        const fns = getFunctions(window.firebaseApp, 'asia-southeast1');
+        callStart  = httpsCallable(fns, 'startPracticeRun');
+        callAnswer = httpsCallable(fns, 'answerPracticeItem');
+        await startRun();
+        if (state.idx >= state.items.length) { showDone(); return; }
         renderProgress();
         renderItem();
       } catch (e) {
@@ -509,113 +531,23 @@
       }
     });
 
-    // ─── Item fetch ─────────────────────────────────────────────
-    // For MVP: pull up to 60 candidates matching topic + difficulty, then
-    // shuffle + slice N. This avoids needing a random Firestore query.
-    // MCQ-only (auto-grade reliably; short_answer would need a tolerant
-    // matcher we don't have yet).
-    async function loadItems() {
-      if (CHALLENGE_ID) {
-        await loadChallengeItems();
-      } else {
-        await loadFreeItems();
-      }
-    }
-
-    async function loadChallengeItems() {
-      const cSnap = await getDoc(doc(window.db, 'daily_challenges', CHALLENGE_ID));
-      if (!cSnap.exists()) throw new Error('Today\'s challenge isn\'t live yet.');
-      const c = cSnap.data();
-      if (c.status !== 'open') throw new Error('This challenge isn\'t open right now.');
-      state.challenge = { id: cSnap.id, ...c };
-      const ids = Array.isArray(c.itemIds) ? c.itemIds : [];
-      if (ids.length === 0) throw new Error('Challenge has no items configured.');
-      // Firestore "in" caps at 30 ids per query. Daily challenges are
-      // typically 5 items — safe to single-shot.
-      const q = query(
-        collection(window.db, 'practice_questions'),
-        where(documentId(), 'in', ids.slice(0, 30))
-      );
-      const snap = await getDocs(q);
-      const byId = {};
-      snap.forEach(d => { byId[d.id] = { id: d.id, ...d.data() }; });
-      // Preserve curator's chosen order
-      state.items = ids.map(id => byId[id]).filter(Boolean).filter(it =>
-        it.correctAnswer && Array.isArray(it.options) && it.options.length >= 2
-      );
-      if (state.items.length === 0) throw new Error('Challenge items unavailable.');
-    }
-
-    async function loadFreeItems() {
-      // The pool is the student's own grade (students/{uid}.gradeLevel,
-      // 7-12). Items carry gradeLevels[] — one question may fit several.
-      const grade = Number(window.studentProfile?.gradeLevel);
-      if (!grade) throw new Error('Your grade is not set yet. Ask your school or Eduversal to set it.');
-      const constraints = [
-        where('subjectId', '==', SUBJECT),
-        where('status', '==', 'active'),
-        where('type', '==', 'mcq'),
-        where('gradeLevels', 'array-contains', grade),
-      ];
-      if (TOPIC) constraints.push(where('topicGroup', '==', TOPIC));
-      if (DIFF !== 'any') constraints.push(where('difficulty', '==', DIFF));
-      const q = query(collection(window.db, 'practice_questions'), ...constraints, limit(60));
-      const snap = await getDocs(q);
-      const pool = [];
-      snap.forEach(d => {
-        const v = d.data();
-        if (!v.correctAnswer) return;
-        if (!Array.isArray(v.options) || v.options.length < 2) return;
-        pool.push({ id: d.id, ...v });
-      });
-      if (pool.length === 0) {
-        throw new Error('No questions for your grade match this topic and difficulty yet.');
-      }
-      shuffle(pool);
-      state.items = pool.slice(0, N);
-    }
-
-    // ─── Attempt lifecycle ──────────────────────────────────────
-    async function createAttempt() {
-      const p = window.studentProfile;
-      const ref = await addDoc(collection(window.db, 'practice_attempts'), {
-        studentUid: window.currentUser.uid,
-        studentName: p.displayName || '',
-        schoolId: p.schoolId || null,
-        classId:  p.classId   || null,
-        gradeLevel: p.gradeLevel || null,
-        subjectId: SUBJECT,
-        mode: MODE,
-        sourceType: CHALLENGE_ID ? 'challenge' : 'free',
-        assessmentId: null,
-        challengeId: CHALLENGE_ID || null,
-        itemIds: state.items.map(i => i.id),
-        topicGroup: TOPIC,
-        responses: [],
-        status: 'in_progress',
-        correctCount: 0,
-        attemptedCount: 0,
-        rawScorePct: 0,
-        streakBest: 0,
-        pointsAwarded: null,
-        createdAt: serverTimestamp(),
-        submittedAt: null,
-      });
-      state.attemptId = ref.id;
-    }
-
-    async function submitAttempt() {
-      if (!state.attemptId) return;
-      const pct = Math.round((state.correctCount / state.items.length) * 100);
-      await updateDoc(doc(window.db, 'practice_attempts', state.attemptId), {
-        responses: state.responses,
-        status: 'submitted',
-        correctCount: state.correctCount,
-        attemptedCount: state.responses.length,
-        rawScorePct: pct,
-        streakBest: state.bestStreak,
-        submittedAt: serverTimestamp(),
-      });
+    // ─── Start (server picks the items + creates the attempt) ────
+    // Free practice: random from the whole active pool for the student's
+    // grade, questions they have not seen recently first. Daily
+    // challenge: one attempt per challenge; an unfinished one resumes.
+    async function startRun() {
+      const payload = CHALLENGE_ID
+        ? { challengeId: CHALLENGE_ID }
+        : { subjectId: SUBJECT, topicGroup: TOPIC, difficulty: DIFF === 'any' ? null : DIFF, n: N };
+      const res = (await callStart(payload)).data;
+      state.items = res.items || [];
+      if (!state.items.length) throw new Error('No questions available right now.');
+      state.attemptId = res.attemptId;
+      state.responses = (res.responses || []).map(r => ({ itemId: r.itemId, answer: r.answer, isCorrect: r.isCorrect }));
+      state.idx = state.responses.length;
+      state.correctCount = res.correctCount || 0;
+      state.streak = res.streak || 0;
+      state.bestStreak = res.streakBest || 0;
     }
 
     // ─── Render ─────────────────────────────────────────────────
@@ -699,6 +631,7 @@
       hydrateStorageImages(opts);
 
       document.getElementById('feedback').classList.remove('show');
+      document.getElementById('fbExplain').textContent = '';
       document.getElementById('btnNext').disabled = true;
       state.locked = false;
       state.qShownAt = Date.now();
@@ -711,44 +644,56 @@
       if (window.__obsStripUpdate) window.__obsStripUpdate(it);
     }
 
-    function answer(letter) {
+    async function answer(letter) {
       if (state.locked) return;
       state.locked = true;
       const it = state.items[state.idx];
-      const isCorrect = letter === it.correctAnswer;
-      state.responses.push({
-        itemId: it.id,
-        answer: letter,
-        isCorrect,
-        timeSpentMs: state.qShownAt ? Date.now() - state.qShownAt : 0,
-        answeredAt: new Date().toISOString(),
-      });
-      if (isCorrect) {
-        state.correctCount++;
-        state.streak++;
-        state.bestStreak = Math.max(state.bestStreak, state.streak);
-      } else {
-        state.streak = 0;
-      }
-
-      // Paint option states
       const opts = document.getElementById('qopts').querySelectorAll('.qopt');
-      let pickedEl = null;
       opts.forEach(o => {
         o.classList.add('is-locked');
-        if (o.dataset.letter === it.correctAnswer) {
+        if (o.dataset.letter === letter) o.classList.add('is-pending');
+      });
+
+      let res;
+      try {
+        res = (await callAnswer({
+          attemptId: state.attemptId, itemId: it.id, answer: letter,
+          timeSpentMs: state.qShownAt ? Date.now() - state.qShownAt : 0,
+        })).data;
+      } catch (e) {
+        // Not graded — let the student try again.
+        opts.forEach(o => o.classList.remove('is-locked', 'is-pending'));
+        state.locked = false;
+        const fb = document.getElementById('feedback');
+        fb.classList.add('show', 'no'); fb.classList.remove('ok');
+        document.getElementById('fbIcon').textContent = '!';
+        document.getElementById('fbTitle').textContent = 'Could not check your answer';
+        document.getElementById('fbBody').textContent = (e && e.message) || 'Please try again.';
+        document.getElementById('fbExplain').textContent = '';
+        return;
+      }
+
+      const isCorrect = res.isCorrect === true;
+      state.responses.push({ itemId: it.id, answer: letter, isCorrect });
+      state.correctCount = res.correctCount;
+      state.streak = res.streak;
+      state.bestStreak = res.streakBest;
+
+      // Paint option states — the correct option is always shown in green.
+      let pickedEl = null;
+      opts.forEach(o => {
+        o.classList.remove('is-pending');
+        if (o.dataset.letter === res.correctAnswer) {
           o.classList.add(isCorrect ? 'is-correct' : 'is-correct-untouched');
         } else if (o.dataset.letter === letter) {
           o.classList.add('is-wrong');
-          pickedEl = o;
         }
-        if (o.dataset.letter === letter && isCorrect) pickedEl = o;
+        if (o.dataset.letter === letter) pickedEl = o;
       });
 
       // ── Micro-feedback (FX) ─────────────────────────────────────
       if (window.fx) {
         if (isCorrect) {
-          // Streak special-case: stronger sound + flame emoji animation
           if (state.streak >= 3) {
             window.fx.play('streak');
             window.fx.haptic([20, 30, 30]);
@@ -770,7 +715,7 @@
         }
       }
 
-      // Feedback band
+      // Feedback band + explanation (the learning moment)
       const fb = document.getElementById('feedback');
       fb.classList.add('show');
       fb.classList.toggle('ok', isCorrect);
@@ -785,8 +730,13 @@
         fbTitle.textContent = 'Not quite';
       }
       document.getElementById('fbBody').textContent = isCorrect
-        ? 'Nice work — onto the next.'
-        : `The correct answer was ${it.correctAnswer}.`;
+        ? ''
+        : `The correct answer is ${res.correctAnswer}.`;
+      const ex = document.getElementById('fbExplain');
+      ex.textContent = res.explanation || '';
+      if (res.explanation && window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([ex]).catch(() => {});
+      }
 
       document.getElementById('btnNext').disabled = false;
       renderProgress();
@@ -799,12 +749,8 @@
         renderItem();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        // Done — submit + show summary
-        try {
-          await submitAttempt();
-        } catch (e) {
-          console.warn('[practice-run] submit failed', e);
-        }
+        // Done — the server marked the attempt submitted with the last
+        // answer, which triggers the points award.
         showDone();
       }
     }
@@ -923,12 +869,10 @@
       }
     }
 
-    async function quit() {
-      // Best effort — try to save partial attempt as submitted with what we have
-      if (state.attemptId && state.responses.length > 0) {
-        try { await submitAttempt(); } catch {}
-      }
-      window.location.href = '/practice';
+    function quit() {
+      // An unfinished run earns no points. A daily challenge can be
+      // resumed later the same day; a free-practice run is simply left.
+      window.location.href = CHALLENGE_ID ? '/daily-challenge' : '/practice';
     }
 
     function showError(msg) {
@@ -951,6 +895,12 @@
           const snap = await getDoc(doc(window.db, 'practice_attempts', attemptId));
           if (!snap.exists()) continue;
           const pts = snap.data().pointsAwarded;
+          if (snap.data().pointsNote === 'daily point limit reached') {
+            el.textContent = '+0';
+            const sub = document.getElementById('doneSub');
+            if (sub) sub.textContent = 'You reached today\'s point limit for practice. Keep practising — points start again tomorrow.';
+            return;
+          }
           if (typeof pts === 'number') {
             // Parse current displayed value (could still be estimate)
             const cur = parseInt((el.textContent || '+0').replace(/[^0-9-]/g, ''), 10) || 0;

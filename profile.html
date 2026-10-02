@@ -64,15 +64,11 @@
         <div class="profile-row-value" id="pSchool">—</div>
       </div>
       <div class="profile-row">
-        <div class="profile-row-label">Class</div>
-        <div class="profile-row-value" id="pClass">—</div>
-      </div>
-      <div class="profile-row">
         <div class="profile-row-label">Grade</div>
         <div class="profile-row-value" id="pGrade">—</div>
       </div>
     </div>
-    <p class="lock-note">School, class, grade, and email are managed by your teacher and can't be edited here. If something is wrong, ask your teacher to fix it.</p>
+    <p class="lock-note">Your school comes from your school email, and you chose your grade when you first signed in. They can't be changed here. If something is wrong, ask your school or Eduversal to fix it.</p>
 
     <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap">
       <a href="/avatar" class="btn btn-primary">🎨 Customize avatar</a>
@@ -97,13 +93,12 @@
       document.getElementById('pName').textContent   = p.displayName || '—';
       document.getElementById('pEmail').textContent  = p.email || '—';
       document.getElementById('pSchool').textContent = p.school || '—';
-      document.getElementById('pClass').textContent  = p.className || '—';
       document.getElementById('pGrade').textContent  = p.gradeLevel ? ('Grade ' + p.gradeLevel) : '—';
 
       const first = (p.displayName || '').split(' ')[0] || 'there';
       document.getElementById('profileHeroName').textContent = first;
       document.getElementById('profileHeroSub').textContent  =
-        [p.className, p.gradeLevel ? 'Grade ' + p.gradeLevel : null].filter(Boolean).join(' · ')
+        [p.gradeLevel ? 'Grade ' + p.gradeLevel : null, p.school || null].filter(Boolean).join(' · ')
         || 'Your Eduversal account';
 
       const av = document.getElementById('profileAvatar');
