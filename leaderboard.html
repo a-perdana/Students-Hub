@@ -135,7 +135,7 @@
       <div class="page-intro-body">
         <div class="page-intro-title">First time on Leaderboard?</div>
         <div class="page-intro-text">
-          4 tabs: <strong>Class · Grade · School · Network</strong>. See where you rank. Boards <strong>reset every week and every month</strong> — so even if you started slowly, you can climb back to the top.
+          3 tabs: <strong>My grade · School · Network</strong>. See where you rank. Boards <strong>reset every week and every month</strong> — so even if you started slowly, you can climb back to the top.
         </div>
         <a class="page-intro-link" href="/welcome">📖 See the full guide →</a>
       </div>
@@ -149,10 +149,10 @@
       <p style="margin-top:8px"><a href="/how-points-work" style="color:#fff;text-decoration:underline;font-size:.85rem;opacity:.92">How are points awarded? →</a></p>
     </section>
 
-    <!-- Scope tabs: Class / Grade / School / Network -->
+    <!-- Scope tabs: My grade (at my school) / School / Network.
+         No Class tab since 2026-10-02 — Students Hub has no classes. -->
     <div class="lb-tabs" id="scopeTabs" role="tablist">
-      <button class="lb-tab active" data-scope="class" role="tab" aria-selected="true">👫 Class</button>
-      <button class="lb-tab" data-scope="grade" role="tab" aria-selected="false">📚 Year</button>
+      <button class="lb-tab active" data-scope="grade" role="tab" aria-selected="true">📚 My grade</button>
       <button class="lb-tab" data-scope="school" role="tab" aria-selected="false">🏫 School</button>
       <button class="lb-tab" data-scope="network" role="tab" aria-selected="false">🌐 Network</button>
     </div>
@@ -202,7 +202,7 @@
       });
     });
 
-    let CURRENT_SCOPE  = 'class';
+    let CURRENT_SCOPE  = 'grade';
     let CURRENT_PERIOD = 'weekly';
 
     window.addEventListener('authReady', (ev) => {
@@ -308,22 +308,23 @@
     }
 
     function scopeIdFor(scope, p) {
-      if (scope === 'class')   return p.classId;
-      if (scope === 'grade')   return p.gradeLevel ? String(p.gradeLevel) : null;
+      // rebuildLeaderboards writes grade boards as grade_{schoolId}|{grade}_{period}
+      // (grade within the student's school). Before 2026-10-02 this returned the
+      // bare grade, so the aggregate was never found and every load fell back
+      // to the live query.
+      if (scope === 'grade')   return (p.gradeLevel && p.schoolId) ? p.schoolId + '|' + p.gradeLevel : null;
       if (scope === 'school')  return p.schoolId;
       if (scope === 'network') return 'all';
       return null;
     }
     function scopeLabelFor(scope, p) {
-      if (scope === 'class')   return p.className ? p.className + ' · class' : 'Your class';
-      if (scope === 'grade')   return p.gradeLevel ? 'Grade ' + p.gradeLevel : 'Your year';
+      if (scope === 'grade')   return p.gradeLevel ? 'Grade ' + p.gradeLevel + ' · ' + (p.school || 'your school') : 'Your grade';
       if (scope === 'school')  return p.school || 'Your school';
       if (scope === 'network') return 'Eduversal network';
       return '';
     }
     function missingScopeMsg(scope) {
-      if (scope === 'class')  return 'Join a class to see your class leaderboard.';
-      if (scope === 'grade')  return 'Your grade isn\'t set yet. Ask your teacher to confirm your enrolment.';
+      if (scope === 'grade')  return 'Your grade isn\'t set yet. Ask your school or Eduversal to set it.';
       if (scope === 'school') return 'Your school isn\'t linked yet.';
       return '';
     }
@@ -374,8 +375,7 @@
       if (!p || !p.schoolId) return [];
       try {
         let q;
-        if (scope === 'class')        q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), where('classId', '==', scopeId), orderBy(field, 'desc'), limit(50));
-        else if (scope === 'grade')   q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), where('gradeLevel', '==', Number(scopeId)), orderBy(field, 'desc'), limit(50));
+        if (scope === 'grade')        q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), where('gradeLevel', '==', Number(p.gradeLevel)), orderBy(field, 'desc'), limit(50));
         else if (scope === 'school')  q = query(collection(window.db, 'student_points'), where('schoolId', '==', p.schoolId), orderBy(field, 'desc'), limit(50));
         else return [];
         const snap = await getDocs(q);

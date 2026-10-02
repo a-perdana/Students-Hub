@@ -1,5 +1,21 @@
 # Students Hub — Architecture Reference
 
+## 🚨 2026-10-02 — Students Hub is now practice + points for Grade 7-12
+
+Decided by Alif on 2026-10-02 after a review showed the hub live but unused (4 student docs, 13 of 16 schools with no classes, one student waiting for approval since July). What changed:
+
+- **Audience:** Grade 7-12 (was the Grade 7-8 pilot).
+- **Enrolment:** sign in with the school Google account → the school comes from the email domain → pick a **grade** (7-12) once on `/class-picker` (URL kept) → `active` straight away. **No classes, no teacher approval, no `/waiting`.** The grade is then locked (admin-only change). The rule re-checks the school against the email domain (`partner_schools/{schoolId}.domain`).
+- **What students do:** practise Math / English / Science questions **written by Eduversal for their grade**, earn points, keep a streak, take the daily challenge, climb the leaderboard. Pool = `practice_questions` where `status == 'active'` and `gradeLevels array-contains students.gradeLevel`. Authoring: CH `/practice-bank-admin` → **Grades** (required for an active item).
+- **Daily challenge:** one per subject per grade, `daily_challenges/{YYYY-MM-DD}_{subject}_g{grade}`, built nightly by `rotateDailyChallenges` straight from the active pool (5 random auto-gradable MCQs; skipped if fewer than 5). `practice_assessments` is no longer needed for rotation.
+- **Leaderboard:** tabs **My grade (at my school) · School · Network** — no Class tab.
+- **Hidden, code kept:** Chapter Tests (`/tests`, `/test`, `/report`), EASE (`/ease-test`, `/growth`), parent share. Removed from the navbar and dashboard; pages still reachable by URL.
+- **Every pre-existing question was archived** (practice_questions 805 · practice_assessments 3 · chapter_test_items 924 · chapter_tests 4 · ease_items 23,160), plus the open EASE window and the open daily challenges were closed. Each doc carries `archivedBy: 'sh-practice-reset-2026-10-02'` + `statusBeforeArchive`; undo with `node scripts/practice/archive-question-banks-2026-10-02.js --restore --apply`.
+
+Sections below that describe classes, approval, Chapter Tests, EASE windows or the 4-tab leaderboard describe the **code as it was before this change** (the pages still exist). Read them with that in mind.
+
+---
+
 ## What This App Is
 
 Eduversal partner-school **student** portal. Audience: 12–18 year-old students in partner schools, primarily Grade 7–8 for the MVP pilot.
@@ -121,12 +137,13 @@ Status transitions are written by:
 | From → To | Where |
 |---|---|
 | `(absent)` → `needs_class` | Auth-guard auto-create on first login |
-| `needs_class` → `pending_approval` | `class-picker.html` after user confirms class |
+| `needs_class` → `active` | `class-picker.html` grade picker (2026-10-02 — the only path for new students) |
+| `needs_class` → `pending_approval` | legacy class picker (pre-2026-10-02) |
 | `pending_approval` → `active` | TH `/test-session-launcher` (or future `/class-roster`) by class teacher |
 | `pending_approval` → `rejected` | Same TH page — "this student isn't in my class" |
 | `active` → `graduated` | AH `/student-roster` end-of-year batch action |
 
-The `students/{uid}` rule (in `firestore.rules`) restricts who can flip these — students can self-write their own `classId/className/gradeLevel/schoolId/status` ONLY when transitioning from `needs_class` to `pending_approval`. Anything else (especially `active`) requires a teacher / admin write path.
+The `students/{uid}` rule (in `firestore.rules`) restricts who can flip these. Since 2026-10-02 a student may self-write `needs_class → active` only with `gradeLevel` an int in 7..12 and a `schoolId` whose `partner_schools` doc has the same `domain` as the signed-in email (and `school` equal to its `name`); affected keys ⊂ `{schoolId, school, gradeLevel, status, gradePickedAt}`. After that the grade is locked — every other status or grade change needs an admin write path. HQ observers (`@eduversal.org`) may change their own `gradeLevel` to preview a grade's pool.
 
 ---
 
@@ -144,17 +161,11 @@ This means **adding a new partner school to `partner_schools` automatically lets
 
 ---
 
-## Class picker
+## Grade picker (`/class-picker`)
 
-Self-enrolment surface. After Google SSO + domain validation, first-time users land on `/class-picker`. Reads `partner_schools/{schoolId}/classes/{classId}` subcollection (already used by TH pacing pages) and shows only **Grade 7 and 8** classes for the MVP pilot.
+Self-enrolment surface (rewritten 2026-10-02; the URL and the `needs_class` status value were kept as code identifiers). After Google SSO + domain validation, first-time users land here. Shared-domain schools (`semesta.sch.id`) get a school step first. Then the student picks **Grade 7-12** (`const GRADES = [7, 8, 9, 10, 11, 12]`) and the doc flips straight to `active` → `/welcome`.
 
-**Allowed grades constant** lives inline in `class-picker.html`:
-```js
-const ALLOWED_GRADES = [7, 8];
-```
-Bump this when expanding the pilot to other grades.
-
-**Trust-but-verify model:** the student's class pick lands them in `pending_approval`, not `active`. A teacher confirms in TH (`/test-session-launcher` or future `/class-roster`) — only then does the student get into the dashboard. This prevents accidental wrong-class enrolment from corrupting growth data.
+**Why no class / approval any more:** classes had to be set up school by school in CH `/schools`, and a teacher had to approve every student in TH `/student-approvals`. By October 2026 only 3 of 16 schools had any classes and the one real pilot student had waited 2½ months for approval. The school is already known from the email domain, which the rule re-verifies, so the class step added friction without adding trust. The grade is locked after the pick so a student can't switch grade to top an easier leaderboard.
 
 ---
 

@@ -39,6 +39,10 @@
       border-color: var(--stage-primary);
       background: var(--stage-primary-2);
     }
+    .obs-grade { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; font-size: .84rem; color: var(--ink-2); }
+    .obs-grade[hidden] { display: none; }
+    .obs-grade select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); }
+    .obs-grade-note { font-size: .74rem; color: var(--ink-3); }
     .subj-card.is-locked {
       opacity: .55; cursor: not-allowed;
     }
@@ -189,7 +193,7 @@
       <div class="page-intro-body">
         <div class="page-intro-title">First time on Practice?</div>
         <div class="page-intro-text">
-          Self-paced practice. Pick a subject, pick a topic, pick a difficulty. Earn <strong>points</strong> and build your <strong>streak</strong>. <strong>This is for fun and revision</strong> — practice never changes your real test scores or your growth line.
+          Practice at your own pace. Pick a subject, a topic and a difficulty. Every correct answer earns <strong>points</strong>, and practising on many days builds your <strong>streak</strong>. <strong>Practice is for learning and fun</strong> — it never counts toward your school grades.
         </div>
         <a class="page-intro-link" href="/welcome">📖 See the full guide →</a>
       </div>
@@ -197,24 +201,28 @@
     </div>
 
     <section class="hero-pra">
-      <span class="stage-chip"><span class="dot"></span> Practice mode</span>
+      <span class="stage-chip"><span class="dot"></span> Practice mode · <span id="gradeChip">Grade …</span></span>
       <h1>Practice your way</h1>
       <p>Pick a subject and a topic, take a quick 10-question run. Every correct answer earns points.</p>
+      <label id="obsGradeBox" class="obs-grade" hidden>Preview as
+        <select id="obsGrade"><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option><option value="12">Grade 12</option></select>
+        <span class="obs-grade-note">Eduversal staff only</span>
+      </label>
     </section>
 
     <!-- Subject row -->
     <section class="subj-row" id="subjRow">
       <button type="button" class="subj-card" data-subj="math">
         <span class="glyph">🧮</span>
-        <div class="meta"><strong>Math</strong><span id="mathCount">…</span></div>
+        <div class="meta"><strong>Math</strong><span id="count-math">…</span></div>
       </button>
-      <button type="button" class="subj-card is-locked" data-subj="english" disabled>
+      <button type="button" class="subj-card" data-subj="english">
         <span class="glyph">📖</span>
-        <div class="meta"><strong>English</strong><span>Coming soon</span></div>
+        <div class="meta"><strong>English</strong><span id="count-english">…</span></div>
       </button>
-      <button type="button" class="subj-card is-locked" data-subj="science" disabled>
+      <button type="button" class="subj-card" data-subj="science">
         <span class="glyph">🔬</span>
-        <div class="meta"><strong>Science</strong><span>Coming soon</span></div>
+        <div class="meta"><strong>Science</strong><span id="count-science">…</span></div>
       </button>
     </section>
 
@@ -264,7 +272,8 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      collection, query, where, orderBy, limit, getDocs
+      collection, query, where, orderBy, limit, getDocs, getCountFromServer,
+      doc, updateDoc, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -279,7 +288,8 @@
     // ─── State ───────────────────────────────────────────────────
     const state = {
       subjectId: 'math',
-      topicGroup: null,
+      grade: null,        // students/{uid}.gradeLevel (7-12) — the pool is filtered to it
+      topicGroup: null,   // null = nothing picked yet; ALL_TOPICS = any topic
       difficulty: 'any',
       counts: { byTopic: {}, byDifficulty: {} },
     };
@@ -291,16 +301,28 @@
       'problem-solving':{ icon: '🧩', label: 'Problem Solving' },
       statistics:       { icon: '📊', label: 'Statistics' },
       probability:      { icon: '🎲', label: 'Probability' },
+      reading:          { icon: '📖', label: 'Reading' },
+      grammar:          { icon: '✏️', label: 'Grammar' },
+      vocabulary:       { icon: '🔤', label: 'Vocabulary' },
+      writing:          { icon: '📝', label: 'Writing' },
+      biology:          { icon: '🧬', label: 'Biology' },
+      chemistry:        { icon: '⚗️', label: 'Chemistry' },
+      physics:          { icon: '🧲', label: 'Physics' },
+      'earth-space':    { icon: '🌍', label: 'Earth & Space' },
       mixed:            { icon: '🎯', label: 'Mixed' },
     };
 
     const DIFF_LABEL = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+    const ALL_TOPICS = '__all';
+    const SUBJECTS = ['math', 'english', 'science'];
 
     window.addEventListener('authReady', (ev) => {
       if (!ev.detail.signedIn) return;
-      // Wire subject card click — pilot only math is live
+      const p = window.studentProfile || {};
+      state.grade = Number(p.gradeLevel) || null;
+      if (p.is_hq_observer === true) setupObserverGrade();
+      renderGradeChip();
       document.querySelectorAll('.subj-card').forEach(c => {
-        if (c.classList.contains('is-locked')) return;
         c.addEventListener('click', () => selectSubject(c.dataset.subj));
       });
       // Wire difficulty chips
@@ -309,8 +331,61 @@
       });
       document.getElementById('btnStart').addEventListener('click', startRun);
       selectSubject('math');
+      loadSubjectCounts();
       loadRecent(window.currentUser.uid);
     });
+
+    function renderGradeChip() {
+      document.getElementById('gradeChip').textContent = state.grade ? 'Grade ' + state.grade : 'No grade set';
+    }
+
+    // Eduversal staff (HQ observers) have no grade of their own. Let them
+    // preview any grade's pool; the choice is saved on their own
+    // students doc (rule branch: observer grade preview).
+    function setupObserverGrade() {
+      const box = document.getElementById('obsGradeBox');
+      const sel = document.getElementById('obsGrade');
+      if (!state.grade) state.grade = 7;
+      sel.value = String(state.grade);
+      box.hidden = false;
+      sel.addEventListener('change', async () => {
+        state.grade = Number(sel.value);
+        window.studentProfile.gradeLevel = state.grade;
+        renderGradeChip();
+        updateDoc(doc(window.db, 'students', window.currentUser.uid), {
+          gradeLevel: state.grade, gradePickedAt: serverTimestamp(),
+        }).catch(e => console.warn('[practice] observer grade save failed', e.message));
+        state.topicGroup = null;
+        await loadCounts(state.subjectId);
+        renderTopicChips();
+        updateStartBar();
+        loadSubjectCounts();
+      });
+    }
+
+    function poolQuery(subj, extra = []) {
+      return query(
+        collection(window.db, 'practice_questions'),
+        where('subjectId', '==', subj),
+        where('status', '==', 'active'),
+        where('gradeLevels', 'array-contains', state.grade),
+        ...extra
+      );
+    }
+
+    async function loadSubjectCounts() {
+      for (const subj of SUBJECTS) {
+        const el = document.getElementById('count-' + subj);
+        if (!state.grade) { el.textContent = 'No grade set'; continue; }
+        try {
+          const n = (await getCountFromServer(poolQuery(subj))).data().count;
+          el.textContent = n === 0 ? 'Coming soon' : (n + ' questions ready');
+        } catch (e) {
+          console.warn('[practice] count failed', subj, e.message);
+          el.textContent = '—';
+        }
+      }
+    }
 
     async function selectSubject(subj) {
       state.subjectId = subj;
@@ -325,17 +400,13 @@
 
     async function loadCounts(subj) {
       // Best-effort metadata aggregator: fetch up to 1000 active items for
-      // this subject and tally topicGroup + difficulty client-side. For 805
-      // math items this is fine; if practice_questions grows past ~5k we
-      // need a Cloud Function aggregate doc.
+      // this subject + the student's grade and tally topicGroup + difficulty
+      // client-side. If one grade's pool grows past ~5k we need a Cloud
+      // Function aggregate doc.
+      state.counts = { byTopic: {}, byDifficulty: {}, total: 0 };
+      if (!state.grade) return;
       try {
-        const q = query(
-          collection(window.db, 'practice_questions'),
-          where('subjectId', '==', subj),
-          where('status', '==', 'active'),
-          limit(1000)
-        );
-        const snap = await getDocs(q);
+        const snap = await getDocs(poolQuery(subj, [limit(1000)]));
         const byT = {}, byD = {};
         snap.forEach(d => {
           const v = d.data();
@@ -344,13 +415,9 @@
           byT[t] = (byT[t] || 0) + 1;
           byD[diff] = (byD[diff] || 0) + 1;
         });
-        state.counts.byTopic = byT;
-        state.counts.byDifficulty = byD;
-        document.getElementById('mathCount').textContent =
-          subj === 'math' ? (snap.size + ' questions ready') : (snap.size + ' items');
+        state.counts = { byTopic: byT, byDifficulty: byD, total: snap.size };
       } catch (e) {
         console.warn('[practice] count load failed', e);
-        state.counts = { byTopic: {}, byDifficulty: {} };
       }
     }
 
@@ -360,10 +427,15 @@
         .filter(([, n]) => n > 0)
         .sort((a, b) => b[1] - a[1]);
       if (entries.length === 0) {
-        box.innerHTML = '<div style="color:var(--ink-3); font-size:.88rem">No topics available right now.</div>';
+        const subjLbl = { math: 'Math', english: 'English', science: 'Science' }[state.subjectId] || state.subjectId;
+        box.innerHTML = state.grade
+          ? `<div style="color:var(--ink-3); font-size:.88rem">New ${escHtml(subjLbl)} questions for Grade ${state.grade} are on the way. Check back soon!</div>`
+          : '<div style="color:var(--ink-3); font-size:.88rem">Your grade is not set yet. Ask your school or Eduversal to set it.</div>';
         return;
       }
-      box.innerHTML = entries.map(([k, n]) => {
+      const allActive = state.topicGroup === ALL_TOPICS ? ' is-active' : '';
+      box.innerHTML = `<button type="button" class="pick-chip${allActive}" data-topic="${ALL_TOPICS}">✨ All topics <span class="count">${state.counts.total}</span></button>` +
+        entries.map(([k, n]) => {
         const lbl = TOPIC_LABEL[k] || { icon: '📚', label: k };
         const isActive = state.topicGroup === k ? ' is-active' : '';
         return `<button type="button" class="pick-chip${isActive}" data-topic="${escAttr(k)}">${lbl.icon} ${escHtml(lbl.label)} <span class="count">${n}</span></button>`;
@@ -397,7 +469,8 @@
         sub.textContent = '10 questions · solo · zero pressure';
         return;
       }
-      const tLbl = (TOPIC_LABEL[state.topicGroup] || { label: state.topicGroup }).label;
+      const tLbl = state.topicGroup === ALL_TOPICS ? 'All topics'
+        : (TOPIC_LABEL[state.topicGroup] || { label: state.topicGroup }).label;
       const dLbl = state.difficulty === 'any' ? 'any difficulty' : DIFF_LABEL[state.difficulty].toLowerCase();
       btn.disabled = false;
       summary.textContent = tLbl;
@@ -407,10 +480,10 @@
     function startRun() {
       const params = new URLSearchParams({
         subject: state.subjectId,
-        topic:   state.topicGroup,
         diff:    state.difficulty,
         n:       '10',
       });
+      if (state.topicGroup !== ALL_TOPICS) params.set('topic', state.topicGroup);
       window.location.href = '/practice-run?' + params.toString();
     }
 

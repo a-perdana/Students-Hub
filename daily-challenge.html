@@ -167,7 +167,7 @@
     <section class="hero-dc">
       <span class="date-chip" id="dateChip">Loading…</span>
       <h1>Daily Challenge</h1>
-      <div class="sub">5 questions. Resets at midnight. Every classmate races the same set.</div>
+      <div class="sub">5 questions. Resets at midnight. Everyone in your grade gets the same set.</div>
     </section>
 
     <section class="subj-tabs" id="subjTabs">
@@ -191,8 +191,8 @@
 
     <section class="lb-card">
       <div class="lb-card-h">
-        <h3>Class leaderboard — today</h3>
-        <span style="font-size:.78rem; color:var(--ink-3)" id="lbScope">your class</span>
+        <h3>Your grade at your school — today</h3>
+        <span style="font-size:.78rem; color:var(--ink-3)" id="lbScope">your grade</span>
       </div>
       <div id="lbBody">
         <div class="empty" style="padding:14px 0; font-size:.88rem">Waiting for classmates to finish…</div>
@@ -255,7 +255,11 @@
 
     async function fetchChallenge(subj) {
       try {
-        const id = `${state.todayKey}_${subj}`;
+        // One challenge per subject per grade (2026-10-02):
+        // daily_challenges/{YYYY-MM-DD}_{subject}_g{grade}
+        const grade = Number(window.studentProfile?.gradeLevel);
+        if (!grade) { state.challenges[subj] = null; return; }
+        const id = `${state.todayKey}_${subj}_g${grade}`;
         const snap = await getDoc(doc(window.db, 'daily_challenges', id));
         state.challenges[subj] = snap.exists() ? { id: snap.id, ...snap.data() } : null;
       } catch (e) {
@@ -372,37 +376,39 @@
       });
     }
 
-    // ─── Class leaderboard ──────────────────────────────────────
-    // Reads practice_attempts where (classId, mode=='daily_challenge',
-    // submittedAt this-subject's challenge). Composite index registered.
+    // ─── School + grade leaderboard ─────────────────────────────
+    // Students Hub has no classes (2026-10-02). Today's board is everyone
+    // at the student's school who did the same challenge — the challenge
+    // id already carries the grade, so this is school × grade.
+    // Composite index: practice_attempts (schoolId, challengeId, status,
+    // submittedAt ASC).
     async function loadLeaderboard() {
       const box = document.getElementById('lbBody');
       const scopeLabel = document.getElementById('lbScope');
       const p = window.studentProfile;
       const c = state.challenges[state.subject];
-      if (!c || !p.classId) {
-        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Need a class to see today\'s board.</div>';
+      if (!c || !p.schoolId) {
+        box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Today\'s board shows up once your challenge is live.</div>';
         return;
       }
-      scopeLabel.textContent = p.className || 'your class';
+      scopeLabel.textContent = 'Grade ' + p.gradeLevel + ' · ' + (p.school || 'your school');
 
       try {
         const q = query(
           collection(window.db, 'practice_attempts'),
-          where('classId', '==', p.classId),
-          where('mode', '==', 'daily_challenge'),
+          where('schoolId', '==', p.schoolId),
           where('challengeId', '==', c.id),
           where('status', '==', 'submitted'),
           orderBy('submittedAt', 'asc'),
-          // Fetch the whole class's finishers, not the first 20 by submit
-          // time — a limit(20) cut here silently dropped late high-scorers
-          // from the board. 100 covers any realistic class size; the
-          // client-side (score DESC, time ASC) sort below does the ranking.
-          limit(100)
+          // Fetch every finisher, not the first 20 by submit time — a
+          // limit(20) cut silently dropped late high-scorers. 300 covers a
+          // whole grade at one school; the client-side (score DESC, time
+          // ASC) sort below does the ranking.
+          limit(300)
         );
         const snap = await getDocs(q);
         if (snap.empty) {
-          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Nobody in your class has finished today yet. Be the first!</div>';
+          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">Nobody in your grade at your school has finished today yet. Be the first!</div>';
           return;
         }
         const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));

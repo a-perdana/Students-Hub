@@ -414,6 +414,8 @@
       algebra: 'Algebra', number: 'Number & Arithmetic', geometry: 'Geometry',
       'problem-solving': 'Problem Solving', statistics: 'Statistics',
       probability: 'Probability', mixed: 'Mixed',
+      reading: 'Reading', grammar: 'Grammar', vocabulary: 'Vocabulary', writing: 'Writing',
+      biology: 'Biology', chemistry: 'Chemistry', physics: 'Physics', 'earth-space': 'Earth & Space',
     };
 
     const state = {
@@ -545,10 +547,15 @@
     }
 
     async function loadFreeItems() {
+      // The pool is the student's own grade (students/{uid}.gradeLevel,
+      // 7-12). Items carry gradeLevels[] — one question may fit several.
+      const grade = Number(window.studentProfile?.gradeLevel);
+      if (!grade) throw new Error('Your grade is not set yet. Ask your school or Eduversal to set it.');
       const constraints = [
         where('subjectId', '==', SUBJECT),
         where('status', '==', 'active'),
         where('type', '==', 'mcq'),
+        where('gradeLevels', 'array-contains', grade),
       ];
       if (TOPIC) constraints.push(where('topicGroup', '==', TOPIC));
       if (DIFF !== 'any') constraints.push(where('difficulty', '==', DIFF));
@@ -562,7 +569,7 @@
         pool.push({ id: d.id, ...v });
       });
       if (pool.length === 0) {
-        throw new Error('No questions available for this topic and difficulty.');
+        throw new Error('No questions for your grade match this topic and difficulty yet.');
       }
       shuffle(pool);
       state.items = pool.slice(0, N);

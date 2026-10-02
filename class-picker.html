@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pick your class — Students Hub</title>
+  <title>Pick your grade — Students Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Lora:wght@600&display=swap" rel="stylesheet">
@@ -26,6 +26,12 @@
     }
     .school-row strong { color: var(--cyan-dk); }
     .pick-grid { display: grid; gap: 10px; }
+    .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .grade-grid .pick-row { flex-direction: column; justify-content: center; gap: 2px; padding: 16px 8px; text-align: center; }
+    .grade-num { font-family: 'Lora', serif; font-size: 1.6rem; font-weight: 600; color: var(--ink); line-height: 1.1; }
+    .grade-lbl { font-size: 0.78rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em; }
+    .lock-note { margin-top: 14px; font-size: 0.84rem; color: var(--ink-3); text-align: center; }
+    @media (max-width: 380px) { .grade-grid { grid-template-columns: repeat(2, 1fr); } }
     .pick-row {
       display: flex; align-items: center; gap: 12px;
       padding: 14px 16px;
@@ -53,27 +59,28 @@
   <main class="picker-shell">
     <div class="picker-head">
       <h1>Welcome to Students Hub</h1>
-      <p>Pick your class so your teachers can find you.</p>
+      <p>Tell us your grade. We will show you practice questions for your grade.</p>
     </div>
 
     <div id="schoolRow" class="school-row" hidden></div>
 
-    <!-- Multi-school domain: school first, then class -->
+    <!-- Shared domain (two schools use one email domain): school first, then grade -->
     <div id="schoolStep" hidden>
       <h3 style="margin-bottom:12px">Which school?</h3>
       <div id="schoolList" class="pick-grid"></div>
     </div>
 
-    <div id="classStep" hidden>
-      <h3 style="margin-bottom:12px">Which class are you in?</h3>
-      <div id="classList" class="pick-grid"></div>
+    <div id="gradeStep" hidden>
+      <h3 style="margin-bottom:12px">Which grade are you in?</h3>
+      <div id="gradeList" class="grade-grid"></div>
+      <p class="lock-note">Choose carefully. You can't change your grade later. If it is wrong, ask your school or Eduversal to fix it.</p>
       <div id="errBox" class="err" hidden></div>
       <div class="actions">
         <button id="confirmBtn" class="btn btn-primary btn-block btn-lg" disabled>Confirm</button>
       </div>
     </div>
 
-    <div id="loadState" class="empty">Loading classes…</div>
+    <div id="loadState" class="empty">Loading…</div>
 
     <a href="#" id="signOutLink" class="signout-link">Not you? Sign out</a>
   </main>
@@ -81,7 +88,7 @@
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
     import {
-      doc, setDoc, serverTimestamp,
+      doc, updateDoc, serverTimestamp,
       collection, query, where, getDocs
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
@@ -89,26 +96,26 @@
       e.preventDefault(); window.signOutStudent();
     });
 
-    // Eligible grade levels for the pilot (Grade 7-8 only at MVP).
-    const ALLOWED_GRADES = [7, 8];
+    // Students Hub is open to Grade 7-12 (2026-10-02). There are no
+    // classes and no teacher approval: the school comes from the email
+    // domain, the student picks a grade once, and the account is active.
+    // The Firestore rule re-checks the school against the email domain
+    // and locks the grade afterwards (only an admin can change it).
+    const GRADES = [7, 8, 9, 10, 11, 12];
 
-    let chosenSchoolId  = null;
-    let chosenSchoolNm  = null;
-    let chosenClassId   = null;
-    let chosenClassNm   = null;
-    let chosenGrade     = null;
+    let chosenSchoolId = null;
+    let chosenSchoolNm = null;
+    let chosenGrade    = null;
 
     window.addEventListener('authReady', async (ev) => {
       if (!ev.detail.signedIn) { window.location.href = '/login'; return; }
       const profile = window.studentProfile;
-      // If schoolId already set (single-school domain), skip school step.
       if (profile.schoolId) {
         chosenSchoolId = profile.schoolId;
         chosenSchoolNm = profile.school || '';
         showSchoolBanner();
-        await loadClasses();
+        showGrades();
       } else {
-        // Multi-school domain — let user pick which school.
         await loadSchoolPicker();
       }
     });
@@ -119,8 +126,16 @@
       row.hidden = false;
     }
 
+    function makeChoice(row, onChoose) {
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.addEventListener('click', onChoose);
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChoose(); }
+      });
+    }
+
     async function loadSchoolPicker() {
-      // Re-query partner_schools by email domain to populate options.
       const dom = (window.studentProfile.emailLower || '').split('@')[1];
       if (!dom) return;
       const q = await getDocs(query(
@@ -133,17 +148,13 @@
         const data = d.data();
         const row = document.createElement('div');
         row.className = 'pick-row';
-        row.dataset.schoolId   = d.id;
-        row.dataset.schoolName = data.name || d.id;
         row.innerHTML = '<span class="pick-name">' + escapeHtml(data.name || d.id) + '</span>';
-        row.addEventListener('click', () => {
-          [...list.querySelectorAll('.pick-row')].forEach(r => r.classList.remove('selected'));
-          row.classList.add('selected');
+        makeChoice(row, () => {
           chosenSchoolId = d.id;
           chosenSchoolNm = data.name || d.id;
           showSchoolBanner();
           document.getElementById('schoolStep').hidden = true;
-          loadClasses();
+          showGrades();
         });
         list.appendChild(row);
       });
@@ -151,75 +162,45 @@
       document.getElementById('schoolStep').hidden = false;
     }
 
-    async function loadClasses() {
-      document.getElementById('loadState').hidden = false;
-      document.getElementById('classStep').hidden = true;
-
-      const classesQ = await getDocs(query(
-        collection(window.db, 'partner_schools', chosenSchoolId, 'classes')
-      ));
-      const list = document.getElementById('classList');
+    function showGrades() {
+      const list = document.getElementById('gradeList');
       list.innerHTML = '';
-
-      const filtered = classesQ.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter(c => ALLOWED_GRADES.includes(Number(c.grade)))
-        .sort((a, b) => (Number(a.grade) - Number(b.grade)) || (a.name || '').localeCompare(b.name || ''));
-
-      if (filtered.length === 0) {
-        const gradesLbl = ALLOWED_GRADES.join(' or ');
-        document.getElementById('loadState').innerHTML =
-          '<div class="empty-title">No classes found yet</div>' +
-          'Your school hasn\'t set up Grade ' + gradesLbl + ' classes for the pilot. ' +
-          'Ask your teacher to create your class first.';
-        return;
-      }
-
-      filtered.forEach(c => {
+      GRADES.forEach(g => {
         const row = document.createElement('div');
         row.className = 'pick-row';
-        row.dataset.classId = c.id;
-        row.dataset.gradeLevel = c.grade;
-        row.dataset.className  = c.name || c.id;
-        row.innerHTML =
-          '<span class="pick-name">' + escapeHtml(c.name || c.id) + '</span>' +
-          '<span class="pick-grade">Grade ' + escapeHtml(String(c.grade)) + '</span>';
-        row.addEventListener('click', () => {
+        row.innerHTML = '<span class="grade-lbl">Grade</span><span class="grade-num">' + g + '</span>';
+        makeChoice(row, () => {
           [...list.querySelectorAll('.pick-row')].forEach(r => r.classList.remove('selected'));
           row.classList.add('selected');
-          chosenClassId = c.id;
-          chosenClassNm = c.name || c.id;
-          chosenGrade   = Number(c.grade);
-          document.getElementById('confirmBtn').disabled = false;
+          chosenGrade = g;
+          const btn = document.getElementById('confirmBtn');
+          btn.disabled = false;
+          btn.textContent = 'Confirm — Grade ' + g;
         });
         list.appendChild(row);
       });
-
       document.getElementById('loadState').hidden = true;
-      document.getElementById('classStep').hidden = false;
+      document.getElementById('gradeStep').hidden = false;
     }
 
     document.getElementById('confirmBtn').addEventListener('click', async () => {
-      if (!chosenClassId) return;
-      const btn  = document.getElementById('confirmBtn');
-      const err  = document.getElementById('errBox');
+      if (!chosenGrade || !chosenSchoolId) return;
+      const btn = document.getElementById('confirmBtn');
+      const err = document.getElementById('errBox');
       btn.disabled = true; btn.textContent = 'Saving…'; err.hidden = true;
       try {
-        const ref  = doc(window.db, 'students', window.currentUser.uid);
-        await setDoc(ref, {
-          schoolId:   chosenSchoolId,
-          school:     chosenSchoolNm,
-          classId:    chosenClassId,
-          className:  chosenClassNm,
-          gradeLevel: chosenGrade,
-          status:     'pending_approval',
-          classPickedAt: serverTimestamp(),
-        }, { merge: true });
-        window.location.href = '/waiting';
+        await updateDoc(doc(window.db, 'students', window.currentUser.uid), {
+          schoolId:      chosenSchoolId,
+          school:        chosenSchoolNm,
+          gradeLevel:    chosenGrade,
+          status:        'active',
+          gradePickedAt: serverTimestamp(),
+        });
+        window.location.href = '/welcome';
       } catch (e) {
         err.textContent = 'Could not save: ' + (e.message || e.code);
         err.hidden = false;
-        btn.disabled = false; btn.textContent = 'Confirm';
+        btn.disabled = false; btn.textContent = 'Confirm — Grade ' + chosenGrade;
       }
     });
 

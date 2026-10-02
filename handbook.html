@@ -168,6 +168,15 @@
       text-align: center; padding: 32px; color: #991b1b;
       background: #fef2f2; border: 1px solid #fecaca; border-radius: var(--radius-lg);
     }
+      .hb-docs { display: grid; gap: 10px; }
+    .hb-doc { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--white); border: 1.5px solid var(--border); border-radius: 12px; text-decoration: none; color: var(--ink); transition: border-color .15s, background .15s; }
+    .hb-doc:hover { border-color: var(--mor); background: var(--mor-2); }
+    .hb-doc.is-primary { border-color: var(--mor); }
+    .hb-doc-icon { font-size: 1.4rem; }
+    .hb-doc-text { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .hb-doc-tag { align-self: flex-start; font-size: .72rem; font-weight: 700; color: var(--mor); background: var(--mor-2); padding: 2px 8px; border-radius: 99px; }
+    .hb-doc-go { font-size: .84rem; font-weight: 600; color: var(--mor); white-space: nowrap; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body style="display:none">
@@ -302,10 +311,39 @@
       </details>`;
     }
 
+    // Since 2026-09-30 the Student Handbook record is a pointer to the
+    // live Google Docs (liveSource.documents[]) and carries no sections
+    // of its own. Show those documents as link cards.
+    function renderLiveSource(hb) {
+      const docs = (hb.liveSource && Array.isArray(hb.liveSource.documents)) ? hb.liveSource.documents : [];
+      document.getElementById('hbEyebrow').textContent = 'Eduversal Student Handbook';
+      document.getElementById('hbTitle').textContent = hb.title || 'Student Handbook';
+      document.getElementById('hbSubtitle').textContent =
+        'The rules and guides for students at Eduversal partner schools. Each one opens in Google Docs.';
+      document.getElementById('hbMeta').innerHTML =
+        `<span class="pill">${docs.length} document${docs.length === 1 ? '' : 's'}</span>`;
+      document.querySelectorAll('#btnExpandAll, #btnCollapseAll, #btnPrint').forEach(b => { b.hidden = true; });
+      const content = document.getElementById('hbContent');
+      content.className = 'hb-docs';
+      content.innerHTML = docs.map(d => `
+        <a class="hb-doc${d.primary ? ' is-primary' : ''}" href="${escapeHtml(d.url)}" target="_blank" rel="noopener">
+          <span class="hb-doc-icon">📄</span>
+          <span class="hb-doc-text">
+            <strong>${escapeHtml(d.title || 'Document')}</strong>
+            ${d.primary ? '<span class="hb-doc-tag">Start here</span>' : ''}
+          </span>
+          <span class="hb-doc-go">Open ↗</span>
+        </a>`).join('');
+    }
+
     function renderHandbook(hb) {
+      if (!Array.isArray(hb.sections) && hb.liveSource && Array.isArray(hb.liveSource.documents) && hb.liveSource.documents.length) {
+        renderLiveSource(hb);
+        return;
+      }
       // Hero
       document.getElementById('hbEyebrow').textContent =
-        `Eduversal School-Facing Handbook · v${hb.version || '?'}`;
+        `Eduversal Student Handbook · v${hb.version || '?'}`;
       document.getElementById('hbTitle').textContent = hb.title || 'Student Handbook';
       document.getElementById('hbSubtitle').textContent = hb.subtitle || '';
 

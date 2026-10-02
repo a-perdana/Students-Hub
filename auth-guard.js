@@ -16,18 +16,22 @@
 //    active student.
 //
 // 3. NO `applyStaffBridge()`.  Students aren't in `staff/`.  We use
-//    a simpler "self-enrol via class picker" flow instead.
+//    a simpler self-enrol flow instead: pick a grade (7-12), done.
 //
 // 4. Domain whitelist is DERIVED from `partner_schools.domain`, not
 //    hardcoded.  `@fatih.sch.id` matches partner_schools where
 //    `domain == 'fatih.sch.id'` and stamps schoolId on the student.
 //    Multi-school domains (e.g. semesta.sch.id used by 2 schools)
 //    leave schoolId null and the user picks the school in
-//    /class-picker.
+//    /class-picker (now a grade picker — URL kept).
 //
 // 5. status flow:
-//    - First login (no doc)         → /class-picker (pick class)
-//    - status='pending_approval'    → /waiting (teacher approves)
+//    - First login (no doc)         → /class-picker (pick grade 7-12;
+//                                     status flips straight to 'active',
+//                                     no classes, no teacher approval —
+//                                     2026-10-02)
+//    - status='pending_approval'    → /waiting (legacy pilot flow only;
+//                                     no new doc reaches this state)
 //    - status='active'              → dashboard
 //    - status='graduated' / 'rejected' → /login?error=...  (signed out)
 //

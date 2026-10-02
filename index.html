@@ -190,56 +190,6 @@
     }
     @media (max-width: 880px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
 
-    /* ─── Class Race widget ───────────────────────────────────── */
-    .race-card {
-      background: linear-gradient(135deg, var(--mor-2) 0%, var(--cyan-2) 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-      margin-bottom: 22px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: center;
-    }
-    @media (max-width: 720px) { .race-card { grid-template-columns: 1fr; } }
-    .race-text h3 { font-family: 'Lora', serif; font-size: 1.1rem; margin: 0 0 4px; }
-    .race-text p { margin: 0 0 8px; color: var(--ink-2); font-size: .88rem; }
-    .race-stat {
-      font-family: 'Lora', serif;
-      font-size: 1.6rem; font-weight: 700;
-      color: var(--stage-primary-dk);
-      line-height: 1;
-    }
-    .race-stat .total { color: var(--ink-3); font-size: 1rem; }
-    .race-podium {
-      display: flex; gap: 6px;
-      align-items: flex-end;
-    }
-    .race-podium .race-spot {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 4px;
-    }
-    .race-podium .race-spot .avatar {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: #fff; overflow: hidden;
-      box-shadow: 0 4px 10px -2px rgba(0,0,0,.15);
-      border: 2px solid #fff;
-    }
-    .race-podium .race-spot .avatar img { width: 100%; height: 100%; display: block; }
-    .race-podium .race-spot .medal {
-      font-size: 1.1rem;
-    }
-    .race-podium .race-spot.rank-1 .avatar { width: 52px; height: 52px; border-color: var(--gold); }
-    .race-podium .race-spot.rank-2 .avatar { border-color: var(--silver); }
-    .race-podium .race-spot.rank-3 .avatar { border-color: var(--bronze); }
-    .race-podium .race-name {
-      font-size: .68rem; font-weight: 700;
-      color: var(--ink-2);
-      max-width: 56px;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
-
     /* ─── Achievements row ────────────────────────────────────── */
     .ach-card {
       margin-bottom: 22px;
@@ -403,7 +353,7 @@
       <div class="page-intro-body">
         <div class="page-intro-title">First time here?</div>
         <div class="page-intro-text">
-          Welcome to Students Hub! This is your <strong>dashboard</strong> — your upcoming tests, your growth, your points, and a button if an EASE window is open. Use the top bar to move around. <strong>New here?</strong> Take 2 minutes to read the welcome page — it explains everything.
+          Welcome to Students Hub! This is your <strong>dashboard</strong> — today's quests, your points, your streak and your badges. Practise questions for your grade to earn points and climb the leaderboard. Use the top bar to move around. <strong>New here?</strong> Take 2 minutes to read the welcome page — it explains everything.
         </div>
         <a class="page-intro-link" href="/welcome">📖 Open the welcome page →</a>
       </div>
@@ -453,7 +403,7 @@
         <a href="/daily-challenge" class="quest-card" data-quest="challenge">
           <span class="q-glyph">⚡</span>
           <div class="q-title">Take today's challenge</div>
-          <div class="q-sub">Five questions. Same set as your classmates. Race to be #1.</div>
+          <div class="q-sub">Five questions. Same set for everyone in your grade. Race to be #1.</div>
           <div class="q-reward">★ +50 points</div>
         </a>
         <a href="/practice" class="quest-card" data-quest="practice">
@@ -465,7 +415,7 @@
         <a href="#" class="quest-card" data-quest="streak" id="streakQuest">
           <span class="q-glyph">🔥</span>
           <div class="q-title">Keep your streak alive</div>
-          <div class="q-sub" id="streakQuestSub">Do any test or run today. Don't break the chain!</div>
+          <div class="q-sub" id="streakQuestSub">Do one practice run or challenge today. Don't break the chain!</div>
           <div class="q-reward">★ Streak bonus</div>
         </a>
       </div>
@@ -496,8 +446,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
         <div class="stat-tile-meta">
-          <div class="stat-tile-val" id="testsCompleted">—</div>
-          <div class="stat-tile-lbl">Tests done</div>
+          <div class="stat-tile-val" id="practiceRuns">—</div>
+          <div class="stat-tile-lbl">Practice runs</div>
         </div>
       </div>
       <div class="stat-tile">
@@ -505,20 +455,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         </div>
         <div class="stat-tile-meta">
-          <div class="stat-tile-val" id="growthDelta">—</div>
-          <div class="stat-tile-lbl">EASE growth</div>
+          <div class="stat-tile-val" id="dailiesDone">—</div>
+          <div class="stat-tile-lbl">Daily challenges</div>
         </div>
       </div>
-    </section>
-
-    <!-- ─── CLASS RACE widget ─── -->
-    <section class="race-card" id="raceCard" style="display:none">
-      <div class="race-text">
-        <h3>Your class is racing</h3>
-        <p id="raceLine">Loading class progress…</p>
-        <div class="race-stat" id="raceCount">—</div>
-      </div>
-      <div class="race-podium" id="racePodium"></div>
     </section>
 
     <!-- ─── ACHIEVEMENTS ─── -->
@@ -530,38 +470,16 @@
       <div class="ach-row" id="achRow"></div>
     </section>
 
-    <!-- ─── Lower grid: tests + growth ─── -->
+    <!-- ─── Lower grid: recent practice + quick links ─── -->
     <section class="grid-2">
       <div class="card">
         <div class="card-h">
-          <h3>Tests available now</h3>
-          <a href="/tests" class="more">View all →</a>
-        </div>
-        <div id="upcomingList">
-          <span class="skel skel-line"></span>
-          <span class="skel skel-line-sm"></span>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-h">
-          <h3>Recent results</h3>
-          <a href="/tests" class="more">View all →</a>
+          <h3>Your recent practice</h3>
+          <a href="/practice" class="more">Practise →</a>
         </div>
         <div id="recentList">
           <span class="skel skel-line"></span>
           <span class="skel skel-line-sm"></span>
-        </div>
-      </div>
-    </section>
-
-    <section class="grid-2" style="margin-top:16px">
-      <div class="card">
-        <div class="card-h">
-          <h3>Your growth journey</h3>
-          <a href="/growth" class="more">See chart →</a>
-        </div>
-        <div id="growthSummary">
-          <span class="skel skel-line"></span>
         </div>
       </div>
       <div class="card">
@@ -569,10 +487,10 @@
           <h3>Quick links</h3>
         </div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px">
+          <a href="/practice" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🎯 Practice</a>
           <a href="/leaderboard" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🏆 Leaderboard</a>
-          <a href="/growth" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">📈 Growth</a>
-          <a href="/profile" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">👤 Profile</a>
           <a href="/avatar" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🎨 Avatar</a>
+          <a href="/how-points-work" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">⭐ How points work</a>
         </div>
       </div>
     </section>
@@ -582,7 +500,7 @@
   <script src="./partials/feedback-fx.js"></script>
   <script type="module">
     import {
-      collection, query, where, onSnapshot, orderBy, limit, getDocs, doc, getDoc, updateDoc
+      collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
@@ -595,7 +513,6 @@
     });
 
     const SUBJ_LABEL = { math: 'Math', english: 'English', science: 'Science' };
-    const SUBJ_GLYPH = { math: '🧮', english: '📖', science: '🔬' };
 
     function dateKey(d) {
       // Challenge ids are minted at 00:00 Asia/Jakarta — match that zone
@@ -637,19 +554,16 @@
       };
       document.getElementById('stagePill').textContent = stageMap[stage] || 'Eduversal';
 
-      // Class pill
-      const cls = p.className || '';
+      // Grade pill (Students Hub has no classes since 2026-10-02)
       const classPill = document.getElementById('heroClassPill');
-      if (cls) classPill.textContent = cls;
+      if (p.gradeLevel) classPill.textContent = 'Grade ' + p.gradeLevel;
       else classPill.style.display = 'none';
 
       // Pull all the data
       loadPoints(uid);
       checkChallengeDone(uid);
       checkPracticeDoneToday(uid);
-      subscribeAttempts(uid);
-      loadGrowthSummary(uid);
-      loadClassRace(p.classId);
+      loadRecentPractice(uid);
     });
 
     // ─── Tier ──────────────────────────────────────────────────
@@ -683,6 +597,8 @@
         try { localStorage.setItem(LAST_PTS_KEY, String(pts)); } catch {}
 
         document.getElementById('streakDays').textContent = streak;
+        document.getElementById('practiceRuns').textContent = d.practiceRunsCompleted || 0;
+        document.getElementById('dailiesDone').textContent  = d.dailyChallengesCompleted || 0;
         document.getElementById('heroLvlBadge').textContent = 'Lv ' + lvl;
 
         // Hero ring fill = level progress
@@ -738,6 +654,8 @@
         console.warn('[dashboard] points load failed', e.message);
         document.getElementById('totalPts').textContent = '0';
         document.getElementById('streakDays').textContent = '0';
+        document.getElementById('practiceRuns').textContent = '0';
+        document.getElementById('dailiesDone').textContent  = '0';
         renderAchievements({});
         recomputeQuestMeta();
       }
@@ -747,9 +665,12 @@
     async function checkChallengeDone(uid) {
       try {
         const subs = ['math','english','science'];
+        const grade = Number(window.studentProfile?.gradeLevel);
+        if (!grade) return;
         // Any open challenge today the student has submitted?
+        // Ids: {YYYY-MM-DD}_{subject}_g{grade} (2026-10-02).
         for (const s of subs) {
-          const cid = `${TODAY}_${s}`;
+          const cid = `${TODAY}_${s}_g${grade}`;
           const qs = query(
             collection(window.db, 'practice_attempts'),
             where('studentUid', '==', uid),
@@ -763,7 +684,7 @@
         if (questState.challengeDone) {
           const card = document.querySelector('.quest-card[data-quest="challenge"]');
           card.classList.add('is-done');
-          card.querySelector('.q-sub').textContent = 'Done — see how the class is doing today.';
+          card.querySelector('.q-sub').textContent = 'Done — see how your grade is doing today.';
           // Hero CTA pivots to leaderboard preview
           const cta = document.getElementById('heroCta');
           cta.href = '/daily-challenge';
@@ -817,59 +738,6 @@
                          `${done} of 3 done · keep going`;
     }
 
-    // ─── Class race widget ─────────────────────────────────────
-    async function loadClassRace(classId) {
-      if (!classId) return;
-      try {
-        // Any of today's daily_challenges in the student's class —
-        // count how many distinct studentUids have submitted.
-        const subs = ['math','english','science'];
-        let totalSubmissions = 0;
-        const studentSet = new Set();
-        const topRows = [];
-        for (const s of subs) {
-          const cid = `${TODAY}_${s}`;
-          const qs = query(
-            collection(window.db, 'practice_attempts'),
-            where('classId', '==', classId),
-            where('challengeId', '==', cid),
-            where('status', '==', 'submitted'),
-            limit(20)
-          );
-          const snap = await getDocs(qs);
-          snap.forEach(d => {
-            const v = d.data();
-            studentSet.add(v.studentUid);
-            totalSubmissions++;
-            topRows.push({ uid: v.studentUid, name: v.studentName, pct: v.rawScorePct || 0, at: v.submittedAt });
-          });
-        }
-        if (totalSubmissions === 0) return; // hide card
-        // Pick the top 3 by score, then by speed
-        topRows.sort((a,b) => (b.pct - a.pct) || ((a.at?.toMillis?.()||0) - (b.at?.toMillis?.()||0)));
-        const top = topRows.slice(0,3);
-
-        document.getElementById('raceCard').style.display = '';
-        document.getElementById('raceLine').textContent =
-          `${studentSet.size} classmate${studentSet.size===1?'':'s'} already did a challenge today.`;
-        document.getElementById('raceCount').innerHTML =
-          `${totalSubmissions} <span class="total">${totalSubmissions === 1 ? 'submission' : 'submissions'}</span>`;
-        const podium = document.getElementById('racePodium');
-        const medals = ['🥇','🥈','🥉'];
-        const meUid = window.currentUser?.uid;
-        podium.innerHTML = top.map((r, i) => {
-          const url = window.studentAvatarUrl ? window.studentAvatarUrl(r.uid, { size: 80 }) : '';
-          const isMe = r.uid === meUid;
-          const first = (r.name || '').split(' ')[0] || 'Student';
-          return `<div class="race-spot rank-${i+1}">
-            <span class="medal">${medals[i]}</span>
-            <span class="avatar">${url ? `<img src="${url}" alt="" loading="lazy">` : ''}</span>
-            <span class="race-name">${escHtml(isMe ? 'You' : first)}</span>
-          </div>`;
-        }).join('');
-      } catch (e) { console.warn('[dashboard] class race load failed', e.message); }
-    }
-
     // ─── Achievements ──────────────────────────────────────────
     // Eight badges derived client-side from student_points counters.
     // No new collection — drives off chapterTestsCompleted /
@@ -909,161 +777,45 @@
       document.getElementById('achTotal').textContent = `${unlocked} / ${BADGES.length} unlocked`;
     }
 
-    // ─── Growth summary (unchanged from v1, trimmed) ───────────
-    async function loadGrowthSummary(uid) {
-      try {
-        const wsnap = await getDocs(query(
-          collection(window.db, 'ease_test_windows'),
-          where('status', '==', 'open')
-        ));
-        const now = Date.now();
-        const openWin = wsnap.docs.map(d => ({ id: d.id, ...d.data() })).find(w => {
-          const o = w.opensAt?.toDate?.()?.getTime() || 0;
-          const c = w.closesAt?.toDate?.()?.getTime() || Infinity;
-          return now >= o && now <= c;
-        });
-
-        const gsnap = await getDocs(query(
-          collection(window.db, 'ease_growth'),
-          where('studentUid', '==', uid)
-        ));
-        const have = {};
-        gsnap.forEach(d => { have[d.data().subjectId] = d.data(); });
-
-        let totalDelta = 0, deltaCount = 0;
-        Object.values(have).forEach(g => {
-          const w = (g.windows || []).slice(-1)[0];
-          if (w && w.growthVsPrev != null) { totalDelta += w.growthVsPrev; deltaCount++; }
-        });
-        const avgDelta = deltaCount ? Math.round(totalDelta / deltaCount) : 0;
-        document.getElementById('growthDelta').textContent =
-          deltaCount === 0 ? '—' : (avgDelta >= 0 ? '+' : '') + avgDelta;
-
-        const box = document.getElementById('growthSummary');
-        const parts = [];
-        // Open-window CTA — the reason the ease_test_windows query above runs.
-        if (openWin) {
-          const winLbl = openWin.window ? `${windowLabel(openWin.window)} window is open` : 'A test window is open';
-          parts.push(`<div class="grow-row">
-            <span class="grow-glyph">🟢</span>
-            <div class="grow-meta">
-              <div class="grow-name">${escHtml(winLbl)}</div>
-              <div class="grow-sub">Take your EASE growth test now</div>
-            </div>
-            <div><a href="/ease-test" style="display:inline-block;background:var(--mor);color:#fff;font-weight:600;font-size:.85rem;padding:8px 14px;border-radius:10px;text-decoration:none;">Start →</a></div>
-          </div>`);
-        }
-        Object.entries(have).forEach(([s, g]) => {
-          const w = (g.windows || []).slice(-1)[0];
-          if (!w) return;
-          const delta = w.growthVsPrev != null
-            ? `<span class="grow-delta ${w.growthVsPrev >= 0 ? 'up' : 'down'}">${w.growthVsPrev >= 0 ? '+' : ''}${w.growthVsPrev}</span>`
-            : '';
-          // Build a clean window label, avoiding "window window" when
-          // w.window is missing entirely.
-          const wLbl = w.window ? `${windowLabel(w.window)} window` : 'Latest result';
-          parts.push(`<div class="grow-row">
-            <span class="grow-glyph">${SUBJ_GLYPH[s] || '📊'}</span>
-            <div class="grow-meta">
-              <div class="grow-name">${escHtml(SUBJ_LABEL[s] || s)}</div>
-              <div class="grow-sub">${escHtml(wLbl)}</div>
-            </div>
-            <div><span class="grow-score">${w.ritScore}</span>${delta}</div>
-          </div>`);
-        });
-        if (parts.length === 0) {
-          box.innerHTML = '<div class="empty" style="padding:14px 0; font-size:.88rem">EASE growth assessments will start when a window opens.</div>';
-        } else {
-          box.innerHTML = parts.join('');
-        }
-      } catch (e) {
-        console.error('[dashboard] growth summary error', e);
-        document.getElementById('growthSummary').innerHTML =
-          '<div class="empty" style="padding:14px 0; font-size:.88rem">Couldn\'t load growth right now.</div>';
-      }
-    }
-
-    // ─── Chapter attempts (kept) ───────────────────────────────
-    function subscribeAttempts(uid) {
-      const q = query(
-        collection(window.db, 'chapter_test_attempts'),
-        where('studentUid', '==', uid),
-        orderBy('opensAt', 'desc'),
-        limit(20)
-      );
-      onSnapshot(q, snap => {
-        const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const now = Date.now();
-        const upcoming = all.filter(a => {
-          if (['submitted','scored','flagged','cancelled'].includes(a.status)) return false;
-          const opens = a.opensAt?.toDate?.()?.getTime() || 0;
-          const closes = a.closesAt?.toDate?.()?.getTime() || Infinity;
-          return now >= opens && now <= closes;
-        });
-        const recent = all.filter(a => ['scored','flagged','submitted'].includes(a.status)).slice(0, 5);
-        const done = all.filter(a => ['scored','flagged','submitted'].includes(a.status)).length;
-        document.getElementById('testsCompleted').textContent = done;
-
-        renderUpcoming(upcoming);
-        renderRecent(recent);
-      }, err => {
-        document.getElementById('upcomingList').innerHTML =
-          '<div class="empty" style="padding:14px 0; font-size:.88rem">Could not load tests: ' + escHtml(err.message || err.code) + '</div>';
-      });
-    }
-
-    function renderUpcoming(list) {
-      const box = document.getElementById('upcomingList');
-      if (list.length === 0) {
-        box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">No tests available right now.<br><span style="font-size:.8rem">Your teacher will schedule the next one.</span></div>';
-        return;
-      }
-      box.innerHTML = list.map(a => `
-        <a href="/test?attemptId=${escAttr(a.id)}" class="test-row">
-          <div class="test-row-info">
-            <div class="test-row-title">${escHtml(a.testTitle || a.testId)}</div>
-            <div class="test-row-meta">Closes ${formatTs(a.closesAt)}</div>
-          </div>
-          <span class="test-row-cta">${a.status === 'in_progress' ? 'Continue' : 'Start →'}</span>
-        </a>
-      `).join('');
-    }
-
-    function renderRecent(list) {
+    // ─── Recent practice runs ──────────────────────────────────
+    async function loadRecentPractice(uid) {
       const box = document.getElementById('recentList');
-      if (list.length === 0) {
-        box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">No results yet.<br><span style="font-size:.8rem">Take a test to see your first result here.</span></div>';
-        return;
-      }
-      box.innerHTML = list.map(a => {
-        const score = typeof a.rawScorePct === 'number' ? a.rawScorePct + '%' : '—';
-        const passClass = a.passed === true ? 'pass' : a.passed === false ? 'fail' : '';
-        return `
-          <a href="/report?attemptId=${escAttr(a.id)}" class="test-row">
+      try {
+        const snap = await getDocs(query(
+          collection(window.db, 'practice_attempts'),
+          where('studentUid', '==', uid),
+          orderBy('submittedAt', 'desc'),
+          limit(6)
+        ));
+        const rows = snap.docs.map(d => d.data()).filter(v => v.status !== 'in_progress').slice(0, 5);
+        if (rows.length === 0) {
+          box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">No practice runs yet.<br><span style="font-size:.8rem">Start one to earn your first points.</span></div>';
+          return;
+        }
+        box.innerHTML = rows.map(v => {
+          const pct = typeof v.rawScorePct === 'number' ? Math.round(v.rawScorePct) + '%' : '—';
+          const kind = v.mode === 'daily_challenge' ? 'Daily challenge' : 'Practice';
+          const when = v.submittedAt?.toDate?.()?.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) || '';
+          const pts = typeof v.pointsAwarded === 'number' ? ` · +${v.pointsAwarded} pts` : '';
+          return `<div class="test-row">
             <div class="test-row-info">
-              <div class="test-row-title">${escHtml(a.testTitle || a.testId)}</div>
-              <div class="test-row-meta">${formatTs(a.submittedAt || a.opensAt)}</div>
+              <div class="test-row-title">${escHtml(SUBJ_LABEL[v.subjectId] || v.subjectId || '')} · ${kind}</div>
+              <div class="test-row-meta">${escHtml(when)}${pts}</div>
             </div>
-            <span class="test-row-score ${passClass}">${score}</span>
-          </a>
-        `;
-      }).join('');
+            <span class="test-row-score">${pct}</span>
+          </div>`;
+        }).join('');
+      } catch (e) {
+        console.warn('[dashboard] recent practice load failed', e.message);
+        box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">Could not load recent practice.</div>';
+      }
     }
 
-    function formatTs(ts) {
-      if (!ts || !ts.toDate) return '';
-      return ts.toDate().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-    }
     function escHtml(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
         '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
       })[c]);
     }
-    function windowLabel(w) {
-      const m = { term1: 'Term 1', term2: 'Term 2', term3: 'Term 3', fall: 'Fall', winter: 'Winter', spring: 'Spring' };
-      return m[w] || w || 'window';
-    }
-    function escAttr(s) { return escHtml(s); }
   </script>
 </body>
 </html>
