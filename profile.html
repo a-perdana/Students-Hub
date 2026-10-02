@@ -93,7 +93,15 @@
       document.getElementById('pName').textContent   = p.displayName || '—';
       document.getElementById('pEmail').textContent  = p.email || '—';
       document.getElementById('pSchool').textContent = p.school || '—';
-      document.getElementById('pGrade').textContent  = p.gradeLevel ? ('Grade ' + p.gradeLevel) : '—';
+      const gradeEl = document.getElementById('pGrade');
+      gradeEl.textContent = p.gradeLevel ? ('Grade ' + p.gradeLevel) : '—';
+      if (p.is_hq_observer === true) {
+        // Eduversal staff preview a grade and may switch it.
+        gradeEl.innerHTML = (p.gradeLevel ? 'Grade ' + p.gradeLevel + ' <span style="color:var(--ink-3)">(preview)</span>' : '—')
+          + ' · <a href="/class-picker">Change</a>';
+        document.querySelector('.lock-note').textContent =
+          'You are signed in with an Eduversal account, so you see Students Hub as a preview. Choose any grade with "Change". Students choose their grade once and cannot change it.';
+      }
 
       const first = (p.displayName || '').split(' ')[0] || 'there';
       document.getElementById('profileHeroName').textContent = first;

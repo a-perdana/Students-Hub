@@ -110,6 +110,24 @@
     window.addEventListener('authReady', async (ev) => {
       if (!ev.detail.signedIn) { window.location.href = '/login'; return; }
       const profile = window.studentProfile;
+      if (profile.is_hq_observer === true) {
+        // Eduversal staff: preview any grade; no school step, not locked.
+        document.querySelector('.picker-head h1').textContent = 'Preview Students Hub';
+        document.querySelector('.picker-head p').textContent =
+          'You are signed in with an Eduversal account. Choose the grade you want to see. You can change it any time from your profile.';
+        document.querySelector('.lock-note').textContent =
+          'Eduversal staff can switch grade whenever they like. Students choose once.';
+        chosenSchoolId = profile.schoolId || 'eduversal_hq';
+        chosenSchoolNm = profile.school || 'Eduversal HQ';
+        showSchoolBanner();
+        showGrades();
+        if (profile.gradeLevel) {
+          const cur = [...document.querySelectorAll('#gradeList .pick-row')]
+            .find(r => r.querySelector('.grade-num').textContent === String(profile.gradeLevel));
+          if (cur) cur.click();
+        }
+        return;
+      }
       if (profile.schoolId) {
         chosenSchoolId = profile.schoolId;
         chosenSchoolNm = profile.school || '';
@@ -189,6 +207,14 @@
       const err = document.getElementById('errBox');
       btn.disabled = true; btn.textContent = 'Saving…'; err.hidden = true;
       try {
+        if (window.studentProfile.is_hq_observer === true) {
+          // Rule branch "HQ observer grade preview": only these two keys.
+          await updateDoc(doc(window.db, 'students', window.currentUser.uid), {
+            gradeLevel: chosenGrade, gradePickedAt: serverTimestamp(),
+          });
+          window.location.href = '/practice';
+          return;
+        }
         await updateDoc(doc(window.db, 'students', window.currentUser.uid), {
           schoolId:      chosenSchoolId,
           school:        chosenSchoolNm,

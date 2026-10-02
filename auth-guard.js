@@ -347,8 +347,16 @@ onAuthStateChanged(auth, async (user) => {
   } else if (status === 'pending_approval') {
     if (PATH !== '/waiting') { window.location.href = '/waiting'; return; }
   } else if (status === 'active') {
-    // signed-in active student landing on auth-flow page → bounce home
-    if (PATH === '/login' || PATH === '/class-picker' || PATH === '/waiting') {
+    // Eduversal staff (observers) pick a grade to preview, like students do
+    // — but theirs is not locked: they can come back to /class-picker any
+    // time (profile → Change). Real active students never see the picker
+    // again.
+    const isObserver = profile.is_hq_observer === true;
+    if (isObserver && !profile.gradeLevel && PATH !== '/class-picker') {
+      window.location.href = '/class-picker';
+      return;
+    }
+    if (PATH === '/login' || PATH === '/waiting' || (PATH === '/class-picker' && !isObserver)) {
       window.location.href = '/';
       return;
     }
