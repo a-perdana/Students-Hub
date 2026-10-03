@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="lobby.css">
-  <script>(function(){try{if(localStorage.getItem("sh-theme")==="bloom"){document.documentElement.classList.add("theme-bloom");var l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap";document.head.appendChild(l);}}catch(e){}})();</script>
+  <script>(function(){try{var t=localStorage.getItem("sh-theme");if(t==="bloom"||t==="pro"){var c=document.documentElement.classList;c.add("theme-bloom");if(t==="pro"){c.add("theme-pro");}else{var l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap";document.head.appendChild(l);}}}catch(e){}})();</script>
   <style>
     .hero-dc {
       background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);

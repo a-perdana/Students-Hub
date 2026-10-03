@@ -381,3 +381,127 @@ html.theme-bloom body.lobby .hero-pra p { color:var(--ink-3); }
 /* theme toggle button in the navbar (shared by both themes) */
 .theme-toggle-btn { background:transparent; border:1px solid var(--border-2,#d3d7e1); border-radius:999px; width:34px; height:34px; cursor:pointer; font-size:1rem; line-height:1; display:inline-flex; align-items:center; justify-content:center; transition:transform .12s; }
 .theme-toggle-btn:hover { transform:scale(1.1) rotate(-8deg); }
+
+/* ═══ PRO theme (3rd look) — calm, data-forward, for teachers / school leaders / testers ═══
+ * Stitch reference: "Pro" dashboard (project 4481946878143943737). Layered ON TOP of Bloom:
+ * the switcher sets html.theme-bloom + html.theme-pro together, so every structural light-theme
+ * rule above still applies and this block only swaps palette, radius, type and removes the play
+ * decoration (glow, 3D button edges, pulse/shine/float animation, emoji heading marks).
+ * Higher specificity (html.theme-bloom.theme-pro body.lobby …) so it wins over Bloom.
+ */
+html.theme-pro, html.theme-pro:has(body.lobby) { background: #f4f6fb; }
+html.theme-bloom.theme-pro body.lobby {
+  --ink:#0f172a; --ink-2:#475569; --ink-3:#64748b;
+  --white:#ffffff; --paper:#f1f5f9;
+  --border:#e2e8f0; --border-2:#cbd5e1;
+  --mor:#4338ca; --mor-dk:#3730a3; --mor-2:#eef2ff;
+  --cyan:#0f766e; --cyan-dk:#115e59; --cyan-2:#ccfbf1;
+  --ok:#15803d; --ok-bg:#dcfce7; --warn:#92400e; --warn-bg:#fef3c7;
+  --danger:#b91c1c; --danger-bg:#fee2e2;
+  --gold:#b45309; --gold-2:#fef3c7;
+  --stage-primary:#4338ca; --stage-primary-dk:#3730a3; --stage-primary-2:#eef2ff;
+  --stage-accent:#0f766e; --stage-accent-dk:#115e59; --stage-accent-2:#ccfbf1;
+  --stage-gradient:linear-gradient(135deg,#312e81 0%,#4338ca 100%);
+  --stage-glow:0 1px 2px rgba(15,23,42,.12);
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06); --shadow:0 2px 8px rgba(15,23,42,.08); --shadow-lg:0 12px 28px rgba(15,23,42,.14);
+  --glass:#ffffff;
+  --lobby-cyan:#4338ca;
+  background:#f4f6fb !important; color:var(--ink);
+}
+/* typography: DM Sans everywhere, no display faces */
+html.theme-bloom.theme-pro body.lobby :is(h1,h2,h3,.card-title,.hero-name,.command-main,.stat-tile-val,.quest-card .q-title,.card-h h3,.nm,.rs-title,.tr-hero h1,.cs-head h1,.test-row-score,.big-pct,.rs-box .v,.btn,.hero-cta,.btn-next,.cs-char-card .nm,.cs-item .nm,.rs-badge b,.lvl-badge,.cs-plate .nm,.tr-card .nm) {
+  font-family:'DM Sans',system-ui,sans-serif; letter-spacing:0;
+}
+html.theme-bloom.theme-pro body.lobby h1, html.theme-bloom.theme-pro body.lobby h2, html.theme-bloom.theme-pro body.lobby h3 { font-weight:700; }
+
+/* surfaces: crisp white cards, thin borders, 12px */
+html.theme-bloom.theme-pro body.lobby :is(.card,.modal,.command-card,.stat-tile,.quest-card,.ach-tile,.flow-step,.page-card,.glossary,section.hpw-card,.tr-card,.cs-item,.cs-char-card,.cs-form,.rs-box,.rs-badge,.tr-feature,.cs-evo,.cs-chars,.cs-wardrobe,.cs-section,.cs-stage-card,.page-intro) {
+  background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-sm);
+}
+html.theme-bloom.theme-pro body.lobby .cs-stage-card, html.theme-bloom.theme-pro body.lobby .cs-scene { border-radius:12px; }
+html.theme-bloom.theme-pro body.lobby .command-card::after, html.theme-bloom.theme-pro body.lobby .quest-card::before { display:none; }
+html.theme-bloom.theme-pro body.lobby .page-intro { background:#eef2ff; border-color:#c7d2fe; }
+html.theme-bloom.theme-pro body.lobby .quest-card:hover, html.theme-bloom.theme-pro body.lobby .cs-item:hover:not(.locked), html.theme-bloom.theme-pro body.lobby .cs-char-card:hover { transform:none; border-color:#4338ca; box-shadow:var(--shadow); }
+html.theme-bloom.theme-pro body.lobby .stat-tile:hover, html.theme-bloom.theme-pro body.lobby .ach-tile:hover { transform:none; }
+html.theme-bloom.theme-pro body.lobby .cs-char-card.is-active, html.theme-bloom.theme-pro body.lobby .cs-item.is-equipped, html.theme-bloom.theme-pro body.lobby .cs-form.current { border-color:#4338ca; box-shadow:0 0 0 3px rgba(67,56,202,.18); }
+html.theme-bloom.theme-pro body.lobby .cs-form.current::before { background:#4338ca; color:#fff; }
+
+/* chrome */
+html.theme-bloom.theme-pro body.lobby .topbar { background:#fff; backdrop-filter:none; border-bottom:1px solid var(--border); }
+html.theme-bloom.theme-pro body.lobby .topbar-nav a.active { background:#eef2ff; color:#3730a3; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .topbar-nav a:hover { background:#f1f5f9; color:#0f172a; }
+
+/* flat buttons (no bottom edge, no glow) */
+html.theme-bloom.theme-pro body.lobby :is(.btn-primary,.page-card-open,.cs-tab.is-active,.tr-tab.is-active) { background:#4338ca; border:1px solid #4338ca; color:#fff; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .btn-primary:hover { background:#3730a3; box-shadow:none; transform:none; }
+html.theme-bloom.theme-pro body.lobby .btn-primary:active { transform:none; }
+html.theme-bloom.theme-pro body.lobby .btn { border-radius:8px; }
+html.theme-bloom.theme-pro body.lobby .btn-secondary, html.theme-bloom.theme-pro body.lobby .card .btn-secondary { background:#fff; border:1px solid var(--border-2); border-bottom-width:1px; border-radius:8px; color:var(--ink); }
+html.theme-bloom.theme-pro body.lobby .btn-secondary:hover { background:#f1f5f9; border-color:#94a3b8; }
+html.theme-bloom.theme-pro body.lobby :is(.hero-cta,.btn-next,.cs-save .btn-save) { background:#4338ca; color:#fff; border:1px solid #4338ca; border-radius:8px; box-shadow:none; animation:none; }
+html.theme-bloom.theme-pro body.lobby :is(.hero-cta,.btn-next,.cs-save .btn-save):hover:not(:disabled) { background:#3730a3; transform:none; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby :is(.hero-cta-eyebrow,.hero-cta .reset) { color:#c7d2fe; }
+html.theme-bloom.theme-pro body.lobby .hero-cta .reward { background:#fff; color:#4338ca; }
+html.theme-bloom.theme-pro body.lobby :is(.btn-next:disabled,.cs-save .btn-save:disabled) { background:#e2e8f0; color:#94a3b8; border-color:#e2e8f0; }
+html.theme-bloom.theme-pro body.lobby :is(.cs-tab,.tr-tab) { border-radius:8px; }
+html.theme-bloom.theme-pro body.lobby .input, html.theme-bloom.theme-pro body.lobby select, html.theme-bloom.theme-pro body.lobby .select { border-radius:8px; }
+
+/* home hero: a calm indigo band */
+html.theme-bloom.theme-pro body.lobby .hero-v2 { background:linear-gradient(135deg,#312e81,#4338ca); border:0; border-radius:12px; color:#fff; box-shadow:var(--shadow); padding:22px 26px; }
+html.theme-bloom.theme-pro body.lobby .hero-v2::before, html.theme-bloom.theme-pro body.lobby .hero-v2::after { display:none; }
+html.theme-bloom.theme-pro body.lobby .hero-greet { color:#c7d2fe; letter-spacing:.08em; }
+html.theme-bloom.theme-pro body.lobby .hero-name { color:#fff; font-weight:700; }
+html.theme-bloom.theme-pro body.lobby .hero-pill { background:rgba(255,255,255,.14); border-color:rgba(255,255,255,.28); color:#fff; }
+html.theme-bloom.theme-pro body.lobby .hero-pill[data-tier] { background:#fff; border-color:#fff; color:#3730a3; }
+html.theme-bloom.theme-pro body.lobby .hero-avatar-shell { filter:none; }
+html.theme-bloom.theme-pro body.lobby .hero-avatar-shell .ring-track-v2 { stroke:rgba(255,255,255,.25); }
+html.theme-bloom.theme-pro body.lobby .hero-avatar-shell .ring-fill-v2 { stroke:#fff; filter:none; }
+html.theme-bloom.theme-pro body.lobby .hero-avatar-shell .lvl-badge { background:#fff; color:#3730a3; border:0; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+
+/* remove play decoration */
+html.theme-bloom.theme-pro body.lobby :is(.quest-h h2,.ach-h h2)::before { content:none; }
+html.theme-bloom.theme-pro body.lobby .quest-h .meta, html.theme-bloom.theme-pro body.lobby .ach-h .meta { background:#eef2ff; border-color:#c7d2fe; color:#3730a3; border-radius:6px; }
+html.theme-bloom.theme-pro body.lobby .xp-fill::after { display:none; }
+html.theme-bloom.theme-pro body.lobby .xp-fill, html.theme-bloom.theme-pro body.lobby .tr-bar > i, html.theme-bloom.theme-pro body.lobby .rs-bar > i, html.theme-bloom.theme-pro body.lobby .cs-bar > i { background:#4338ca; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .xp-track, html.theme-bloom.theme-pro body.lobby .tr-bar, html.theme-bloom.theme-pro body.lobby .rs-bar, html.theme-bloom.theme-pro body.lobby .cs-bar { background:#e2e8f0; border-color:#e2e8f0; box-shadow:none; height:10px; }
+html.theme-bloom.theme-pro body.lobby .ach-tile .ach-progress > span, html.theme-bloom.theme-pro body.lobby .tr-card .mini > i { background:#4338ca; }
+html.theme-bloom.theme-pro body.lobby .stat-tile-icon { border-radius:8px; animation:none; }
+html.theme-bloom.theme-pro body.lobby .stat-tile-icon.icon-gold { background:#fef3c7; color:#b45309; }
+html.theme-bloom.theme-pro body.lobby .stat-tile-icon.icon-flame { background:#ffedd5; color:#c2410c; }
+html.theme-bloom.theme-pro body.lobby .stat-tile-icon.icon-mor { background:#eef2ff; color:#4338ca; }
+html.theme-bloom.theme-pro body.lobby .stat-tile-icon.icon-cyan { background:#ccfbf1; color:#0f766e; }
+html.theme-bloom.theme-pro body.lobby .command-eyebrow { color:#4338ca; }
+html.theme-bloom.theme-pro body.lobby .command-link, html.theme-bloom.theme-pro body.lobby .card-h .more { color:#4338ca; }
+html.theme-bloom.theme-pro body.lobby .week-cal .wd.on i { background:#4338ca; border-color:#4338ca; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .week-cal .wd.today i { outline-color:#0f766e; }
+html.theme-bloom.theme-pro body.lobby .quest-card .q-glyph { background:#4338ca; box-shadow:none; border-radius:10px; }
+html.theme-bloom.theme-pro body.lobby .quest-card[data-quest="challenge"] .q-glyph { background:#b45309; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .quest-card[data-quest="streak"] .q-glyph { background:#0f766e; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .quest-card .q-reward { color:#b45309; }
+html.theme-bloom.theme-pro body.lobby .quest-card.is-done { background:#f0fdf4; border-color:#86efac; }
+html.theme-bloom.theme-pro body.lobby .quest-card.is-done .q-glyph { background:#15803d; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .quest-chest.is-open { animation:none; background:#fef3c7; border-color:#f59e0b; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .quest-chest.is-open .chest-ico { animation:none; }
+html.theme-bloom.theme-pro body.lobby .ach-tile:not(.locked), html.theme-bloom.theme-pro body.lobby .tr-card.done { background:#fff; box-shadow:var(--shadow-sm); }
+html.theme-bloom.theme-pro body.lobby .ach-tile .ach-art, html.theme-bloom.theme-pro body.lobby .tr-card img { filter:none; }
+html.theme-bloom.theme-pro body.lobby .ach-tile.locked .ach-art, html.theme-bloom.theme-pro body.lobby .tr-card.locked img { filter:grayscale(1) opacity(.45); }
+html.theme-bloom.theme-pro body.lobby .test-row-score { background:#eef2ff; color:#3730a3; border-color:#c7d2fe; border-radius:6px; }
+
+/* trophy room + results + studio chrome */
+html.theme-bloom.theme-pro body.lobby .tr-hero { background:linear-gradient(135deg,#312e81,#4338ca); border-radius:12px; border:0; box-shadow:var(--shadow); }
+html.theme-bloom.theme-pro body.lobby .tr-feature { background:#fffbeb; border-radius:12px; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .tr-feature .flag { background:#b45309; color:#fff; }
+html.theme-bloom.theme-pro body.lobby .tr-card.is-new::before { background:#4338ca; color:#fff; }
+html.theme-bloom.theme-pro body.lobby .rs-stage { background:linear-gradient(135deg,#1e1b4b,#312e81); border-radius:12px; border:0; box-shadow:var(--shadow); }
+html.theme-bloom.theme-pro body.lobby .rs-title { text-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .rs-star.on .st { background:#f59e0b; border:0; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .rs-badge { background:#fffbeb; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .qcard { border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); }
+html.theme-bloom.theme-pro body.lobby .qcard-head { background:#f8fafc; }
+html.theme-bloom.theme-pro body.lobby .qopt { border-radius:10px; border-width:1px; border-bottom-width:1px; }
+html.theme-bloom.theme-pro body.lobby .qopt:hover:not(.is-locked) { background:#f8fafc; border-color:#4338ca; transform:none; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .q-streak-pill { border-radius:6px; animation:none; transform:none; }
+html.theme-bloom.theme-pro body.lobby .cs-plate .lv { background:#fff; color:#3730a3; box-shadow:none; }
+html.theme-bloom.theme-pro body.lobby .cs-char, html.theme-bloom.theme-pro body.lobby .rs-mascot img { animation:none; }
+html.theme-bloom.theme-pro body.lobby .cs-chars .new-flag { background:#b45309; color:#fff; }
+html.theme-bloom.theme-pro body.lobby .sh-tester { background:#fffbeb; border-color:#f59e0b; }

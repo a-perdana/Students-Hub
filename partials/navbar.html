@@ -140,26 +140,42 @@
     if (!(window.fx)) setTimeout(wireMuteBtn, 200);
     document.addEventListener('fx-mute-changed', paintMuteBtn);
 
-    // Look switcher: Arcade (dark, default) <-> Bloom (light). Per-device, stored in
-    // localStorage 'sh-theme'; pages apply it before paint from a tiny head script.
+    // Look switcher: Arcade (dark, default) -> Bloom (light, playful) -> Pro (calm, for teachers /
+    // testers) -> Arcade. Per device in localStorage 'sh-theme' ('arcade' | 'bloom' | 'pro'); pages
+    // apply it before paint from a tiny head script. Pro = html.theme-bloom + html.theme-pro.
+    var LOOKS = [
+      { id: 'arcade', icon: '🎮', name: 'Arcade (dark game look)' },
+      { id: 'bloom',  icon: '🌸', name: 'Bloom (light, playful look)' },
+      { id: 'pro',    icon: '💼', name: 'Pro (calm, professional look)' }
+    ];
+    function currentLook() {
+      var c = document.documentElement.classList;
+      return c.contains('theme-pro') ? 'pro' : c.contains('theme-bloom') ? 'bloom' : 'arcade';
+    }
+    function nextLook(id) { for (var i = 0; i < LOOKS.length; i++) if (LOOKS[i].id === id) return LOOKS[(i + 1) % LOOKS.length]; return LOOKS[0]; }
     function paintThemeBtn() {
-      var b = document.getElementById('themeToggleBtn');
-      if (!b) return;
-      var bloom = document.documentElement.classList.contains('theme-bloom');
-      b.textContent = bloom ? '🌙' : '🌸';
-      b.title = bloom ? 'Switch to the dark Arcade look' : 'Switch to the light Bloom look';
+      var btn = document.getElementById('themeToggleBtn');
+      if (!btn) return;
+      var cur = currentLook(), nx = nextLook(cur);
+      btn.textContent = nx.icon;
+      btn.title = 'Look: ' + LOOKS.filter(function (l) { return l.id === cur; })[0].name + ' — click for ' + nx.name;
+    }
+    function applyLook(id) {
+      var c = document.documentElement.classList;
+      c.toggle('theme-bloom', id !== 'arcade');
+      c.toggle('theme-pro', id === 'pro');
+      try { localStorage.setItem('sh-theme', id); } catch (e) {}
+      if (id === 'bloom' && !document.getElementById('bloomFont')) {
+        var l = document.createElement('link'); l.id = 'bloomFont'; l.rel = 'stylesheet';
+        l.href = 'https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap';
+        document.head.appendChild(l);
+      }
     }
     var tb = document.getElementById('themeToggleBtn');
     if (tb && !tb._wired) {
       tb._wired = true;
       tb.addEventListener('click', function () {
-        var on = document.documentElement.classList.toggle('theme-bloom');
-        try { localStorage.setItem('sh-theme', on ? 'bloom' : 'arcade'); } catch (e) {}
-        if (on && !document.getElementById('bloomFont')) {
-          var l = document.createElement('link'); l.id = 'bloomFont'; l.rel = 'stylesheet';
-          l.href = 'https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap';
-          document.head.appendChild(l);
-        }
+        applyLook(nextLook(currentLook()).id);
         paintThemeBtn();
         if (window.fx && window.fx.play) window.fx.play('tick');
       });
