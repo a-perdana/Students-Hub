@@ -7,7 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Lora:wght@600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
   <style>
     /* ─── Hero v2 — big avatar + quest welcome ─────────────────── */
@@ -433,12 +433,191 @@
     .page-intro-dismiss { position:absolute; top:8px; right:8px; background:rgba(255,255,255,.7); border:1px solid #c4b5fd; border-radius:6px; width:24px; height:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#4e3db8; font-size:14px; line-height:1; }
     .page-intro-dismiss:hover { background:#fff; }
   </style>
+  <style id="lobby-v3">
+    /* ═══ Game Lobby v3 — Stitch "Arcade Academic" (2026-10-03) ═══════════
+       Scoped to body.lobby. Overrides the v2 dashboard rules above; every
+       element id the page script hooks into is unchanged. */
+    body.lobby {
+      --ink:#f1ecff; --ink-2:#cfc8ee; --ink-3:#9d96c4;
+      --border:rgba(255,255,255,.11); --border-2:rgba(255,255,255,.22);
+      --paper:rgba(255,255,255,.05);
+      --ok:#34d399; --ok-bg:rgba(52,211,153,.12);
+      --danger:#fb7185; --danger-bg:rgba(251,113,133,.14);
+      --gold:#fbbf24; --flame:#ff7a2f; --lobby-cyan:#22d3ee; --lobby-mor:#8b7cff;
+      --glass:linear-gradient(160deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
+      background:
+        radial-gradient(900px 500px at 12% -8%,rgba(108,92,231,.38),transparent 60%),
+        radial-gradient(800px 480px at 95% 8%,rgba(8,145,178,.30),transparent 60%),
+        radial-gradient(700px 500px at 50% 110%,rgba(245,179,1,.10),transparent 60%),
+        #0f0b24;
+      background-attachment: fixed;
+      color: var(--ink);
+      font-family:'DM Sans',system-ui,sans-serif;
+    }
+    body.lobby .topbar { background:rgba(15,11,36,.78); backdrop-filter:blur(14px); border-bottom:1px solid var(--border); }
+    body.lobby .topbar a, body.lobby .topbar-brand { color:var(--ink); }
+    body.lobby .page-intro { background:var(--glass); border-color:var(--border-2); }
+    body.lobby .page-intro-title,body.lobby .page-intro-text strong,body.lobby .page-intro-link { color:#c9c1ff; }
+    body.lobby .page-intro-dismiss { background:rgba(255,255,255,.08); border-color:var(--border-2); color:var(--ink); }
+    body.lobby h2, body.lobby h3, body.lobby .hero-name, body.lobby .command-main,
+    body.lobby .test-row-score, body.lobby .card-h h3 { font-family:'Outfit','DM Sans',sans-serif; }
+
+    /* glass surface shared by all panels */
+    body.lobby .command-card, body.lobby .stat-tile, body.lobby .quest-card,
+    body.lobby .ach-tile, body.lobby .card {
+      background:var(--glass); border:1px solid var(--border);
+      box-shadow:0 18px 40px -26px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.08);
+      backdrop-filter:blur(10px); color:var(--ink);
+    }
+
+    /* ── Hero ── */
+    body.lobby .hero-v2 {
+      background:
+        radial-gradient(420px 220px at 85% 0%,rgba(34,211,238,.35),transparent 65%),
+        radial-gradient(420px 260px at 0% 100%,rgba(139,124,255,.45),transparent 65%),
+        linear-gradient(135deg,#2a1f6b 0%,#1a1550 60%,#0e3a52 100%);
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:0 30px 60px -28px rgba(108,92,231,.75), inset 0 1px 0 rgba(255,255,255,.18);
+      padding:28px 32px;
+    }
+    body.lobby .hero-v2::after { content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+      background-image:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(1.5px 1.5px at 60% 70%,#fff,transparent),radial-gradient(2px 2px at 82% 25%,#fff,transparent),radial-gradient(1.5px 1.5px at 40% 85%,#fff,transparent);
+      animation:lobbyTwinkle 4s ease-in-out infinite alternate; }
+    @keyframes lobbyTwinkle { from{opacity:.25} to{opacity:.7} }
+    body.lobby .hero-avatar-shell { width:132px; height:132px; filter:drop-shadow(0 0 18px rgba(139,124,255,.7)); }
+    body.lobby .hero-avatar-shell .ring-track-v2 { stroke:rgba(255,255,255,.14); stroke-width:7; }
+    body.lobby .hero-avatar-shell .ring-fill-v2 { stroke:url(#lobbyRingGrad); stroke-width:7; filter:drop-shadow(0 0 8px rgba(251,191,36,.8)); }
+    body.lobby .hero-avatar-shell .avatar-pic { inset:14px; background:#1d1747; box-shadow:inset 0 0 0 3px rgba(255,255,255,.18); }
+    body.lobby .hero-avatar-shell .lvl-badge {
+      background:linear-gradient(180deg,#ffd54a,#f59e0b); color:#3b2600; border:2px solid #fff3c4;
+      min-width:42px; height:42px; border-radius:21px; font-size:1.05rem; font-family:'Outfit',sans-serif;
+      box-shadow:0 4px 0 #b45309, 0 8px 18px rgba(245,158,11,.55);
+    }
+    body.lobby .hero-greet { color:#bfe9f5; opacity:1; letter-spacing:.14em; text-transform:uppercase; font-size:.72rem; font-weight:700; }
+    body.lobby .hero-name { font-family:'Outfit',sans-serif; font-weight:800; font-size:clamp(1.8rem,3.6vw,2.7rem); text-shadow:0 0 24px rgba(139,124,255,.6); }
+    body.lobby .hero-pill { background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.22); color:#fff; }
+    body.lobby .hero-pill[data-tier] { background:linear-gradient(180deg,rgba(251,191,36,.3),rgba(251,191,36,.12)); border-color:rgba(251,191,36,.6); color:#ffe08a; }
+    body.lobby .hero-cta {
+      background:linear-gradient(180deg,#ffd54a 0%,#f5a30b 100%); color:#3b2600;
+      padding:16px 24px; border-radius:18px; font-family:'Outfit',sans-serif; font-size:1.1rem;
+      border:2px solid #fff3c4; box-shadow:0 6px 0 #b45309, 0 16px 34px -6px rgba(245,158,11,.65);
+      animation:lobbyPulse 2.4s ease-in-out infinite; position:relative;
+    }
+    body.lobby .hero-cta:hover { transform:translateY(-3px); box-shadow:0 9px 0 #b45309, 0 22px 40px -6px rgba(245,158,11,.75); }
+    body.lobby .hero-cta:active { transform:translateY(5px); box-shadow:0 1px 0 #b45309, 0 6px 14px -4px rgba(245,158,11,.6); }
+    body.lobby .hero-cta-eyebrow { color:#7a4a00; opacity:1; }
+    body.lobby .hero-cta .reward { display:inline-block; margin-top:3px; padding:2px 9px; border-radius:99px; background:#3b2600; color:#ffd54a; font-size:.72rem; font-weight:800; letter-spacing:.04em; }
+    body.lobby .hero-cta .reset { display:block; margin-top:4px; font-size:.7rem; font-weight:700; color:#7a4a00; font-variant-numeric:tabular-nums; }
+    @keyframes lobbyPulse { 0%,100%{box-shadow:0 6px 0 #b45309,0 16px 34px -6px rgba(245,158,11,.55)} 50%{box-shadow:0 6px 0 #b45309,0 16px 46px 0 rgba(245,158,11,.95)} }
+
+    /* ── Section headings ── */
+    body.lobby .quest-h h2, body.lobby .ach-h h2 { font-size:1.35rem; font-weight:800; letter-spacing:-.01em; }
+    body.lobby .quest-h h2::before { content:'⚔️ '; } body.lobby .ach-h h2::before { content:'🏅 '; }
+    body.lobby .quest-h .meta, body.lobby .ach-h .meta { color:#c9c1ff; background:rgba(139,124,255,.16); border:1px solid rgba(139,124,255,.35); padding:4px 12px; border-radius:99px; font-weight:700; }
+
+    /* ── Quests ── */
+    body.lobby .quest-card { border-radius:20px; min-height:170px; border-color:rgba(139,124,255,.45); }
+    body.lobby .quest-card::before { content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+      background:radial-gradient(240px 120px at 0% 0%,rgba(139,124,255,.25),transparent 70%); }
+    body.lobby .quest-card:hover { transform:translateY(-4px) scale(1.01); border-color:var(--lobby-cyan); box-shadow:0 22px 44px -18px rgba(34,211,238,.45); }
+    body.lobby .quest-card .q-glyph { width:54px;height:54px;border-radius:16px;font-size:1.7rem;
+      background:linear-gradient(160deg,#7c6cff,#4b3bd1); box-shadow:0 4px 0 #2d2190, 0 0 22px rgba(139,124,255,.55); color:#fff; }
+    body.lobby .quest-card[data-quest="challenge"] .q-glyph { background:linear-gradient(160deg,#ffd54a,#f59e0b); box-shadow:0 4px 0 #b45309,0 0 22px rgba(251,191,36,.55); }
+    body.lobby .quest-card[data-quest="streak"] .q-glyph { background:linear-gradient(160deg,#ff9a4d,#ea4b1f); box-shadow:0 4px 0 #9a2a0a,0 0 22px rgba(255,122,47,.6); }
+    body.lobby .quest-card .q-title { color:#fff; font-family:'Outfit',sans-serif; font-size:1.05rem; font-weight:700; }
+    body.lobby .quest-card .q-sub { color:var(--ink-2); }
+    body.lobby .quest-card .q-reward { color:#ffd54a; border-top-color:rgba(255,255,255,.14); font-size:.82rem; }
+    body.lobby .quest-card.is-done { background:linear-gradient(160deg,rgba(52,211,153,.2),rgba(52,211,153,.05)); border-color:var(--ok); }
+    body.lobby .quest-card.is-done::after { background:var(--ok); color:#053b2a; box-shadow:0 0 16px rgba(52,211,153,.8); }
+    body.lobby .quest-card.is-done .q-glyph { background:linear-gradient(160deg,#34d399,#059669); box-shadow:0 4px 0 #046c4e; color:#fff; }
+    body.lobby .quest-card.is-done .q-reward { color:var(--ok); }
+
+    /* progress track + reward chest */
+    body.lobby .quest-track { grid-template-columns:repeat(3,1fr) auto; gap:10px; align-items:stretch; position:relative; }
+    body.lobby .quest-node { background:rgba(255,255,255,.05); border-color:var(--border); color:var(--ink-2); border-radius:14px; }
+    body.lobby .quest-node .node-dot { background:transparent; border-color:var(--border-2); }
+    body.lobby .quest-node.is-done { background:var(--ok-bg); border-color:var(--ok); color:var(--ok); }
+    body.lobby .quest-node.is-done .node-dot { background:var(--ok); box-shadow:0 0 12px rgba(52,211,153,.9); }
+    body.lobby .quest-chest { display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:14px; font-weight:800; font-size:.8rem;
+      background:rgba(255,255,255,.05); border:1px dashed var(--border-2); color:var(--ink-3); }
+    body.lobby .quest-chest .chest-ico { font-size:1.5rem; filter:grayscale(1) opacity(.5); transition:filter .3s; }
+    body.lobby .quest-chest.is-open { border:1px solid #ffd54a; background:linear-gradient(160deg,rgba(255,213,74,.28),rgba(245,158,11,.1)); color:#ffe08a; animation:lobbyPulse 2s infinite; }
+    body.lobby .quest-chest.is-open .chest-ico { filter:none; animation:lobbyShake .7s ease-in-out 3; }
+    @keyframes lobbyShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-12deg) scale(1.15)} 75%{transform:rotate(12deg) scale(1.15)} }
+    @media (max-width:760px){ body.lobby .quest-track{grid-template-columns:1fr} }
+
+    /* ── Status deck ── */
+    body.lobby .command-card { border-radius:20px; }
+    body.lobby .command-card::after { background:radial-gradient(circle,rgba(139,124,255,.45),transparent 70%); opacity:1; }
+    body.lobby .command-eyebrow { color:#8fe9f7; }
+    body.lobby .command-main { color:#fff; font-weight:800; font-size:1.6rem; }
+    body.lobby .command-sub { color:var(--ink-2); }
+    body.lobby .xp-track { height:16px; background:rgba(0,0,0,.35); border:1px solid var(--border-2); box-shadow:inset 0 2px 4px rgba(0,0,0,.5); }
+    body.lobby .xp-fill { background:linear-gradient(90deg,#8b7cff,#22d3ee 55%,#fbbf24); box-shadow:0 0 16px rgba(34,211,238,.7); position:relative; }
+    body.lobby .xp-fill::after { content:'';position:absolute;inset:0;border-radius:inherit;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent); background-size:60% 100%; background-repeat:no-repeat; animation:lobbyShine 2.4s linear infinite; }
+    @keyframes lobbyShine { from{background-position:-80% 0} to{background-position:180% 0} }
+    body.lobby .command-link { color:#ffd54a; }
+    .week-cal { display:flex; gap:6px; margin:10px 0 2px; position:relative; z-index:1; }
+    .week-cal .wd { flex:1; text-align:center; font-size:.62rem; font-weight:800; color:var(--ink-3); letter-spacing:.06em; }
+    .week-cal .wd i { display:flex; align-items:center; justify-content:center; height:26px; margin-bottom:3px; border-radius:50%; font-style:normal; font-size:.85rem;
+      background:rgba(255,255,255,.07); border:1px solid var(--border); }
+    .week-cal .wd.on i { background:linear-gradient(160deg,#ff9a4d,#ea4b1f); border-color:#ffb27a; box-shadow:0 0 12px rgba(255,122,47,.7); }
+    .week-cal .wd.today i { outline:2px solid #ffd54a; outline-offset:2px; }
+
+    /* ── Stat tiles ── */
+    body.lobby .stat-tile { border-radius:20px; transition:transform .15s; }
+    body.lobby .stat-tile:hover { transform:translateY(-3px); }
+    body.lobby .stat-tile-val { color:#fff; font-family:'Outfit',sans-serif; font-weight:800; font-size:1.7rem; }
+    body.lobby .stat-tile-lbl { color:var(--ink-3); text-transform:uppercase; letter-spacing:.08em; font-size:.68rem; font-weight:700; }
+    body.lobby .stat-tile-icon { box-shadow:0 0 22px currentColor; }
+    body.lobby .stat-tile-icon.icon-gold { background:rgba(251,191,36,.18); color:#fbbf24; }
+    body.lobby .stat-tile-icon.icon-flame { background:rgba(255,122,47,.18); color:#ff7a2f; animation:lobbyFlame 1.6s ease-in-out infinite; }
+    body.lobby .stat-tile-icon.icon-mor { background:rgba(139,124,255,.2); color:#a99dff; }
+    body.lobby .stat-tile-icon.icon-cyan { background:rgba(34,211,238,.18); color:#22d3ee; }
+    @keyframes lobbyFlame { 0%,100%{transform:scale(1) rotate(-2deg)} 50%{transform:scale(1.1) rotate(3deg)} }
+
+    html:has(body.lobby) { background:#0f0b24; }
+    body.lobby { min-height:100vh; }
+    /* ── Achievements = medals (8 badges: 8 → 4 → 2 columns, never an orphan row) ── */
+    body.lobby .ach-row { grid-template-columns:repeat(8,1fr); }
+    @media (max-width:1000px) { body.lobby .ach-row { grid-template-columns:repeat(4,1fr); } }
+    @media (max-width:480px)  { body.lobby .ach-row { grid-template-columns:repeat(2,1fr); } }
+    body.lobby .ach-tile { border-radius:20px; padding:16px 8px; }
+    body.lobby .ach-tile:hover { transform:translateY(-4px); }
+    body.lobby .ach-tile:not(.locked) { border-color:rgba(251,191,36,.7); background:linear-gradient(160deg,rgba(251,191,36,.25),rgba(251,191,36,.05)); box-shadow:0 0 26px -6px rgba(251,191,36,.6); }
+    body.lobby .ach-tile .ach-glyph { font-size:2.1rem; filter:drop-shadow(0 0 10px rgba(251,191,36,.7)); }
+    body.lobby .ach-tile.locked { background:rgba(255,255,255,.03); border:1px dashed var(--border-2); opacity:1; }
+    body.lobby .ach-tile.locked .ach-glyph { filter:grayscale(1) brightness(.5); }
+    body.lobby .ach-tile .ach-label { color:#fff; }
+    body.lobby .ach-tile.locked .ach-label { color:var(--ink-3); }
+    body.lobby .ach-tile .ach-progress { background:rgba(255,255,255,.12); }
+    body.lobby .ach-tile .ach-progress > span { background:linear-gradient(90deg,#22d3ee,#fbbf24); }
+
+    /* ── Lower grid ── */
+    body.lobby .card { border-radius:20px; }
+    body.lobby .card-h h3 { color:#fff; font-weight:800; }
+    body.lobby .card-h .more { color:#ffd54a; }
+    body.lobby .test-row { border-bottom-color:var(--border); }
+    body.lobby .test-row:hover { background:rgba(255,255,255,.05); }
+    body.lobby .test-row-title { color:#fff; }
+    body.lobby .test-row-meta { color:var(--ink-3); }
+    body.lobby .test-row-score { background:rgba(251,191,36,.16); color:#ffd54a; border:1px solid rgba(251,191,36,.4); }
+    body.lobby .card .btn-secondary { background:rgba(255,255,255,.07); border:1px solid var(--border-2); color:#fff; border-bottom-width:3px; border-radius:14px; }
+    body.lobby .card .btn-secondary:hover { border-color:var(--lobby-cyan); background:rgba(34,211,238,.12); }
+    body.lobby .skel { background:rgba(255,255,255,.08); }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.lobby *, body.lobby *::before, body.lobby *::after { animation:none !important; transition:none !important; }
+    }
+  </style>
 </head>
-<body style="display:none">
+<body class="lobby" style="display:none">
   <!-- FIREBASE_ENV -->
 
   <svg class="tier-svg-defs" aria-hidden="true">
     <defs>
+      <linearGradient id="lobbyRingGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#fbbf24"/></linearGradient>
       <linearGradient id="tierMasterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%"   stop-color="#6c5ce7"/>
         <stop offset="100%" stop-color="#0891b2"/>
@@ -509,6 +688,8 @@
         <div style="text-align:left">
           <span class="hero-cta-eyebrow" id="heroCtaEyebrow">Today</span>
           <strong id="heroCtaLabel">Daily Challenge</strong>
+          <span class="reward">★ +50 POINTS</span>
+          <span class="reset" id="heroCtaReset"></span>
         </div>
         <span class="arrow">→</span>
       </a>
@@ -544,6 +725,7 @@
         <div class="quest-node" id="nodeChallenge"><span class="node-dot"></span><span>Challenge clear</span></div>
         <div class="quest-node" id="nodePractice"><span class="node-dot"></span><span>Practice run</span></div>
         <div class="quest-node" id="nodeStreak"><span class="node-dot"></span><span>Streak saved</span></div>
+        <div class="quest-chest" id="questChest"><span class="chest-ico">🎁</span><span id="questChestTxt">Finish all 3 to open the chest</span></div>
       </div>
     </section>
 
@@ -559,6 +741,7 @@
         <div class="command-eyebrow">Streak watch</div>
         <div class="command-main" id="streakStatus">Loading...</div>
         <div class="command-sub" id="streakSub">One scored run keeps the chain alive.</div>
+        <div class="week-cal" id="weekCal" aria-label="This week streak"></div>
         <a class="command-link" href="/practice">Start a run</a>
       </div>
       <div class="command-card">
@@ -1039,6 +1222,63 @@
         '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
       })[c]);
     }
+  </script>
+
+  <!-- Game-lobby extras (2026-10-03): reset countdown, week streak calendar, reward chest.
+       Read-only decoration — derives everything from the DOM the main script already fills. -->
+  <script>
+  (function () {
+    const TZ = 'Asia/Jakarta';
+    function jakartaNow() {
+      const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour12: false,
+        weekday: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date()).map(x => [x.type, x.value]));
+      return { dow: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].indexOf(p.weekday),
+               h: +p.hour % 24, m: +p.minute, s: +p.second };
+    }
+    // 1) countdown to the 00:00 Asia/Jakarta daily-challenge rotation
+    const resetEl = document.getElementById('heroCtaReset');
+    function tick() {
+      if (!resetEl) return;
+      const t = jakartaNow();
+      const left = 86400 - (t.h * 3600 + t.m * 60 + t.s);
+      const pad = n => String(n).padStart(2, '0');
+      resetEl.textContent = 'Resets in ' + pad(Math.floor(left / 3600)) + ':' + pad(Math.floor(left % 3600 / 60)) + ':' + pad(left % 60);
+    }
+    tick(); setInterval(tick, 1000);
+
+    // 2) this-week streak calendar
+    const cal = document.getElementById('weekCal');
+    const streakEl = document.getElementById('streakDays');
+    const streakNode = document.getElementById('nodeStreak');
+    function paintWeek() {
+      if (!cal) return;
+      const streak = parseInt((streakEl.textContent || '0').replace(/[^\d]/g, ''), 10) || 0;
+      const alive = streakNode.classList.contains('is-done');
+      const today = jakartaNow().dow;
+      const end = alive ? today : today - 1;
+      cal.innerHTML = ['M','T','W','T','F','S','S'].map((d, i) => {
+        const on = streak > 0 && i <= end && i > end - streak;
+        return '<div class="wd' + (on ? ' on' : '') + (i === today ? ' today' : '') + '"><i>' + (on ? '🔥' : '') + '</i>' + d + '</div>';
+      }).join('');
+    }
+    paintWeek();
+    if (streakEl) new MutationObserver(paintWeek).observe(streakEl, { childList: true, characterData: true, subtree: true });
+    if (streakNode) new MutationObserver(paintWeek).observe(streakNode, { attributes: true, attributeFilter: ['class'] });
+
+    // 3) reward chest opens once all three quest nodes are done
+    const chest = document.getElementById('questChest');
+    const chestTxt = document.getElementById('questChestTxt');
+    const nodes = ['nodeChallenge', 'nodePractice', 'nodeStreak'].map(id => document.getElementById(id));
+    function paintChest() {
+      if (!chest) return;
+      const done = nodes.filter(n => n && n.classList.contains('is-done')).length;
+      const open = done === 3;
+      chest.classList.toggle('is-open', open);
+      chestTxt.textContent = open ? 'All quests clear — chest unlocked!' : done + ' / 3 — finish all to open the chest';
+    }
+    paintChest();
+    nodes.forEach(n => n && new MutationObserver(paintChest).observe(n, { attributes: true, attributeFilter: ['class'] }));
+  })();
   </script>
 </body>
 </html>
