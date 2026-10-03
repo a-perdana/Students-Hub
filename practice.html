@@ -84,7 +84,7 @@
       border-radius: 12px; border: 1.5px solid var(--border); background: var(--white); color: var(--ink-2); }
     .chap-sel:disabled { opacity: .5; }
     .chap-sel.is-active { border-color: var(--mor, #6c5ce7); color: var(--ink); }
-    #chapterSection[hidden] { display: none; }
+    #chapterSection[hidden], .chap-sel[hidden] { display: none; }
     .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
     .pick-chip {
       padding: 8px 14px;
@@ -253,6 +253,7 @@
       <div class="pick-section" id="chapterSection" hidden>
         <div class="pick-label">Or study by chapter</div>
         <div class="chap-row">
+          <select class="chap-sel" id="bookSel" aria-label="Book" hidden></select>
           <select class="chap-sel" id="chapterSel" aria-label="Chapter"></select>
           <select class="chap-sel" id="chapTopicSel" aria-label="Topic in chapter" disabled></select>
         </div>
@@ -309,6 +310,7 @@
       subjectId: 'math',
       grade: null,        // students/{uid}.gradeLevel (7-12) — the pool is filtered to it
       topicGroup: null,   // null = nothing picked yet; ALL_TOPICS = any topic
+      book: null,         // coursebook the chapter belongs to ("Pure Mathematics 1", "Stage 8", "Biology")
       chapter: null,      // exact chapter string from the Cambridge LO workbook ("1. Integers")
       chapTopic: null,    // exact topic string within that chapter ("1.1 Adding and subtracting integers")
       difficulty: 'any',
@@ -352,6 +354,7 @@
         ch.addEventListener('click', () => selectDifficulty(ch.dataset.diff));
       });
       document.getElementById('btnStart').addEventListener('click', startRun);
+      document.getElementById('bookSel').addEventListener('change', e => selectBook(e.target.value));
       document.getElementById('chapterSel').addEventListener('change', e => selectChapter(e.target.value));
       document.getElementById('chapTopicSel').addEventListener('change', e => selectChapTopic(e.target.value));
       selectSubject('math');
@@ -384,7 +387,7 @@
         poolStats = null;
         poolStatsPromise = null;
         state.topicGroup = null;
-        state.chapter = null; state.chapTopic = null;
+        state.book = null; state.chapter = null; state.chapTopic = null;
         await loadCounts(state.subjectId);
         renderTopicChips();
         renderChapterPicker();
@@ -423,7 +426,7 @@
     async function selectSubject(subj) {
       state.subjectId = subj;
       state.topicGroup = null;
-      state.chapter = null; state.chapTopic = null;
+      state.book = null; state.chapter = null; state.chapTopic = null;
       document.querySelectorAll('.subj-card').forEach(c =>
         c.classList.toggle('is-active', c.dataset.subj === subj)
       );
@@ -434,11 +437,11 @@
     }
 
     async function loadCounts(subj) {
-      state.counts = { byTopic: {}, byDifficulty: {}, byChapter: {}, total: 0 };
+      state.counts = { byTopic: {}, byDifficulty: {}, byBook: {}, total: 0 };
       if (!state.grade) return;
       if (!poolStats) await fetchPoolStats();
       const s = poolStats?.subjects?.[subj];
-      if (s) state.counts = { byTopic: s.byTopic || {}, byDifficulty: s.byDifficulty || {}, byChapter: s.byChapter || {}, total: s.total || 0 };
+      if (s) state.counts = { byTopic: s.byTopic || {}, byDifficulty: s.byDifficulty || {}, byBook: s.byBook || {}, total: s.total || 0 };
     }
 
     // ─── Chapter / topic picker (Cambridge LO workbook order) ────────
@@ -446,17 +449,32 @@
     const numKey = (str) => { const m = String(str).match(/^(\d+)(?:\.(\d+))?/); return m ? [Number(m[1]), Number(m[2] || 0)] : [1e9, 0]; };
     const byNum = (a, b) => { const x = numKey(a), y = numKey(b); return x[0] - y[0] || x[1] - y[1] || a.localeCompare(b); };
 
+    // Books: "Stage 7" < "Stage 8"; "Pure Mathematics 1" < "Pure Mathematics 2 & 3"; otherwise A-Z.
+    const bookSort = (a, b) => a.localeCompare(b, undefined, { numeric: true });
+
     function renderChapterPicker() {
       const sec = document.getElementById('chapterSection');
+      const bsel = document.getElementById('bookSel');
       const sel = document.getElementById('chapterSel');
       const tsel = document.getElementById('chapTopicSel');
-      const chapters = Object.keys(state.counts.byChapter || {}).sort(byNum);
-      sec.hidden = chapters.length === 0;
-      if (!chapters.length) return;
-      sel.innerHTML = '<option value="">Choose a chapter…</option>' + chapters.map(c =>
-        `<option value="${escAttr(c)}"${state.chapter === c ? ' selected' : ''}>${escHtml(c)} (${state.counts.byChapter[c].n})</option>`).join('');
+      const books = Object.keys(state.counts.byBook || {}).sort(bookSort);
+      sec.hidden = books.length === 0;
+      if (!books.length) return;
+      // One book only (e.g. IGCSE Mathematics): no need to ask which one.
+      if (books.length === 1) state.book = books[0];
+      const label = state.subjectId === 'science' && state.grade >= 9 ? 'Science subject' : 'Book';
+      bsel.hidden = books.length === 1;
+      bsel.innerHTML = `<option value="">Choose ${label === 'Book' ? 'a book' : 'a subject'}…</option>` + books.map(b =>
+        `<option value="${escAttr(b)}"${state.book === b ? ' selected' : ''}>${escHtml(b)} (${state.counts.byBook[b].n})</option>`).join('');
+      bsel.setAttribute('aria-label', label);
+      bsel.classList.toggle('is-active', !!state.book);
+      const bk = state.book ? state.counts.byBook[state.book] : null;
+      sel.disabled = !bk;
+      const chapters = bk ? Object.keys(bk.chapters).sort(byNum) : [];
+      sel.innerHTML = '<option value="">' + (bk ? 'Choose a chapter…' : 'Chapter…') + '</option>' + chapters.map(c =>
+        `<option value="${escAttr(c)}"${state.chapter === c ? ' selected' : ''}>${escHtml(c)} (${bk.chapters[c].n})</option>`).join('');
       sel.classList.toggle('is-active', !!state.chapter);
-      const info = state.chapter ? state.counts.byChapter[state.chapter] : null;
+      const info = bk && state.chapter ? bk.chapters[state.chapter] : null;
       tsel.disabled = !info;
       const topics = info ? Object.keys(info.topics || {}).sort(byNum) : [];
       tsel.innerHTML = info
@@ -464,6 +482,14 @@
             `<option value="${escAttr(t)}"${state.chapTopic === t ? ' selected' : ''}>${escHtml(t)} (${info.topics[t]})</option>`).join('')
         : '<option value="">Topic…</option>';
       tsel.classList.toggle('is-active', !!state.chapTopic);
+    }
+
+    function selectBook(b) {
+      state.book = b || null;
+      state.chapter = null;
+      state.chapTopic = null;
+      renderChapterPicker();
+      updateStartBar();
     }
 
     function selectChapter(c) {
@@ -506,7 +532,7 @@
 
     function selectTopic(t) {
       state.topicGroup = state.topicGroup === t ? null : t;
-      if (state.topicGroup) { state.chapter = null; state.chapTopic = null; renderChapterPicker(); }
+      if (state.topicGroup) { state.book = null; state.chapter = null; state.chapTopic = null; renderChapterPicker(); }
       renderTopicChips();
       updateStartBar();
     }
@@ -551,6 +577,7 @@
         n:       '10',
       });
       if (state.chapter) {
+        if (state.book) params.set('book', state.book);
         params.set('chapter', state.chapter);
         if (state.chapTopic) params.set('ctopic', state.chapTopic);
       } else if (state.topicGroup !== ALL_TOPICS) params.set('topic', state.topicGroup);

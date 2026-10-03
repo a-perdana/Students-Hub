@@ -629,6 +629,7 @@
     const CHALLENGE_ID = params.get('challenge');   // e.g. '2026-05-13_math'
     const SUBJECT = params.get('subject') || (CHALLENGE_ID ? CHALLENGE_ID.split('_')[1] : 'math');
     const TOPIC   = params.get('topic')   || null;
+    const BOOK    = params.get('book')    || null;
     const CHAPTER = params.get('chapter') || null;   // Cambridge chapter, exact string
     const CTOPIC  = params.get('ctopic')  || null;   // topic within that chapter
     const DIFF    = params.get('diff')    || 'any';
@@ -749,7 +750,7 @@
     async function startRun() {
       const payload = CHALLENGE_ID
         ? { challengeId: CHALLENGE_ID }
-        : { subjectId: SUBJECT, topicGroup: TOPIC, chapter: CHAPTER, chapterTopic: CTOPIC, difficulty: DIFF === 'any' ? null : DIFF, n: N };
+        : { subjectId: SUBJECT, topicGroup: TOPIC, book: BOOK, chapter: CHAPTER, chapterTopic: CTOPIC, difficulty: DIFF === 'any' ? null : DIFF, n: N };
       const res = (await callStart(payload)).data;
       state.items = res.items || [];
       if (!state.items.length) throw new Error('No questions available right now.');
