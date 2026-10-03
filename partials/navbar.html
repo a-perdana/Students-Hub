@@ -94,7 +94,17 @@
       } catch (e) { /* silent — chip stays hidden */ }
     }
 
-    function onReady() { paintAvatar(); paintPoints(); }
+    function paintTester() {
+      if (document.getElementById('shTesterChip') || !window.shIsTester || !window.shIsTester()) return;
+      const u = document.querySelector('.topbar-user');
+      if (!u) return;
+      const c = document.createElement('a');
+      c.id = 'shTesterChip'; c.href = '/avatar'; c.textContent = '🧪 TESTER';
+      c.title = 'Eduversal tester mode: everything unlocked. Click to change.';
+      c.style.cssText = 'padding:4px 10px;border-radius:99px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-decoration:none;background:#fbbf24;color:#3b2600;white-space:nowrap';
+      u.insertBefore(c, u.firstChild);
+    }
+    function onReady() { paintAvatar(); paintPoints(); paintTester(); }
     window.addEventListener('mascot-level', paintAvatar);
     if (window.studentProfile) onReady();
     else window.addEventListener('authReady', onReady);

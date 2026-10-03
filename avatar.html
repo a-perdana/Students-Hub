@@ -204,6 +204,8 @@
       <div class="cs-charrow" id="csChars"></div>
     </section>
 
+    <div id="csTester"></div>
+
     <div class="cs-grid">
       <!-- ── Stage ── -->
       <section class="card cs-stage-card" aria-label="Your mascot">
@@ -320,7 +322,9 @@
     const state = { equipped: { hat: null, gear: null, companion: null, bg: 'study-nook' }, saved: null, cat: 'hat', preview: null, char: 'sparky', chosen: false };
     let uid = null;
 
+    const unlockAll = () => !!(window.shTesterUnlockAll && window.shTesterUnlockAll());
     const have = (it) => {
+      if (unlockAll()) return true;
       const r = it.req;
       return (r.t === 'level' ? stats.level : r.t === 'streak' ? stats.streak : stats.perfect) >= r.n;
     };
@@ -350,6 +354,8 @@
         stats.perfect  = d.perfectScores || 0;
         stats.progress = Math.max(0, Math.min(100, d.levelProgress || 0));
       } catch (e) { console.warn('[studio] points load failed', e.message); }
+      stats.realLevel = stats.level;
+      applyTesterLevel();
 
       // equipped: Firestore wins, then this device, then defaults
       let eq = p.mascotEquipped;
@@ -373,7 +379,19 @@
       renderAll();
     });
 
-    function renderAll() { renderChars(); renderStage(); renderEvo(); renderItems(); renderForms(); renderNext(); renderCount(); markDirty(); }
+    // Tester mode: simulate a level (unlock-everything is handled by have()/unlockAll()).
+    function applyTesterLevel() {
+      const tl = window.shTesterLevel && window.shTesterLevel();
+      stats.level = tl || stats.realLevel || stats.level;
+      if (tl) stats.progress = 40;
+    }
+    function renderTester() {
+      window.shRenderTesterBar(document.getElementById('csTester'), {
+        onChange: () => { applyTesterLevel(); state.preview = null; renderAll(); }
+      });
+    }
+
+    function renderAll() { renderTester(); renderChars(); renderStage(); renderEvo(); renderItems(); renderForms(); renderNext(); renderCount(); markDirty(); }
 
     function renderChars() {
       const card = document.getElementById('csCharsCard');
@@ -469,7 +487,7 @@
     function renderForms() {
       const fi = formFor(stats.level);
       document.getElementById('csForms').innerHTML = FORMS.map((f, i) => {
-        const cls = i < fi ? 'done' : i === fi ? 'current' : 'locked';
+        const cls = i < fi ? 'done' : i === fi ? 'current' : (unlockAll() ? 'done' : 'locked');
         const range = f.to ? 'Lv ' + f.from + '–' + f.to : 'Lv ' + f.from + '+';
         return '<button type="button" class="cs-form ' + cls + (state.preview === i ? ' previewing' : '') + '" data-i="' + i + '"' + (i > fi ? ' aria-disabled="true"' : '') + '>'
           + '<div class="art"><img src="' + fp(f.id) + '" alt="" loading="lazy"></div>'
@@ -477,7 +495,7 @@
       }).join('');
       document.querySelectorAll('#csForms .cs-form').forEach(b => b.addEventListener('click', () => {
         const i = +b.dataset.i;
-        if (i > fi) return;
+        if (i > fi && !unlockAll()) return;
         state.preview = (i === fi || state.preview === i) ? null : i;
         renderStage(); renderForms();
       }));

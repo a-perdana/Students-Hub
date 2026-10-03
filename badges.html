@@ -106,6 +106,8 @@
       </div>
     </section>
 
+    <div id="trTester" style="margin-top:14px"></div>
+
     <div class="tr-legend" id="trLegend"><b>Rarity</b></div>
 
     <section id="trFeature" hidden></section>
@@ -137,7 +139,7 @@
 
     const B = window.SH_BADGES;
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
-    let all = [], cat = 'all', fresh = [];
+    let all = [], cat = 'all', fresh = [], lastPoints = {};
 
     window.addEventListener('authReady', async (ev) => {
       if (!ev.detail.signedIn) return;
@@ -147,9 +149,11 @@
         const snap = await getDoc(doc(window.db, 'student_points', uid));
         d = snap.exists() ? snap.data() : {};
       } catch (e) { console.warn('[trophies] points load failed', e.message); }
+      lastPoints = d;
       all = B.status(d);
       fresh = B.checkNew(uid, d);          // badges unlocked since the last visit anywhere in the portal
       renderLegend(); renderRing(); renderFeature(); renderGrid();
+      window.shRenderTesterBar(document.getElementById('trTester'), { level: false, onChange: () => { all = B.status(lastPoints); fresh = []; renderRing(); renderFeature(); renderGrid(); } });
       document.querySelectorAll('#trTabs .tr-tab').forEach(b => b.addEventListener('click', () => {
         cat = b.dataset.cat;
         document.querySelectorAll('#trTabs .tr-tab').forEach(x => x.classList.toggle('is-active', x === b));

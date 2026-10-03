@@ -1000,7 +1000,7 @@
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
     const EVO_AT = [5, 10, 20, 35];
     const TIER_LABEL = (l) => l >= 35 ? 'Cambridge Fellow' : l >= 20 ? 'Master' : l >= 10 ? 'Mentor' : l >= 5 ? 'Scholar' : 'Apprentice';
-    const myLevel = () => (state.before && state.before.level) || window.studentLevel || 1;
+    const myLevel = () => (window.shTesterLevel && window.shTesterLevel()) || (state.before && state.before.level) || window.studentLevel || 1;
     const myChar = () => (window.shMascotId ? window.shMascotId() : 'sparky');
     const myForm = (lvl) => (window.mascotFormFor ? window.mascotFormFor(lvl) : 'apprentice');
     const mascotSrc = (kind, lvl) => window.mascotPath

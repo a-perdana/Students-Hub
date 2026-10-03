@@ -63,11 +63,13 @@
     }
     return '';
   }
-  function status(d) {
+  // real=true ignores tester mode (used for the seen/new bookkeeping so it never records fake unlocks)
+  function status(d, real) {
+    var all = !real && window.shTesterUnlockAll && window.shTesterUnlockAll();
     return LIST.map(function (b) {
       var v = metric(d, b.t);
-      var cur = Math.min(b.n, v);
-      return Object.assign({}, b, { cur: cur, done: v >= b.n, pct: Math.round(cur / b.n * 100), goal: goalText(b) });
+      var cur = all ? b.n : Math.min(b.n, v);
+      return Object.assign({}, b, { cur: cur, done: all || v >= b.n, pct: Math.round(cur / b.n * 100), goal: goalText(b) });
     });
   }
   function art(id) { return '/assets/badges/' + id + '.webp'; }
@@ -80,12 +82,13 @@
 
   function baseline(uid, d) {
     if (!uid || readSeen(uid) !== null) return;
-    writeSeen(uid, status(d).filter(function (b) { return b.done; }).map(function (b) { return b.id; }));
+    writeSeen(uid, status(d, true).filter(function (b) { return b.done; }).map(function (b) { return b.id; }));
   }
   function checkNew(uid, d) {
     if (!uid) return [];
+    if (window.shTesterUnlockAll && window.shTesterUnlockAll()) return [];   // testers see everything unlocked: nothing is "new"
     var seen = readSeen(uid);
-    var st = status(d);
+    var st = status(d, true);
     if (seen === null) { baseline(uid, d); return []; }
     var fresh = st.filter(function (b) { return b.done && seen.indexOf(b.id) < 0; });
     if (fresh.length) writeSeen(uid, seen.concat(fresh.map(function (b) { return b.id; })));

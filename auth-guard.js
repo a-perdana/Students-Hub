@@ -180,6 +180,63 @@ window.shMascotId = function (uid) {
   }
   return window.SH_MASCOTS[id] ? id : 'sparky';
 };
+// ─── Tester mode (@eduversal.org = the academic-team testers, 2026-10-03) ─────────
+// Everyone signing in with an eduversal.org Google account (or flagged is_hq_observer) can
+// see the whole game without grinding: every cosmetic / evolution form / badge shown as
+// unlocked, plus a "simulate level" switch to walk through the five evolution forms across
+// the portal. Purely a client-side VIEW — nothing is written, no points / badges / levels are
+// ever granted, and non-@eduversal.org accounts can never turn it on (the check reads the
+// signed-in email, not localStorage). Switch off in Character Studio / Trophy Room.
+window.shIsTester = function () {
+  const em = String((window.currentUser && window.currentUser.email) || '').toLowerCase();
+  return em.endsWith('@eduversal.org') || !!(window.studentProfile && window.studentProfile.is_hq_observer === true);
+};
+window.shTesterUnlockAll = function () {
+  if (!window.shIsTester()) return false;
+  try { return localStorage.getItem('sh-tester-unlock') !== '0'; } catch (_) { return true; }
+};
+window.shTesterLevel = function () {          // simulated level, or null
+  if (!window.shIsTester()) return null;
+  try {
+    const n = parseInt(localStorage.getItem('sh-tester-level') || '', 10);
+    return n > 0 ? n : null;
+  } catch (_) { return null; }
+};
+// Small control bar the Studio / Trophy Room mount. opts.level=false hides the level switch.
+window.shRenderTesterBar = function (host, opts) {
+  if (!host) return;
+  if (!window.shIsTester()) { host.innerHTML = ''; return; }
+  const o = opts || {};
+  if (!document.getElementById('shTesterCss')) {
+    const st = document.createElement('style');
+    st.id = 'shTesterCss';
+    st.textContent = '.sh-tester{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin:0 0 16px;padding:10px 16px;border-radius:16px;'
+      + 'border:2px dashed #fbbf24;background:rgba(251,191,36,.12);color:var(--ink,#1a1d29);font-size:.84rem}'
+      + '.sh-tester b{font-family:Outfit,sans-serif}.sh-tester label{display:inline-flex;align-items:center;gap:6px;font-weight:700;cursor:pointer}'
+      + '.sh-tester select{padding:4px 8px;border-radius:8px;border:1px solid var(--border-2,#ccc);background:var(--white,#fff);color:var(--ink,#111);font:inherit}'
+      + '.sh-tester .hint{flex:1;min-width:180px;opacity:.75}';
+    document.head.appendChild(st);
+  }
+  const lv = window.shTesterLevel();
+  host.innerHTML = '<div class="sh-tester"><span>🧪 <b>Tester mode</b></span>'
+    + '<label><input type="checkbox" id="shTUnlock"' + (window.shTesterUnlockAll() ? ' checked' : '') + '> Unlock everything</label>'
+    + (o.level === false ? '' : '<label>Simulate level <select id="shTLevel"><option value="">My real level</option>'
+      + [1, 5, 10, 20, 35].map(n => '<option value="' + n + '"' + (lv === n ? ' selected' : '') + '>Level ' + n + ' · ' + window.mascotFormFor(n) + '</option>').join('')
+      + '</select></label>')
+    + '<span class="hint">View only: nothing is saved to the student record.</span></div>';
+  const fire = () => {
+    window.dispatchEvent(new CustomEvent('mascot-level', { detail: { level: window.studentLevel } }));
+    if (typeof o.onChange === 'function') o.onChange();
+  };
+  const u = host.querySelector('#shTUnlock');
+  if (u) u.addEventListener('change', () => { try { localStorage.setItem('sh-tester-unlock', u.checked ? '1' : '0'); } catch (_) {} fire(); });
+  const s = host.querySelector('#shTLevel');
+  if (s) s.addEventListener('change', () => {
+    try { s.value ? localStorage.setItem('sh-tester-level', s.value) : localStorage.removeItem('sh-tester-level'); } catch (_) {}
+    if (s.value) window.studentLevel = parseInt(s.value, 10);
+    fire();
+  });
+};
 window.studentAvatarUrl = function (uid, opts) {
   const o = opts || {};
   if (o.dicebear) {
@@ -196,6 +253,7 @@ window.studentAvatarUrl = function (uid, opts) {
       try { level = parseInt(localStorage.getItem('sh-level:' + uid) || '', 10); } catch (_) {}
     }
   }
+  if (isSelf) { const tl = window.shTesterLevel(); if (tl) level = tl; }
   const char = o.char || (isSelf ? window.shMascotId(uid) : 'sparky');
   return window.mascotPath(char, 'head', window.mascotFormFor(level));
 };
@@ -386,7 +444,8 @@ onAuthStateChanged(auth, async (user) => {
   (async () => {
     try {
       const sp = await getDoc(doc(db, 'student_points', user.uid));
-      const lvl = sp.exists() ? (sp.data().level || 1) : 1;
+      const realLvl = sp.exists() ? (sp.data().level || 1) : 1;
+      const lvl = window.shTesterLevel() || realLvl;   // testers may simulate a level
       window.studentLevel = lvl;
       try { localStorage.setItem('sh-level:' + user.uid, String(lvl)); } catch (_) {}
       window.dispatchEvent(new CustomEvent('mascot-level', { detail: { level: lvl } }));
