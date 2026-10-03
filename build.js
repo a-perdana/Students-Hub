@@ -49,7 +49,8 @@ const ROUTES = {
   'avatar.html':         'avatar',           // /avatar           → cosmetic avatar style+seed picker
   'how-points-work.html':'how-points-work',  // /how-points-work  → student-facing gamification guide
   'handbook.html':       'handbook',          // /handbook         → Student Handbook reader (school-facing network handbook)
-  'welcome.html':        'welcome',           // /welcome          → ESL-friendly first-time-user guide (2026-05-19)
+  'welcome.html':        'welcome',
+  'badges.html':         'badges',            // /badges           → Trophy Room (16 collectible badges)           // /welcome          → ESL-friendly first-time-user guide (2026-05-19)
 };
 
 // Internal href rewrites — same pattern as TH/AH/CH builds.
@@ -105,6 +106,7 @@ function processFile(filename) {
   html = html.replace(/src="\.\/partials\/observer-strip\.js"/g, 'src="/partials/observer-strip.js"');
   html = html.replace(/src="\.\/partials\/question-visuals\.js"/g, 'src="/partials/question-visuals.js"');
   html = html.replace(/src="\.\/partials\/footer\.js"/g, 'src="/partials/footer.js"');
+  html = html.replace(/src="\.\/partials\/badges\.js"/g, 'src="/partials/badges.js"');
 
   // 5. Rewrite internal .html links → clean URLs
   LINK_REWRITES.forEach(([pat, repl]) => { html = html.replace(pat, repl); });

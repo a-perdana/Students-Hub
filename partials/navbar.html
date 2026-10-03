@@ -22,6 +22,7 @@
     <a href="/practice" data-nav="practice">Practice</a>
     <a href="/daily-challenge" data-nav="daily-challenge">Daily</a>
     <a href="/leaderboard" data-nav="leaderboard">Leaderboard</a>
+    <a href="/badges" data-nav="badges">Trophies</a>
     <a href="/profile" data-nav="profile">Profile</a>
   </nav>
   <div class="topbar-user">
@@ -42,7 +43,7 @@
     const path = (window.location.pathname.replace(/\/$/, '') || '/');
     const map  = {
       '/': 'dashboard', '/tests': 'tests', '/growth': 'growth',
-      '/leaderboard': 'leaderboard', '/profile': 'profile',
+      '/leaderboard': 'leaderboard', '/badges': 'badges', '/profile': 'profile',
       '/practice': 'practice', '/daily-challenge': 'daily-challenge'
     };
     let activeKey = map[path] || null;

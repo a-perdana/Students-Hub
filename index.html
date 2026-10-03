@@ -581,6 +581,10 @@
     body.lobby .stat-tile-icon.icon-cyan { background:rgba(34,211,238,.18); color:#22d3ee; }
     @keyframes lobbyFlame { 0%,100%{transform:scale(1) rotate(-2deg)} 50%{transform:scale(1.1) rotate(3deg)} }
 
+    body.lobby .ach-tile .ach-art { width: 72px; height: 72px; display: block; margin: 2px auto 6px; filter: drop-shadow(0 4px 10px rgba(0,0,0,.45)); transition: transform .15s; }
+    body.lobby .ach-tile:hover .ach-art { transform: scale(1.1) rotate(-3deg); }
+    body.lobby .ach-tile.locked .ach-art { filter: grayscale(1) brightness(.42); }
+    body.lobby .ach-tile:not(.locked) { border-color: var(--rc); box-shadow: 0 0 24px -8px var(--rc); background: linear-gradient(160deg, rgba(255,255,255,.1), rgba(255,255,255,.03)); }
     html:has(body.lobby) { background:#0f0b24; }
     body.lobby { min-height:100vh; }
     /* ── Achievements = medals (8 badges: 8 → 4 → 2 columns, never an orphan row) ── */
@@ -800,7 +804,7 @@
     <section class="ach-card">
       <div class="ach-h">
         <h2>Achievements</h2>
-        <a href="#" class="meta" id="achTotal">— / 8 unlocked</a>
+        <a href="/badges" class="meta" id="achTotal">— / 16 unlocked</a>
       </div>
       <div class="ach-row" id="achRow"></div>
     </section>
@@ -833,6 +837,7 @@
 
   <script type="module" src="auth-guard.js"></script>
   <script src="./partials/feedback-fx.js"></script>
+  <script src="./partials/badges.js"></script>
   <script type="module">
     import {
       collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc
@@ -1155,37 +1160,27 @@
     // practiceRunsCompleted / dailyChallengesCompleted / streak.
     // Each badge has a goal and shows progress to next.
     function renderAchievements(d) {
-      const total = d.totalPoints || 0;
-      const streak = d.streak?.longest || d.streak?.current || 0;
-      const chap = d.chapterTestsCompleted || 0;
-      const prac = d.practiceRunsCompleted || 0;
-      const daily = d.dailyChallengesCompleted || 0;
-      const perfect = d.perfectScores || 0;
-
-      const BADGES = [
-        { id:'starter',  glyph:'🌱', label:'First steps',  cur: prac+chap+daily, goal: 1 },
-        { id:'streak3',  glyph:'🔥', label:'3-day streak', cur: streak, goal: 3 },
-        { id:'streak7',  glyph:'⚡', label:'Weekly hero',  cur: streak, goal: 7 },
-        { id:'p100',     glyph:'💯', label:'100 points',   cur: total,  goal: 100 },
-        { id:'p1000',    glyph:'🏆', label:'1,000 club',   cur: total,  goal: 1000 },
-        { id:'daily3',   glyph:'⭐', label:'3 dailies',    cur: daily,  goal: 3 },
-        { id:'practice10', glyph:'🎯', label:'10 practices', cur: prac, goal: 10 },
-        { id:'perfect',  glyph:'✨', label:'Perfect run',  cur: perfect, goal: 1 },
-      ];
-
-      let unlocked = 0;
-      const html = BADGES.map(b => {
-        const done = b.cur >= b.goal;
-        if (done) unlocked++;
-        const pct = Math.min(100, Math.round((b.cur / b.goal) * 100));
-        return `<div class="ach-tile ${done ? '' : 'locked'}" title="${b.label}: ${b.cur}/${b.goal}">
-          <div class="ach-glyph">${b.glyph}</div>
-          <div class="ach-label">${b.label}</div>
-          <div class="ach-progress"><span style="width:${pct}%"></span></div>
-        </div>`;
+      // 16 badges (partials/badges.js). Home shows eight: unlocked ones first (rarest first),
+      // then the locked ones that are closest to being earned. Full shelf = /badges.
+      const B = window.SH_BADGES;
+      if (!B) return;
+      const st = B.status(d);
+      const done = st.filter(x => x.done).sort((x, y) => B.rarity[y.rar].rank - B.rarity[x.rar].rank);
+      const todo = st.filter(x => !x.done).sort((x, y) => y.pct - x.pct);
+      const show = done.concat(todo).slice(0, 8);
+      document.getElementById('achRow').innerHTML = show.map(x => {
+        const r = B.rarity[x.rar];
+        return '<a class="ach-tile ' + (x.done ? '' : 'locked') + '" href="/badges" title="' + escHtml(x.name + ' — ' + x.goal) + '" style="--rc:' + r.color + ';text-decoration:none;color:inherit">'
+          + '<img class="ach-art" src="' + B.art(x.id) + '" alt="" loading="lazy">'
+          + '<div class="ach-label">' + escHtml(x.name) + '</div>'
+          + '<div class="ach-progress"><span style="width:' + x.pct + '%"></span></div></a>';
       }).join('');
-      document.getElementById('achRow').innerHTML = html;
-      document.getElementById('achTotal').textContent = `${unlocked} / ${BADGES.length} unlocked`;
+      const el = document.getElementById('achTotal');
+      el.textContent = done.length + ' / ' + st.length + ' unlocked · Trophy Room →';
+      el.setAttribute('href', '/badges');
+      // celebrate anything unlocked since the last visit (first visit = silent baseline)
+      const fresh = B.checkNew(window.currentUser && window.currentUser.uid, d);
+      if (fresh.length) setTimeout(() => B.celebrate(fresh), 1400);
     }
 
     // ─── Recent practice runs ──────────────────────────────────

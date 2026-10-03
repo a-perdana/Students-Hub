@@ -220,7 +220,8 @@
     const start = performance.now();
     const delta = to - from;
     function tick(now) {
-      const t = Math.min(1, (now - start) / duration);
+      // clamp to >= 0: the first rAF timestamp can precede performance.now() and would flash "-0" / negatives
+      const t = Math.max(0, Math.min(1, (now - start) / duration));
       const eased = 1 - Math.pow(1 - t, 3);
       const val = Math.round(from + delta * eased);
       el.textContent = prefix + val.toLocaleString('en-GB') + suffix;
