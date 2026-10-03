@@ -32,7 +32,7 @@
       </span>
       <span id="topbarPointsVal">0</span>
     </span>
-    <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Change look" aria-label="Change look">🌸</button>
+    <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Choose your look" aria-label="Choose your look">🌸</button>
     <button type="button" class="fx-mute-btn" id="fxMuteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
     <a href="/avatar" class="topbar-avatar" id="topbarAvatar" title="Open Character Studio">·</a>
   </div>
@@ -156,9 +156,11 @@
     function paintThemeBtn() {
       var btn = document.getElementById('themeToggleBtn');
       if (!btn) return;
-      var cur = currentLook(), nx = nextLook(cur);
-      btn.textContent = nx.icon;
-      btn.title = 'Look: ' + LOOKS.filter(function (l) { return l.id === cur; })[0].name + ' — click for ' + nx.name;
+      var cur = currentLook();
+      var l = LOOKS.filter(function (x) { return x.id === cur; })[0];
+      btn.textContent = l.icon;
+      btn.title = 'Look: ' + l.name + ' — click to change';
+      btn.setAttribute('aria-haspopup', 'menu');
     }
     function applyLook(id) {
       var c = document.documentElement.classList;
@@ -171,14 +173,40 @@
         document.head.appendChild(l);
       }
     }
+    function closeLookMenu() { var m = document.getElementById('lookMenu'); if (m) m.remove(); }
+    function openLookMenu(anchor) {
+      closeLookMenu();
+      var cur = currentLook();
+      var m = document.createElement('div');
+      m.id = 'lookMenu'; m.setAttribute('role', 'menu');
+      m.style.cssText = 'position:fixed;z-index:200;min-width:230px;padding:6px;border-radius:14px;background:#1a1545;color:#f1ecff;border:1px solid rgba(255,255,255,.2);box-shadow:0 18px 40px rgba(0,0,0,.45);font:600 .86rem DM Sans,sans-serif';
+      var html = '<div style="padding:6px 10px 4px;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;opacity:.65;font-weight:800">Choose your look</div>';
+      LOOKS.forEach(function (l) {
+        var sel = l.id === cur;
+        html += '<button type="button" role="menuitemradio" aria-checked="' + sel + '" data-look="' + l.id + '" style="display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:10px;cursor:pointer;text-align:left;font:inherit;color:inherit;background:' + (sel ? 'rgba(139,124,255,.35)' : 'transparent') + '">'
+          + '<span style="font-size:1.15rem">' + l.icon + '</span><span style="flex:1">' + l.name + '</span>' + (sel ? '<span aria-hidden="true">✓</span>' : '') + '</button>';
+      });
+      m.innerHTML = html;
+      document.body.appendChild(m);
+      var r = anchor.getBoundingClientRect();
+      m.style.top = (r.bottom + 8) + 'px';
+      m.style.left = Math.max(8, Math.min(window.innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth)) + 'px';
+      m.querySelectorAll('button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          applyLook(btn.getAttribute('data-look'));
+          paintThemeBtn(); closeLookMenu();
+          if (window.fx && window.fx.play) window.fx.play('tick');
+        });
+      });
+      setTimeout(function () {
+        document.addEventListener('click', function off(e) { if (!m.contains(e.target) && e.target !== anchor) { closeLookMenu(); document.removeEventListener('click', off); } });
+      }, 0);
+    }
     var tb = document.getElementById('themeToggleBtn');
     if (tb && !tb._wired) {
       tb._wired = true;
-      tb.addEventListener('click', function () {
-        applyLook(nextLook(currentLook()).id);
-        paintThemeBtn();
-        if (window.fx && window.fx.play) window.fx.play('tick');
-      });
+      tb.addEventListener('click', function () { if (document.getElementById('lookMenu')) closeLookMenu(); else openLookMenu(tb); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLookMenu(); });
       paintThemeBtn();
     }
   })();
