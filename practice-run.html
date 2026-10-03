@@ -603,7 +603,6 @@
   <script src="./partials/feedback-fx.js"></script>
   <script src="./partials/badges.js"></script>
   <script src="./partials/observer-strip.js"></script>
-  <script src="./partials/question-visuals.js"></script>
   <script type="module">
     import {
       collection, query, where, orderBy, limit, getDocs,
@@ -826,9 +825,6 @@
           });
         }
       }
-      const visualSpec = window.StudentHubQuestionVisuals && window.StudentHubQuestionVisuals.visualFor(it);
-      const visual = window.StudentHubQuestionVisuals && window.StudentHubQuestionVisuals.render(visualSpec);
-      if (visual) stem.appendChild(visual);
 
       // Options
       const letters = ['A', 'B', 'C', 'D', 'E'];
