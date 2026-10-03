@@ -23,7 +23,7 @@
     body { background: var(--paper); }
 
     .run-shell {
-      max-width: 720px; margin: 0 auto;
+      max-width: 820px; margin: 0 auto;
       padding: 18px 16px 60px;
     }
     .run-header {
@@ -71,8 +71,65 @@
       background: var(--white);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 26px;
-      box-shadow: var(--shadow-sm);
+      padding: 0;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .qcard-head {
+      padding: 16px 22px 13px;
+      background: linear-gradient(135deg, var(--stage-primary-2), #fff);
+      border-bottom: 1px solid var(--border);
+    }
+    .q-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .q-counter {
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--stage-primary-dk);
+    }
+    .q-streak-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--ink-2);
+      font-size: .78rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .q-streak-pill.is-hot {
+      color: #92400e;
+      background: var(--gold-2);
+      border-color: #fcd34d;
+      box-shadow: 0 8px 18px -14px rgba(245, 158, 11, .8);
+    }
+    .q-mini-progress {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(108,92,231,.14);
+      overflow: hidden;
+    }
+    .q-mini-progress > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--stage-primary), var(--stage-accent));
+      transition: width .35s ease;
+    }
+    .qcard-body {
+      padding: 24px 26px 26px;
     }
     .qstem {
       font-size: 1.05rem;
@@ -133,19 +190,26 @@
 
     .qopt {
       display: flex; align-items: center; gap: 12px;
-      padding: 14px 18px;
+      padding: 15px 18px;
       background: var(--paper);
       border: 1.5px solid var(--border);
       border-radius: 12px;
       cursor: pointer;
       margin-bottom: 10px;
-      transition: all .12s;
+      transition: transform .12s, border-color .12s, background .12s, box-shadow .12s;
       text-align: left;
       width: 100%;
+      min-height: 58px;
     }
     .qopt:hover:not(.is-locked) {
       border-color: var(--stage-primary);
       background: var(--white);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px -16px rgba(15,23,42,.45);
+    }
+    .qopt:focus-visible {
+      outline: 3px solid rgba(108,92,231,.25);
+      outline-offset: 2px;
     }
     .qopt .letter {
       width: 28px; height: 28px; border-radius: 50%;
@@ -186,7 +250,14 @@
       border-style: dashed;
     }
     .qopt.is-correct-untouched .letter { background: var(--ok); color: #fff; border-color: var(--ok); }
-    .qopt.is-pending { opacity: .7; }
+    .qopt.is-pending {
+      opacity: .82;
+      border-color: var(--stage-primary);
+      background: var(--stage-primary-2);
+    }
+    .qcard.is-answered .qopt:not(.is-correct):not(.is-wrong):not(.is-correct-untouched) {
+      opacity: .62;
+    }
     .fb-explain {
       display: block; margin-top: 6px;
       color: var(--ink-2); font-weight: 400; line-height: 1.5;
@@ -200,10 +271,11 @@
       border-radius: 12px;
       display: none;
       align-items: center; gap: 14px;
+      border: 1.5px solid transparent;
     }
     .feedback.show { display: flex; }
-    .feedback.ok { background: var(--ok-bg); color: var(--ok); }
-    .feedback.no { background: var(--danger-bg); color: var(--danger); }
+    .feedback.ok { background: var(--ok-bg); color: var(--ok); border-color: rgba(22,101,52,.22); }
+    .feedback.no { background: var(--danger-bg); color: var(--danger); border-color: rgba(185,28,28,.22); }
     .feedback .icon {
       width: 36px; height: 36px; border-radius: 50%;
       background: rgba(255,255,255,.6);
@@ -218,6 +290,9 @@
     .run-foot {
       display: flex; justify-content: flex-end;
       margin-top: 18px;
+      position: sticky;
+      bottom: 10px;
+      z-index: 4;
     }
     .btn-next {
       background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
@@ -230,6 +305,16 @@
     }
     .btn-next:hover { transform: translateY(-1px); }
     .btn-next:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    @media (max-width: 560px) {
+      .run-shell { padding: 14px 12px 48px; }
+      .run-header { align-items: flex-start; }
+      .qcard-head { padding: 14px 16px 12px; }
+      .qcard-body { padding: 20px 16px 22px; }
+      .q-meta-row { align-items: flex-start; }
+      .qopt { padding: 14px 13px; }
+      .run-foot { bottom: 8px; }
+      .btn-next { width: 100%; }
+    }
 
     /* Done state */
     .done-card {
@@ -299,6 +384,14 @@
     </div>
 
     <div id="qcard" class="qcard" hidden>
+      <div class="qcard-head">
+        <div class="q-meta-row">
+          <div class="q-counter" id="qCounter">Question</div>
+          <div class="q-streak-pill" id="qStreakPill">Build a streak</div>
+        </div>
+        <div class="q-mini-progress" aria-hidden="true"><span id="qMiniProgress"></span></div>
+      </div>
+      <div class="qcard-body">
       <div class="qstem" id="qstem"></div>
       <div id="qopts"></div>
       <div class="feedback" id="feedback">
@@ -323,7 +416,8 @@
         <button type="button" class="obs-btn" id="obsStarBtn" title="Endorse this item — add comment + tags">☆ Star</button>
         <button type="button" class="obs-btn is-primary" id="obsFlagBtn" title="Flag this item for HQ review">⚑ Flag</button>
       </div>
-    </div>
+      </div>
+      </div>
 
     <!-- HQ flag modal -->
     <div class="obs-modal-back" id="obsFlagModal" role="dialog" aria-modal="true" aria-labelledby="obsFlagModalTitle">
@@ -569,6 +663,8 @@
     function renderItem() {
       document.getElementById('loadState').hidden = true;
       document.getElementById('qcard').hidden = false;
+      document.getElementById('qcard').classList.remove('is-answered');
+      updateQuestionHud();
 
       const it = state.items[state.idx];
       const stem = document.getElementById('qstem');
@@ -644,6 +740,22 @@
       if (window.__obsStripUpdate) window.__obsStripUpdate(it);
     }
 
+    function updateQuestionHud() {
+      const total = state.items.length || 0;
+      const current = Math.min(total, state.idx + 1);
+      const pct = total ? Math.round((current / total) * 100) : 0;
+      const streak = Number(state.streak || 0);
+      const counter = document.getElementById('qCounter');
+      const mini = document.getElementById('qMiniProgress');
+      const pill = document.getElementById('qStreakPill');
+      if (counter) counter.textContent = total ? 'Question ' + current + ' of ' + total : 'Question';
+      if (mini) mini.style.width = pct + '%';
+      if (pill) {
+        pill.textContent = streak >= 3 ? streak + ' in a row' : (streak > 0 ? streak + ' streak' : 'Build a streak');
+        pill.classList.toggle('is-hot', streak >= 3);
+      }
+    }
+
     async function answer(letter) {
       if (state.locked) return;
       state.locked = true;
@@ -674,10 +786,12 @@
       }
 
       const isCorrect = res.isCorrect === true;
+      document.getElementById('qcard').classList.add('is-answered');
       state.responses.push({ itemId: it.id, answer: letter, isCorrect });
       state.correctCount = res.correctCount;
       state.streak = res.streak;
       state.bestStreak = res.streakBest;
+      updateQuestionHud();
 
       // Paint option states — the correct option is always shown in green.
       let pickedEl = null;
