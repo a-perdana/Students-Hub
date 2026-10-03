@@ -1,0 +1,13 @@
+# Collision image production record
+
+Item: `g11-science-r3740-c`
+Asset: `g11-science-r3740-c.v1.png`
+Generation method: built-in `image_gen`, opaque background.
+Model ID and billing usage: not exposed by the built-in tool.
+Content review: the displayed output has the stated masses, speeds and motion
+directions. Y's final speed and the collision type remain unknown. Review was
+performed on the generated image, not a rendered Student Hub screen.
+
+## Exact Generation Prompt
+
+Use case: scientific-educational. Asset type: a single finished raster diagram for a Grade 11 physics multiple-choice practice question in Student Hub, not a screenshot of an app. Produce a crisp, exceptionally clear, polished educational illustration on a pure white background, wide landscape composition, generous margins, large readable dark sans-serif typography, restrained blue, amber and teal accents, subtle realistic shading on the balls but technically clear 2D geometry and arrows. Two horizontal rows, separated by white space and a fine pale gray rule, vertically aligned objects. Row 1 heading exactly 'Before collision': a blue spherical ball labelled 'X' on the left, with mass label exactly '0.20 kg' underneath; a warm amber spherical ball labelled 'Y' on the right, with mass label exactly '0.30 kg' underneath. Above X, a clearly right-pointing horizontal velocity arrow, positioned wholly between the two balls without touching either, label exactly '4.0 m/s'. Above Y, text exactly 'stationary', with NO velocity arrow for Y. Row 2 heading exactly 'After collision': ball X is on the left and ball Y is on the right, same colours and mass labels. Above X, a clearly LEFT-pointing horizontal arrow that points away from Y, labelled exactly '0.80 m/s'. Above Y, a clearly RIGHT-pointing horizontal arrow that points away from X, labelled exactly 'v = ?'. Arrow labels must not intersect the arrow lines; each heading, label, sphere and arrow has ample spacing. Pale thin horizontal reference line beneath the balls in each row indicates the same straight-line motion, not a ramp, table, curved trajectory or impact path. Text at bottom exactly 'Schematic; not to scale.' Physics invariant: X approaches the stationary Y before the collision, then X rebounds to the left and Y travels to the right. Represent only these given facts. Do not calculate or display Y's velocity, any conservation equations, kinetic energy, or collision type. No decorative charts, no arc trajectories, no formulas, no extra objects, no card borders, no rounded containers, no gradients in the background, no logo or watermark. All text must be spelled exactly as specified. This illustration should be suitable for saving once and attaching permanently to question g11-science-r3740-c.

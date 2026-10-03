@@ -5,6 +5,9 @@
   "description": "Students Hub — assessment delivery + growth tracking for partner-school students",
   "scripts": {
     "test:images": "node --test tests/question-images.test.cjs",
+    "test:image-production": "node --test tests/image-production.test.cjs",
+    "images:plan": "node scripts/practice/plan-image-production.js",
+    "images:audit": "node scripts/practice/audit-visuals.js --strict",
     "build": "node build.js",
     "dev": "node build.js && npx serve dist"
   }

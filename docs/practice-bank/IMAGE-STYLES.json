@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "shared": {
+    "background": "#FFFFFF",
+    "text": "#17202A",
+    "muted": "#52616B",
+    "layout": "Unframed textbook figure; no cards, badges, shadows or decorative title. Choose aspect ratio for content, not a fixed banner.",
+    "typography": "Consistent labels; upright units and numerals; proper superscripts and subscripts. No decorative lettering.",
+    "minimumLabelSize": "At least 14 px when displayed at 360 CSS px wide. Split dense figures rather than shrinking labels.",
+    "accessibility": "Never encode meaning only through colour. Use labels, shapes or line patterns. No answer leakage in image or alt text.",
+    "accuracy": "Only facts supplied by the question. Unknown values remain unknown. The figure must not make the tested reasoning unnecessary."
+  },
+  "subjects": {
+    "mathematics": {
+      "name": "Precision Geometry",
+      "typography": "Neutral sans-serif labels; STIX-style mathematical expressions. Italic variables, upright numerals and units.",
+      "primary": "#245AC4",
+      "secondary": "#00796B",
+      "conventions": "Precise outlines, restrained grid, separated dimensions. Right-angle squares at the correct vertex; angle arcs only for specified angles. No inferred lengths or extra equal-side marks.",
+      "review": "Verify vertices, angle locations, dimensions, scale claims, axes, ticks and every plotted coordinate."
+    },
+    "physics": {
+      "name": "Directional Mechanics",
+      "typography": "Inter-style technical sans-serif with tabular numerals; italic physical variables, upright SI units, consistent vector notation.",
+      "primary": "#006C91",
+      "secondary": "#B83A35",
+      "conventions": "Separate objects from force or velocity arrows; label arrows explicitly. Align before/after panels. Standard circuit symbols and exact connections; no substituted components.",
+      "review": "Verify arrow directions, reference frame, signed values, units, circuit topology and answer leakage."
+    },
+    "chemistry": {
+      "name": "Molecular Structure",
+      "typography": "Noto Sans-style scientific labels; upright element symbols and formulae with true subscripts and superscript charges. Bond lines distinct from reaction arrows.",
+      "primary": "#7D3C98",
+      "secondary": "#007F73",
+      "conventions": "Clean 2D structural or apparatus figures. Atom labels accompany colour when identity is given. Preserve specified counts, bonds, charges, phases and connections. No glossy decoration.",
+      "review": "Verify symbols, indices, charges, stoichiometry, bond orders, apparatus layout and safety-relevant details."
+    },
+    "biology": {
+      "name": "Living Structure",
+      "typography": "Source Sans-style humanist labels; horizontal annotations and tidy non-crossing leader lines. Scientific names italic where appropriate.",
+      "primary": "#24744A",
+      "secondary": "#9B4167",
+      "conventions": "Textbook line illustrations with light flat fills. Preserve orientation; use identifiers instead of names when identification is tested. Scale bars only when supplied.",
+      "review": "Verify structural placement, process direction, scale claims, leader destinations and identification-task leakage."
+    },
+    "science": {
+      "name": "General Science",
+      "typography": "Neutral scientific sans-serif; upright units, clear numerals and horizontal labels.",
+      "primary": "#256A80",
+      "secondary": "#99602D",
+      "conventions": "Item-specific scientific figures; no generic decoration or keyword-based apparatus.",
+      "review": "Verify objects, relationships, labels, values and answer leakage against the full question."
+    }
+  }
+}

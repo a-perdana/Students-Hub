@@ -7,3 +7,4 @@ firebase-config.js
 Thumbs.db
 *.log
 .vercel
+tmp/
