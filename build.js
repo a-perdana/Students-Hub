@@ -103,6 +103,7 @@ function processFile(filename) {
   html = html.replace(/fetch\('partials\/navbar\.html'\)/g, "fetch('/partials/navbar.html')");
   html = html.replace(/src="\.\/partials\/feedback-fx\.js"/g, 'src="/partials/feedback-fx.js"');
   html = html.replace(/src="\.\/partials\/observer-strip\.js"/g, 'src="/partials/observer-strip.js"');
+  html = html.replace(/src="\.\/partials\/question-visuals\.js"/g, 'src="/partials/question-visuals.js"');
 
   // 5. Rewrite internal .html links → clean URLs
   LINK_REWRITES.forEach(([pat, repl]) => { html = html.replace(pat, repl); });
@@ -144,7 +145,6 @@ fs.copyFileSync(
 );
 console.log('Copied: dist/lobby.css');
 
-// Copy Eduversal master logo (white-on-transparent, 600x176) used by login + navbar.
 // Copy assets/ (mascot art for the Character Studio — webp, ~450 KB total), recursive
 const assetsSrc  = path.join(__dirname, 'assets');
 const assetsDist = path.join(distDir, 'assets');
@@ -159,6 +159,7 @@ if (fs.existsSync(assetsSrc)) {
   console.log('Copied: dist/assets/');
 }
 
+// Copy Eduversal master logo (white-on-transparent, 600x176) used by login + navbar.
 const logoSrc = path.join(__dirname, 'eduversal-logo-white.png');
 if (fs.existsSync(logoSrc)) {
   fs.copyFileSync(logoSrc, path.join(distDir, 'eduversal-logo-white.png'));
