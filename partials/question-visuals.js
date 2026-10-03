@@ -10,12 +10,18 @@
     style.id = STYLE_ID;
     style.textContent = `
       .q-visual {
-        margin: 18px 0 20px;
-        border: 1px solid rgba(108, 92, 231, .18);
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-        border-radius: 14px;
+        margin: 18px 0 22px;
+        border: 1px solid rgba(108, 92, 231, .20);
+        background:
+          radial-gradient(circle at 18% 0%, rgba(124, 58, 237, .08), transparent 34%),
+          linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border-radius: 16px;
         padding: 14px;
-        box-shadow: 0 12px 28px -26px rgba(15, 23, 42, .42);
+        box-shadow:
+          0 18px 38px -30px rgba(15, 23, 42, .55),
+          inset 0 1px 0 rgba(255, 255, 255, .84);
+        position: relative;
+        overflow: hidden;
       }
       .q-visual svg {
         display: block;
@@ -24,15 +30,45 @@
         max-height: 270px;
       }
       .q-visual-title {
-        margin: 0 0 8px;
-        color: var(--ink-2, #334155);
-        font-size: .78rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 9px;
+        color: #4338ca;
+        font-size: .74rem;
         font-weight: 800;
-        letter-spacing: .06em;
+        letter-spacing: .07em;
         text-transform: uppercase;
+        background: rgba(238, 242, 255, .92);
+        border: 1px solid rgba(129, 140, 248, .24);
+        border-radius: 999px;
+        padding: 5px 9px;
+      }
+      .q-visual-title::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #6c5ce7, #06b6d4);
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, .12);
+      }
+      .q-visual[data-family="science"] {
+        border-color: rgba(20, 184, 166, .24);
+        background:
+          radial-gradient(circle at 18% 0%, rgba(20, 184, 166, .09), transparent 34%),
+          linear-gradient(180deg, #ffffff 0%, #f5fffc 100%);
+      }
+      .q-visual[data-family="science"] .q-visual-title {
+        color: #0f766e;
+        background: rgba(240, 253, 250, .94);
+        border-color: rgba(20, 184, 166, .24);
+      }
+      .q-visual[data-family="science"] .q-visual-title::before {
+        background: linear-gradient(135deg, #14b8a6, #22c55e);
+        box-shadow: 0 0 0 3px rgba(20, 184, 166, .13);
       }
       .q-visual-caption {
-        margin: 8px 2px 0;
+        margin: 9px 2px 0;
         color: var(--ink-3, #64748b);
         font-size: .82rem;
         line-height: 1.45;
@@ -69,6 +105,10 @@
       'font-size': 14,
       'font-weight': 700,
       'text-anchor': 'middle',
+      'paint-order': 'stroke',
+      stroke: '#ffffff',
+      'stroke-width': 3,
+      'stroke-linejoin': 'round',
     }, attrs || {}), [escText(value)]);
   }
 
@@ -82,13 +122,19 @@
   }
 
   function rect(x, y, width, height, attrs) {
+    const boxAttrs = Object.assign({}, attrs || {});
+    if (Number(width) >= 500 && Number(height) >= 180 && boxAttrs.fill === '#fbfdff') {
+      boxAttrs.fill = 'url(#qv-panel)';
+      boxAttrs.stroke = '#dbeafe';
+      boxAttrs.filter = 'url(#qv-panel-shadow)';
+    }
     return svgEl('rect', Object.assign({
       x, y, width, height,
       rx: 10,
       fill: '#ffffff',
       stroke: '#c4b5fd',
       'stroke-width': 2,
-    }, attrs || {}));
+    }, boxAttrs));
   }
 
   function polygon(points, attrs) {
@@ -111,12 +157,47 @@
   }
 
   function makeSvg(viewBox, children) {
+    const [, , width = '560', height = '260'] = String(viewBox).split(/\s+/);
+    const defs = svgEl('defs', {}, [
+      svgEl('linearGradient', { id: 'qv-canvas', x1: '0', y1: '0', x2: '1', y2: '1' }, [
+        svgEl('stop', { offset: '0%', 'stop-color': '#ffffff' }),
+        svgEl('stop', { offset: '55%', 'stop-color': '#f8fbff' }),
+        svgEl('stop', { offset: '100%', 'stop-color': '#eef7ff' }),
+      ]),
+      svgEl('linearGradient', { id: 'qv-panel', x1: '0', y1: '0', x2: '1', y2: '1' }, [
+        svgEl('stop', { offset: '0%', 'stop-color': '#ffffff' }),
+        svgEl('stop', { offset: '100%', 'stop-color': '#f8fbff' }),
+      ]),
+      svgEl('filter', { id: 'qv-panel-shadow', x: '-10%', y: '-12%', width: '120%', height: '128%' }, [
+        svgEl('feDropShadow', {
+          dx: '0',
+          dy: '10',
+          stdDeviation: '10',
+          'flood-color': '#0f172a',
+          'flood-opacity': '.10',
+        }),
+      ]),
+      svgEl('pattern', { id: 'qv-grid', width: '24', height: '24', patternUnits: 'userSpaceOnUse' }, [
+        svgEl('path', {
+          d: 'M 24 0 L 0 0 0 24',
+          fill: 'none',
+          stroke: '#e2e8f0',
+          'stroke-width': '.7',
+          opacity: '.55',
+        }),
+      ]),
+      svgEl('marker', { id: 'qv-arrow-slate', markerWidth: '9', markerHeight: '9', refX: '7', refY: '4.5', orient: 'auto' }, [
+        polygon('0,0 9,4.5 0,9', { fill: '#334155', stroke: 'none' }),
+      ]),
+    ]);
+    const canvas = svgEl('rect', { x: 0, y: 0, width, height, rx: 22, fill: 'url(#qv-canvas)' });
+    const grid = svgEl('rect', { x: 0, y: 0, width, height, rx: 22, fill: 'url(#qv-grid)', opacity: '.42' });
     return svgEl('svg', {
       viewBox,
       role: 'img',
       'aria-hidden': 'true',
       focusable: 'false',
-    }, children);
+    }, [defs, canvas, grid, ...children]);
   }
 
   function solidFactCards(spec) {
@@ -844,6 +925,22 @@
     'atom-structure': atomStructure,
   };
 
+  const SCIENCE_RENDERERS = new Set([
+    'ray-mirror',
+    'vector-components',
+    'chromatography-paper',
+    'cell-diagram',
+    'virus-diagram',
+    'particle-model',
+    'gas-syringe-apparatus',
+    'titration-setup',
+    'circuit-diagram',
+    'wave-diagram',
+    'bar-magnet-field',
+    'line-graph',
+    'atom-structure',
+  ]);
+
   function render(spec) {
     if (!spec || spec.kind !== 'programmatic') return null;
     const renderer = RENDERERS[spec.renderer];
@@ -852,6 +949,8 @@
 
     const figure = document.createElement('figure');
     figure.className = 'q-visual';
+    figure.dataset.family = SCIENCE_RENDERERS.has(spec.renderer) ? 'science' : 'math';
+    figure.dataset.renderer = spec.renderer;
     if (spec.alt) figure.setAttribute('aria-label', spec.alt);
 
     if (spec.title) {

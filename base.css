@@ -1339,3 +1339,6 @@ body[data-stage="checkpoint"] .tier-chip {
   color: #92400e;
   font-weight: 600;
 }
+
+/* Students Hub logo mark (2026-10-03) — replaces the gradient "E" tile in the topbar */
+.topbar-brand .brand-mark-img { width: 34px; height: 34px; display: block; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(15,95,102,.35)); }
