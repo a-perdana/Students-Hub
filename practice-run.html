@@ -709,7 +709,8 @@
           });
         }
       }
-      const visual = window.StudentHubQuestionVisuals && window.StudentHubQuestionVisuals.render(it.visual);
+      const visualSpec = window.StudentHubQuestionVisuals && window.StudentHubQuestionVisuals.visualFor(it);
+      const visual = window.StudentHubQuestionVisuals && window.StudentHubQuestionVisuals.render(visualSpec);
       if (visual) stem.appendChild(visual);
 
       // Options

@@ -941,6 +941,134 @@
     'atom-structure',
   ]);
 
+  function itemText(item) {
+    if (!item) return '';
+    return [
+      item.stem,
+      item.stemHtml,
+      item.chapter,
+      item.topic,
+      item.topicGroup,
+    ].filter(Boolean).join(' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\\\(|\\\)|\$/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function inferVisual(item) {
+    const raw = itemText(item);
+    if (!raw) return null;
+    const lower = raw.toLowerCase();
+
+    const shorterSides = lower.match(/two shorter sides(?: of length)?\s+(\d+(?:\.\d+)?)\s*(cm|m|mm|km)?\s+and\s+(\d+(?:\.\d+)?)\s*(cm|m|mm|km)?/);
+    if (lower.includes('right-angled triangle') && lower.includes('hypotenuse') && shorterSides) {
+      const a = Number(shorterSides[1]);
+      const b = Number(shorterSides[3]);
+      const unit = shorterSides[2] || shorterSides[4] || '';
+      const base = Math.max(a, b);
+      const height = Math.min(a, b);
+      const suffix = unit ? ` ${unit}` : '';
+      return {
+        kind: 'programmatic',
+        renderer: 'right-triangle',
+        title: 'Right triangle model',
+        heading: 'Identify the hypotenuse',
+        base: `${base}${suffix}`,
+        height: `${height}${suffix}`,
+        hypotenuse: 'h',
+        angle: '90 deg',
+        caption: 'The hypotenuse is the side opposite the right angle.',
+        alt: `Right-angled triangle with shorter sides ${height}${suffix} and ${base}${suffix}; hypotenuse labelled h.`,
+      };
+    }
+
+    const solidStats = lower.match(/(\d+)\s+faces?,\s*(\d+)\s+edges?\s+and\s+(\d+)\s+vertices?/);
+    if (solidStats && lower.includes('triangles') && lower.includes('rectangles')) {
+      return {
+        kind: 'programmatic',
+        renderer: 'solid-fact-cards',
+        title: 'Shape clues',
+        heading: 'Match the solid to its clues',
+        stats: {
+          faces: Number(solidStats[1]),
+          edges: Number(solidStats[2]),
+          vertices: Number(solidStats[3]),
+        },
+        faces: [
+          { shape: 'triangle', label: 'triangle' },
+          { shape: 'triangle', label: 'triangle' },
+          { shape: 'rectangle', label: 'rectangle' },
+          { shape: 'rectangle', label: 'rectangle' },
+          { shape: 'rectangle', label: 'rectangle' },
+        ],
+        note: 'Use the face shapes together with the counts.',
+        alt: 'Solid shape clue cards showing faces, edges, vertices, two triangular faces, and three rectangular faces.',
+      };
+    }
+
+    if (lower.includes('chromatography')) {
+      return {
+        kind: 'programmatic',
+        renderer: 'chromatography-paper',
+        title: 'Chromatography setup',
+        alt: 'Paper chromatography diagram with solvent level, start line, and separated spots.',
+      };
+    }
+
+    if (lower.includes('burette') || lower.includes('titration')) {
+      return {
+        kind: 'programmatic',
+        renderer: 'titration-setup',
+        title: 'Titration apparatus',
+        alt: 'Titration setup with burette, conical flask, and indicator.',
+      };
+    }
+
+    if (lower.includes('circuit') || lower.includes('ammeter') || lower.includes('voltmeter')) {
+      return {
+        kind: 'programmatic',
+        renderer: 'circuit-diagram',
+        title: 'Circuit model',
+        alt: 'Simple circuit diagram with cell, lamp, and measuring instrument.',
+      };
+    }
+
+    if (lower.includes('wave') && (lower.includes('wavelength') || lower.includes('amplitude') || lower.includes('frequency'))) {
+      return {
+        kind: 'programmatic',
+        renderer: 'wave-diagram',
+        title: 'Wave diagram',
+        alt: 'Wave diagram with amplitude and wavelength marked.',
+      };
+    }
+
+    if (lower.includes('bar magnet') || lower.includes('magnetic field')) {
+      return {
+        kind: 'programmatic',
+        renderer: 'bar-magnet-field',
+        title: 'Magnetic field',
+        alt: 'Bar magnet with field lines from north to south.',
+      };
+    }
+
+    if (lower.includes('atom') && (lower.includes('electron') || lower.includes('shell') || lower.includes('nucleus'))) {
+      return {
+        kind: 'programmatic',
+        renderer: 'atom-structure',
+        title: 'Atom structure',
+        alt: 'Atom structure diagram showing nucleus and electron shells.',
+      };
+    }
+
+    return null;
+  }
+
+  function visualFor(item) {
+    if (!item) return null;
+    return item.visual || inferVisual(item);
+  }
+
   function render(spec) {
     if (!spec || spec.kind !== 'programmatic') return null;
     const renderer = RENDERERS[spec.renderer];
@@ -971,5 +1099,5 @@
     return figure;
   }
 
-  window.StudentHubQuestionVisuals = { render };
+  window.StudentHubQuestionVisuals = { render, inferVisual, visualFor };
 })();
