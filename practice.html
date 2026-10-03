@@ -79,6 +79,12 @@
       text-transform: uppercase; color: var(--ink-2);
       margin-bottom: 8px;
     }
+    .chap-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .chap-sel { flex: 1 1 220px; min-width: 0; font: inherit; font-size: .88rem; font-weight: 600; padding: 9px 12px;
+      border-radius: 12px; border: 1.5px solid var(--border); background: var(--white); color: var(--ink-2); }
+    .chap-sel:disabled { opacity: .5; }
+    .chap-sel.is-active { border-color: var(--mor, #6c5ce7); color: var(--ink); }
+    #chapterSection[hidden] { display: none; }
     .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
     .pick-chip {
       padding: 8px 14px;
@@ -244,6 +250,14 @@
         </div>
       </div>
 
+      <div class="pick-section" id="chapterSection" hidden>
+        <div class="pick-label">Or study by chapter</div>
+        <div class="chap-row">
+          <select class="chap-sel" id="chapterSel" aria-label="Chapter"></select>
+          <select class="chap-sel" id="chapTopicSel" aria-label="Topic in chapter" disabled></select>
+        </div>
+      </div>
+
       <div class="pick-section">
         <div class="pick-label">Difficulty</div>
         <div class="chip-row" id="diffChips">
@@ -295,6 +309,8 @@
       subjectId: 'math',
       grade: null,        // students/{uid}.gradeLevel (7-12) — the pool is filtered to it
       topicGroup: null,   // null = nothing picked yet; ALL_TOPICS = any topic
+      chapter: null,      // exact chapter string from the Cambridge LO workbook ("1. Integers")
+      chapTopic: null,    // exact topic string within that chapter ("1.1 Adding and subtracting integers")
       difficulty: 'any',
       counts: { byTopic: {}, byDifficulty: {} },
     };
@@ -336,6 +352,8 @@
         ch.addEventListener('click', () => selectDifficulty(ch.dataset.diff));
       });
       document.getElementById('btnStart').addEventListener('click', startRun);
+      document.getElementById('chapterSel').addEventListener('change', e => selectChapter(e.target.value));
+      document.getElementById('chapTopicSel').addEventListener('change', e => selectChapTopic(e.target.value));
       selectSubject('math');
       loadSubjectCounts();
       loadRecent(window.currentUser.uid);
@@ -366,8 +384,10 @@
         poolStats = null;
         poolStatsPromise = null;
         state.topicGroup = null;
+        state.chapter = null; state.chapTopic = null;
         await loadCounts(state.subjectId);
         renderTopicChips();
+        renderChapterPicker();
         updateStartBar();
         loadSubjectCounts();
       });
@@ -403,20 +423,61 @@
     async function selectSubject(subj) {
       state.subjectId = subj;
       state.topicGroup = null;
+      state.chapter = null; state.chapTopic = null;
       document.querySelectorAll('.subj-card').forEach(c =>
         c.classList.toggle('is-active', c.dataset.subj === subj)
       );
       await loadCounts(subj);
       renderTopicChips();
+      renderChapterPicker();
       updateStartBar();
     }
 
     async function loadCounts(subj) {
-      state.counts = { byTopic: {}, byDifficulty: {}, total: 0 };
+      state.counts = { byTopic: {}, byDifficulty: {}, byChapter: {}, total: 0 };
       if (!state.grade) return;
       if (!poolStats) await fetchPoolStats();
       const s = poolStats?.subjects?.[subj];
-      if (s) state.counts = { byTopic: s.byTopic || {}, byDifficulty: s.byDifficulty || {}, total: s.total || 0 };
+      if (s) state.counts = { byTopic: s.byTopic || {}, byDifficulty: s.byDifficulty || {}, byChapter: s.byChapter || {}, total: s.total || 0 };
+    }
+
+    // ─── Chapter / topic picker (Cambridge LO workbook order) ────────
+    // "10. Angles" must sort after "9. Shapes": order by the leading number, not the text.
+    const numKey = (str) => { const m = String(str).match(/^(\d+)(?:\.(\d+))?/); return m ? [Number(m[1]), Number(m[2] || 0)] : [1e9, 0]; };
+    const byNum = (a, b) => { const x = numKey(a), y = numKey(b); return x[0] - y[0] || x[1] - y[1] || a.localeCompare(b); };
+
+    function renderChapterPicker() {
+      const sec = document.getElementById('chapterSection');
+      const sel = document.getElementById('chapterSel');
+      const tsel = document.getElementById('chapTopicSel');
+      const chapters = Object.keys(state.counts.byChapter || {}).sort(byNum);
+      sec.hidden = chapters.length === 0;
+      if (!chapters.length) return;
+      sel.innerHTML = '<option value="">Choose a chapter…</option>' + chapters.map(c =>
+        `<option value="${escAttr(c)}"${state.chapter === c ? ' selected' : ''}>${escHtml(c)} (${state.counts.byChapter[c].n})</option>`).join('');
+      sel.classList.toggle('is-active', !!state.chapter);
+      const info = state.chapter ? state.counts.byChapter[state.chapter] : null;
+      tsel.disabled = !info;
+      const topics = info ? Object.keys(info.topics || {}).sort(byNum) : [];
+      tsel.innerHTML = info
+        ? `<option value="">All topics in this chapter (${info.n})</option>` + topics.map(t =>
+            `<option value="${escAttr(t)}"${state.chapTopic === t ? ' selected' : ''}>${escHtml(t)} (${info.topics[t]})</option>`).join('')
+        : '<option value="">Topic…</option>';
+      tsel.classList.toggle('is-active', !!state.chapTopic);
+    }
+
+    function selectChapter(c) {
+      state.chapter = c || null;
+      state.chapTopic = null;
+      if (state.chapter) state.topicGroup = null;   // the two ways of choosing are exclusive
+      renderTopicChips();
+      renderChapterPicker();
+      updateStartBar();
+    }
+
+    function selectChapTopic(t) {
+      state.chapTopic = t || null;
+      updateStartBar();
     }
 
     function renderTopicChips() {
@@ -445,6 +506,7 @@
 
     function selectTopic(t) {
       state.topicGroup = state.topicGroup === t ? null : t;
+      if (state.topicGroup) { state.chapter = null; state.chapTopic = null; renderChapterPicker(); }
       renderTopicChips();
       updateStartBar();
     }
@@ -461,9 +523,16 @@
       const btn = document.getElementById('btnStart');
       const summary = document.getElementById('startSummary');
       const sub = document.getElementById('startSubline');
+      if (state.chapter) {
+        const dLbl2 = state.difficulty === 'any' ? 'any difficulty' : DIFF_LABEL[state.difficulty].toLowerCase();
+        btn.disabled = false;
+        summary.textContent = state.chapTopic || state.chapter;
+        sub.textContent = `10 questions · ${dLbl2} · solo run`;
+        return;
+      }
       if (!state.topicGroup) {
         btn.disabled = true;
-        summary.textContent = 'Choose a topic to start';
+        summary.textContent = 'Choose a topic or chapter to start';
         sub.textContent = '10 questions · solo · zero pressure';
         return;
       }
@@ -481,7 +550,10 @@
         diff:    state.difficulty,
         n:       '10',
       });
-      if (state.topicGroup !== ALL_TOPICS) params.set('topic', state.topicGroup);
+      if (state.chapter) {
+        params.set('chapter', state.chapter);
+        if (state.chapTopic) params.set('ctopic', state.chapTopic);
+      } else if (state.topicGroup !== ALL_TOPICS) params.set('topic', state.topicGroup);
       window.location.href = '/practice-run?' + params.toString();
     }
 

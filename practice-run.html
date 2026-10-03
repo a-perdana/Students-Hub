@@ -630,6 +630,8 @@
     const CHALLENGE_ID = params.get('challenge');   // e.g. '2026-05-13_math'
     const SUBJECT = params.get('subject') || (CHALLENGE_ID ? CHALLENGE_ID.split('_')[1] : 'math');
     const TOPIC   = params.get('topic')   || null;
+    const CHAPTER = params.get('chapter') || null;   // Cambridge chapter, exact string
+    const CTOPIC  = params.get('ctopic')  || null;   // topic within that chapter
     const DIFF    = params.get('diff')    || 'any';
     const N       = Math.max(1, Math.min(20, parseInt(params.get('n') || '10', 10)));
     const MODE    = CHALLENGE_ID ? 'daily_challenge' : 'practice';
@@ -673,7 +675,7 @@
         document.getElementById('runTopic').textContent = SUBJECT + ' · today';
       } else {
         document.getElementById('runTopic').textContent =
-          (TOPIC_LABEL[TOPIC] || 'Mixed') + ' · ' + SUBJECT;
+          (CTOPIC || CHAPTER || TOPIC_LABEL[TOPIC] || 'Mixed') + ' · ' + SUBJECT;
       }
       document.getElementById('quitBtn').addEventListener('click', quit);
       document.getElementById('btnNext').addEventListener('click', next);
@@ -748,7 +750,7 @@
     async function startRun() {
       const payload = CHALLENGE_ID
         ? { challengeId: CHALLENGE_ID }
-        : { subjectId: SUBJECT, topicGroup: TOPIC, difficulty: DIFF === 'any' ? null : DIFF, n: N };
+        : { subjectId: SUBJECT, topicGroup: TOPIC, chapter: CHAPTER, chapterTopic: CTOPIC, difficulty: DIFF === 'any' ? null : DIFF, n: N };
       const res = (await callStart(payload)).data;
       state.items = res.items || [];
       if (!state.items.length) throw new Error('No questions available right now.');
@@ -1084,7 +1086,7 @@
       }
       document.getElementById('rsTopic').textContent = CHALLENGE_ID
         ? 'Daily Challenge · ' + SUBJECT
-        : (TOPIC_LABEL[TOPIC] || 'Mixed') + ' · ' + SUBJECT;
+        : (CTOPIC || CHAPTER || TOPIC_LABEL[TOPIC] || 'Mixed') + ' · ' + SUBJECT;
 
       const total = state.items.length;
       const pct = Math.round((state.correctCount / total) * 100);
