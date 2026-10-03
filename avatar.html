@@ -28,6 +28,24 @@
     .cs-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
     @media (max-width: 920px) { .cs-grid { grid-template-columns: 1fr; } }
 
+    /* ── Character picker ── */
+    .cs-chars { padding: 18px; border-radius: 26px; margin-bottom: 20px; }
+    .cs-chars h2 { margin: 0 0 2px; font-size: 1.15rem; }
+    .cs-chars > p { margin: 0 0 14px; color: var(--ink-3); font-size: .86rem; }
+    .cs-chars .new-flag { display: none; margin-left: 8px; padding: 2px 10px; border-radius: 99px; font-size: .62rem; font-weight: 800; letter-spacing: .08em; vertical-align: middle; background: #fbbf24; color: #3b2600; }
+    .cs-chars.is-new .new-flag { display: inline-block; }
+    .cs-charrow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 820px) { .cs-charrow { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); } }
+    .cs-char-card { text-align: center; font: inherit; color: var(--ink); cursor: pointer; padding: 10px 8px 12px; border-radius: 20px; border: 2px solid var(--border-2); background: var(--glass, var(--white)); transition: transform .12s, box-shadow .12s; }
+    .cs-char-card:hover { transform: translateY(-3px); }
+    .cs-char-card .pic { width: 84px; height: 84px; margin: 0 auto 8px; border-radius: 50%; overflow: hidden; background: #0f0b24; border: 3px solid rgba(255,255,255,.35); }
+    .cs-char-card .pic img { width: 100%; height: 100%; display: block; }
+    .cs-char-card .nm { font-family: 'Outfit',sans-serif; font-weight: 800; font-size: 1rem; }
+    .cs-char-card .sp { font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--stage-accent-dk, #8fe9f7); }
+    .cs-char-card .bl { margin-top: 6px; font-size: .74rem; line-height: 1.35; color: var(--ink-3); }
+    .cs-char-card.is-active { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,.3), 0 14px 28px -14px rgba(251,191,36,.7); }
+    .cs-char-card.is-active .pic { border-color: #fbbf24; }
+
     /* ── Stage ── */
     .cs-stage-card { padding: 0; overflow: hidden; border-radius: 26px; }
     .cs-scene {
@@ -177,15 +195,21 @@
     <header class="cs-head">
       <div class="cs-eyebrow">Your mascot</div>
       <h1>Character Studio</h1>
-      <p>Meet Sparky. Every level you earn makes your mascot stronger, and new outfits, gear and companions unlock as you practise. Nothing is for sale: you earn it all.</p>
+      <p>Pick your character and watch it grow. Every level you earn makes it stronger, and new gear, companions and scenes unlock as you practise. Nothing is for sale: you earn it all.</p>
     </header>
+
+    <section class="card cs-chars" id="csCharsCard" aria-label="Choose your character">
+      <h2>Your character <span class="new-flag">PICK ONE!</span></h2>
+      <p>Five companions, one journey. You can switch any time: your level and unlocks always stay with you.</p>
+      <div class="cs-charrow" id="csChars"></div>
+    </section>
 
     <div class="cs-grid">
       <!-- ── Stage ── -->
       <section class="card cs-stage-card" aria-label="Your mascot">
         <div class="cs-scene" id="csScene">
           <div class="cs-bg scene-study-nook" id="csBg"></div>
-          <img class="cs-char" id="csChar" alt="Your mascot, Sparky" src="/assets/mascot/form-apprentice.webp">
+          <img class="cs-char" id="csChar" alt="Your character" src="">
           <div class="cs-loadout left">
             <div class="cs-slot" id="slotHat"><div class="tile empty">＋</div><div class="lbl">Hat</div></div>
             <div class="cs-slot" id="slotGear"><div class="tile empty">＋</div><div class="lbl">Gear</div></div>
@@ -195,12 +219,12 @@
           </div>
           <div class="cs-plate">
             <span class="lv" id="csLv">1</span>
-            <span><span class="nm">Sparky</span><br><span class="tr" id="csTier">Apprentice</span></span>
+            <span><span class="nm" id="csName">Sparky</span><br><span class="tr" id="csTier">Apprentice</span></span>
           </div>
         </div>
         <div class="cs-under">
           <div class="cs-evo" id="csEvo">
-            <div class="sil" id="csEvoSil"><img id="csEvoImg" alt="" src="/assets/mascot/form-scholar.webp"></div>
+            <div class="sil" id="csEvoSil"><img id="csEvoImg" alt="" src=""></div>
             <div class="tx">
               <b id="csEvoTitle">Next evolution</b>
               <span id="csEvoSub">Keep practising to evolve.</span>
@@ -257,7 +281,8 @@
       });
     });
 
-    const ASSETS = '/assets/mascot/';
+    const ASSETS = '/assets/mascot/';   // cosmetics: item-<id>.webp
+    const fp = (form) => window.mascotPath(state.char, 'form', form);   // per-character evolution art
 
     // Same tier bands as tierFor() on the dashboard / leaderboard / how-points-work.
     const FORMS = [
@@ -292,7 +317,7 @@
     const CAT_LABEL = { hat: 'Hat', gear: 'Gear', companion: 'Companion', bg: 'Scene' };
 
     const stats = { level: 1, streak: 0, perfect: 0, progress: 0 };
-    const state = { equipped: { hat: null, gear: null, companion: null, bg: 'study-nook' }, saved: null, cat: 'hat', preview: null };
+    const state = { equipped: { hat: null, gear: null, companion: null, bg: 'study-nook' }, saved: null, cat: 'hat', preview: null, char: 'sparky', chosen: false };
     let uid = null;
 
     const have = (it) => {
@@ -308,7 +333,7 @@
     };
     const byId = (id) => ITEMS.find(i => i.id === id);
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
-    const eqKey = (e) => ['hat', 'gear', 'companion', 'bg'].map(k => e[k] || '').join('|');
+    const eqKey = (e) => state.char + '#' + ['hat', 'gear', 'companion', 'bg'].map(k => e[k] || '').join('|');
     const lsKey = () => 'sh-mascot:' + uid;
 
     window.addEventListener('authReady', async (ev) => {
@@ -335,6 +360,8 @@
           if (it && it.cat === k && have(it)) state.equipped[k] = it.id;
         });
       }
+      state.char = window.shMascotId(uid);
+      try { state.chosen = !!(p.mascotId || localStorage.getItem('sh-char:' + uid)); } catch (_) { state.chosen = !!p.mascotId; }
       state.saved = eqKey(state.equipped);
 
       document.querySelectorAll('#csTabs .cs-tab').forEach(b => b.addEventListener('click', () => {
@@ -346,12 +373,32 @@
       renderAll();
     });
 
-    function renderAll() { renderStage(); renderEvo(); renderItems(); renderForms(); renderNext(); renderCount(); markDirty(); }
+    function renderAll() { renderChars(); renderStage(); renderEvo(); renderItems(); renderForms(); renderNext(); renderCount(); markDirty(); }
+
+    function renderChars() {
+      const card = document.getElementById('csCharsCard');
+      card.classList.toggle('is-new', !state.chosen);
+      document.getElementById('csChars').innerHTML = Object.keys(window.SH_MASCOTS).map(id => {
+        const m = window.SH_MASCOTS[id];
+        return '<button type="button" class="cs-char-card' + (id === state.char ? ' is-active' : '') + '" data-id="' + id + '" aria-pressed="' + (id === state.char) + '">'
+          + '<div class="pic"><img src="' + window.mascotPath(id, 'head', 'apprentice') + '" alt="" loading="lazy"></div>'
+          + '<div class="nm">' + esc(m.name) + '</div><div class="sp">' + esc(m.species) + '</div><div class="bl">' + esc(m.blurb) + '</div></button>';
+      }).join('');
+      document.querySelectorAll('#csChars .cs-char-card').forEach(b => b.addEventListener('click', () => {
+        if (state.char === b.dataset.id) return;
+        state.char = b.dataset.id;
+        state.preview = null;
+        renderChars(); renderStage(); renderEvo(); renderForms(); markDirty();
+        setStatus('Looking good! Save to make ' + window.SH_MASCOTS[state.char].name + ' your character.', '');
+      }));
+    }
 
     function renderStage() {
       const fi = state.preview != null ? state.preview : formFor(stats.level);
       const f = FORMS[fi];
-      document.getElementById('csChar').src = ASSETS + 'form-' + f.id + '.webp';
+      document.getElementById('csChar').src = fp(f.id);
+      document.getElementById('csChar').alt = 'Your character, ' + window.SH_MASCOTS[state.char].name;
+      document.getElementById('csName').textContent = window.SH_MASCOTS[state.char].name;
       document.getElementById('csLv').textContent = stats.level;
       document.getElementById('csTier').textContent = f.label + (state.preview != null && state.preview !== formFor(stats.level) ? ' · preview' : '');
       document.getElementById('csBg').className = 'cs-bg scene-' + (state.equipped.bg || 'study-nook');
@@ -372,14 +419,14 @@
       const sil = document.getElementById('csEvoSil');
       if (!next) {
         sil.classList.add('max');
-        document.getElementById('csEvoImg').src = ASSETS + 'form-fellow.webp';
+        document.getElementById('csEvoImg').src = fp('fellow');
         document.getElementById('csEvoTitle').textContent = 'Final form reached 👑';
-        document.getElementById('csEvoSub').textContent = 'Sparky is a Cambridge Fellow. Keep your streak going to unlock every companion.';
+        document.getElementById('csEvoSub').textContent = window.SH_MASCOTS[state.char].name + ' is a Cambridge Fellow. Keep your streak going to unlock every companion.';
         document.getElementById('csEvoBar').style.width = '100%';
         return;
       }
       sil.classList.remove('max');
-      document.getElementById('csEvoImg').src = ASSETS + 'form-' + next.id + '.webp';
+      document.getElementById('csEvoImg').src = fp(next.id);
       const togo = next.from - stats.level;
       document.getElementById('csEvoTitle').textContent = 'Next evolution: ' + next.label;
       document.getElementById('csEvoSub').textContent = 'Reach Level ' + next.from + ' · ' + togo + ' level' + (togo > 1 ? 's' : '') + ' to go';
@@ -425,7 +472,7 @@
         const cls = i < fi ? 'done' : i === fi ? 'current' : 'locked';
         const range = f.to ? 'Lv ' + f.from + '–' + f.to : 'Lv ' + f.from + '+';
         return '<button type="button" class="cs-form ' + cls + (state.preview === i ? ' previewing' : '') + '" data-i="' + i + '"' + (i > fi ? ' aria-disabled="true"' : '') + '>'
-          + '<div class="art"><img src="' + ASSETS + 'form-' + f.id + '.webp" alt="" loading="lazy"></div>'
+          + '<div class="art"><img src="' + fp(f.id) + '" alt="" loading="lazy"></div>'
           + '<div class="t">' + esc(f.label) + '</div><div class="l">' + range + '</div></button>';
       }).join('');
       document.querySelectorAll('#csForms .cs-form').forEach(b => b.addEventListener('click', () => {
@@ -469,12 +516,15 @@
       btn.disabled = true;
       setStatus('Saving…', '');
       const payload = { hat: state.equipped.hat, gear: state.equipped.gear, companion: state.equipped.companion, bg: state.equipped.bg };
-      try { localStorage.setItem(lsKey(), JSON.stringify(payload)); } catch (_) {}
+      try { localStorage.setItem(lsKey(), JSON.stringify(payload)); localStorage.setItem('sh-char:' + uid, state.char); } catch (_) {}
+      state.chosen = true;
+      if (window.studentProfile) window.studentProfile.mascotId = state.char;
+      window.dispatchEvent(new CustomEvent('mascot-level', { detail: { level: stats.level } }));   // repaint navbar / hero avatars
       try {
-        await updateDoc(doc(window.db, 'students', uid), { mascotEquipped: payload, mascotUpdatedAt: serverTimestamp() });
+        await updateDoc(doc(window.db, 'students', uid), { mascotEquipped: payload, mascotId: state.char, mascotUpdatedAt: serverTimestamp() });
         if (window.studentProfile) window.studentProfile.mascotEquipped = payload;
         state.saved = eqKey(state.equipped);
-        setStatus('✓ Saved — Sparky looks amazing!', 'ok');
+        setStatus('✓ Saved — ' + window.SH_MASCOTS[state.char].name + ' looks amazing!', 'ok');
         if (window.fx && window.fx.play) window.fx.play('tick');
       } catch (e) {
         console.warn('[studio] cloud save failed, kept on this device', e.code || e.message);

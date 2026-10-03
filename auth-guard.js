@@ -141,20 +141,44 @@ window.applyStageTheme = function (gradeLevel) {
 };
 
 // ─── Mascot avatars (Character Studio, 2026-10-03) ─────────────────
-// Every avatar in the portal is now Sparky's head in the evolution form that
-// matches a level (same bands as tierFor()). studentAvatarUrl(uid, opts):
-//   opts.level  → that level's form (leaderboard rows carry e.level)
-//   self        → window.studentLevel (loaded below from student_points),
-//                 else the level cached on this device, else 1
-//   other peers → no level known → the Apprentice form
-// Art lives in /assets/mascot/head-<form>.webp (192px). The legacy DiceBear
-// picker is gone; opts.dicebear === true still yields the old URL if ever needed.
+// Every avatar in the portal is a mascot head in the evolution form that matches a
+// level (same bands as tierFor()). Five characters share the same five forms; the
+// student picks one in Character Studio (students/{uid}.mascotId, cached on this
+// device as localStorage 'sh-char:<uid>'; default 'sparky').
+//   studentAvatarUrl(uid, opts):
+//     opts.level / opts.char → explicit form / character (leaderboard rows carry e.level)
+//     self                   → live window.studentLevel, else the cached level, else 1;
+//                              and the student's own character
+//     other peers            → their level when known, always Sparky (a peer's character
+//                              is not readable from the client)
+// Art: /assets/mascot/<char>/head-<form>.webp (192px) and form-<form>.webp (720px).
+// The legacy DiceBear picker is gone; opts.dicebear === true still yields the old URL.
 const AVATAR_STYLE_ALLOWLIST = new Set([
   'bottts', 'adventurer', 'lorelei', 'notionists', 'shapes', 'fun-emoji'
 ]);
+// KEEP IN SYNC with the mascotId allowlist in Central Hub/firestore.rules (students self-update).
+window.SH_MASCOTS = {
+  sparky: { name: 'Sparky', species: 'Fox-cat explorer', blurb: 'Curious and brave. Always the first to try something new.' },
+  ember:  { name: 'Ember',  species: 'Baby dragon',      blurb: 'Fiery and determined. Turns every mistake into fuel.' },
+  bolt:   { name: 'Bolt',   species: 'Robot buddy',      blurb: 'Logical and loyal. Loves patterns, puzzles and a good streak.' },
+  luna:   { name: 'Luna',   species: 'Axolotl',          blurb: 'Calm and creative. Never stops growing, just like you.' },
+  capy:   { name: 'Capy',   species: 'Capybara',         blurb: 'Chill and wise. Slow and steady wins the race.' },
+};
 window.mascotFormFor = function (level) {
   const l = Number(level) || 1;
   return l >= 35 ? 'fellow' : l >= 20 ? 'master' : l >= 10 ? 'mentor' : l >= 5 ? 'scholar' : 'apprentice';
+};
+window.mascotPath = function (char, kind, form) {
+  const id = window.SH_MASCOTS[char] ? char : 'sparky';
+  return '/assets/mascot/' + id + '/' + kind + '-' + form + '.webp';
+};
+window.shMascotId = function (uid) {
+  const p = window.studentProfile || {};
+  let id = p.mascotId;
+  if (!id) {
+    try { id = localStorage.getItem('sh-char:' + (uid || (window.currentUser && window.currentUser.uid))); } catch (_) {}
+  }
+  return window.SH_MASCOTS[id] ? id : 'sparky';
 };
 window.studentAvatarUrl = function (uid, opts) {
   const o = opts || {};
@@ -164,14 +188,16 @@ window.studentAvatarUrl = function (uid, opts) {
     return 'https://api.dicebear.com/9.x/' + style + '/svg?seed=' + encodeURIComponent(o.seed || uid)
       + '&size=' + (o.size || 96) + '&backgroundColor=efedfb,ecfeff,fef3c7,d1fae5,fee2e2,e0e7ff&radius=50';
   }
+  const isSelf = !!uid && uid === (window.currentUser && window.currentUser.uid);
   let level = o.level;
-  if (level == null && uid && uid === (window.currentUser && window.currentUser.uid)) {
+  if (level == null && isSelf) {
     level = window.studentLevel;
     if (level == null) {
       try { level = parseInt(localStorage.getItem('sh-level:' + uid) || '', 10); } catch (_) {}
     }
   }
-  return '/assets/mascot/head-' + window.mascotFormFor(level) + '.webp';
+  const char = o.char || (isSelf ? window.shMascotId(uid) : 'sparky');
+  return window.mascotPath(char, 'head', window.mascotFormFor(level));
 };
 
 // ─── Bypass: pages that don't need a logged-in active student ────

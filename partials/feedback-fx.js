@@ -253,13 +253,16 @@
     // (Lv 5 / 10 / 20 / 35) he EVOLVES: full new-form art and a longer, bigger card.
     const evolved = level === 5 || level === 10 || level === 20 || level === 35;
     const form = level >= 35 ? 'fellow' : level >= 20 ? 'master' : level >= 10 ? 'mentor' : level >= 5 ? 'scholar' : 'apprentice';
+    const char = window.shMascotId ? window.shMascotId() : 'sparky';
+    const mname = ((window.SH_MASCOTS && window.SH_MASCOTS[char]) ? window.SH_MASCOTS[char].name : 'Sparky').toUpperCase();
+    const pth = (kind) => window.mascotPath ? window.mascotPath(char, kind, form) : '/assets/mascot/sparky/' + kind + '-' + form + '.webp';
     const art = evolved
-      ? '<img src="/assets/mascot/form-' + form + '.webp" alt="" style="width:min(240px,60vw);height:auto;border-radius:22px;display:block;margin:0 auto 10px;box-shadow:0 0 40px rgba(251,191,36,.55)">'
-      : '<img src="/assets/mascot/head-' + form + '.webp" alt="" style="width:96px;height:96px;border-radius:50%;display:block;margin:0 auto 8px;border:3px solid rgba(255,255,255,.7);box-shadow:0 0 28px rgba(255,255,255,.35)">';
+      ? '<img src="' + pth('form') + '" alt="" style="width:min(240px,60vw);height:auto;border-radius:22px;display:block;margin:0 auto 10px;box-shadow:0 0 40px rgba(251,191,36,.55)">'
+      : '<img src="' + pth('head') + '" alt="" style="width:96px;height:96px;border-radius:50%;display:block;margin:0 auto 8px;border:3px solid rgba(255,255,255,.7);box-shadow:0 0 28px rgba(255,255,255,.35)">';
     ov.innerHTML = ''
       + '<div class="fx-levelup-card">'
       +   art
-      +   '<div class="fx-levelup-eyebrow">' + (evolved ? 'SPARKY EVOLVED!' : 'LEVEL UP') + '</div>'
+      +   '<div class="fx-levelup-eyebrow">' + (evolved ? mname + ' EVOLVED!' : 'LEVEL UP') + '</div>'
       +   '<div class="fx-levelup-num">' + level + '</div>'
       +   '<div class="fx-levelup-tier">' + (tierLabel || '') + '</div>'
       + '</div>';

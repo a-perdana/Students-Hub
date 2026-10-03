@@ -1284,6 +1284,26 @@
     paintChest();
     nodes.forEach(n => n && new MutationObserver(paintChest).observe(n, { attributes: true, attributeFilter: ['class'] }));
 
+    // 4) first-run nudge: no character chosen yet → invite the student to Character Studio
+    function charNudge() {
+      try {
+        const p = window.studentProfile || {};
+        const uid = window.currentUser && window.currentUser.uid;
+        if (!uid || p.mascotId || localStorage.getItem('sh-char:' + uid) || document.getElementById('charNudge')) return;
+        if (!window.SH_MASCOTS || !window.mascotPath) return;
+        const a = document.createElement('a');
+        a.id = 'charNudge'; a.href = '/avatar';
+        a.style.cssText = 'display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 18px;padding:14px 18px;border-radius:22px;text-decoration:none;'
+          + 'border:2px solid #fbbf24;background:linear-gradient(135deg,rgba(251,191,36,.22),rgba(139,124,255,.18));color:inherit;box-shadow:0 14px 30px -18px rgba(251,191,36,.7)';
+        const heads = Object.keys(window.SH_MASCOTS).map(id => '<img src="' + window.mascotPath(id, 'head', 'apprentice') + '" alt="" style="width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.6);margin-left:-10px;background:#0f0b24">').join('');
+        a.innerHTML = '<span style="display:flex;padding-left:10px">' + heads + '</span>'
+          + '<span style="flex:1;min-width:200px"><b style="font-family:Outfit,sans-serif;font-size:1.05rem;color:var(--ink)">Pick your character!</b><br><span style="font-size:.84rem;color:var(--ink-2)">Sparky, Ember, Bolt, Luna or Capy is waiting. Level up to make them evolve.</span></span>'
+          + '<span style="padding:10px 18px;border-radius:14px;background:linear-gradient(180deg,#ffd54a,#f5a30b);color:#3b2600;font-weight:800;box-shadow:0 4px 0 #b45309">Choose →</span>';
+        const hero = document.querySelector('.hero-v2');
+        if (hero && hero.parentNode) hero.parentNode.insertBefore(a, hero);
+      } catch (e) { /* cosmetic nudge, never block the page */ }
+    }
+    if (window.studentProfile) charNudge(); else window.addEventListener('authReady', charNudge);
   })();
   </script>
   <script src="./partials/footer.js"></script>
