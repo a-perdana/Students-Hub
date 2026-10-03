@@ -99,6 +99,7 @@ function processFile(filename) {
   // 4. Absolute paths so subdirectory pages resolve auth-guard / base.css / partials
   html = html.replace(/src="auth-guard\.js"/g,            'src="/auth-guard.js"');
   html = html.replace(/href="base\.css"/g,                'href="/base.css"');
+  html = html.replace(/href="lobby\.css"/g,               'href="/lobby.css"');
   html = html.replace(/fetch\('partials\/navbar\.html'\)/g, "fetch('/partials/navbar.html')");
   html = html.replace(/src="\.\/partials\/feedback-fx\.js"/g, 'src="/partials/feedback-fx.js"');
   html = html.replace(/src="\.\/partials\/observer-strip\.js"/g, 'src="/partials/observer-strip.js"');
@@ -135,6 +136,13 @@ fs.copyFileSync(
   path.join(distDir, 'base.css')
 );
 console.log('Copied: dist/base.css');
+
+// Copy lobby.css (game-lobby theme, opt-in via <body class="lobby">)
+fs.copyFileSync(
+  path.join(__dirname, 'lobby.css'),
+  path.join(distDir, 'lobby.css')
+);
+console.log('Copied: dist/lobby.css');
 
 // Copy Eduversal master logo (white-on-transparent, 600x176) used by login + navbar.
 const logoSrc = path.join(__dirname, 'eduversal-logo-white.png');
