@@ -121,26 +121,43 @@ body.lobby .gloss-def code { background:rgba(255,255,255,.1); color:#c9c1ff; }
 body.lobby .not-built .nb { background:rgba(255,255,255,.05); }
 body.lobby section.hpw-card h2 { font-family:"Outfit","DM Sans",sans-serif; }
 
-/* practice-run.html question card */
-body.lobby .qcard-head { background:linear-gradient(135deg,rgba(139,124,255,.28),rgba(34,211,238,.1)); }
-body.lobby .q-counter { color:#8fe9f7; }
-body.lobby .q-streak-pill { background:rgba(255,255,255,.08); color:var(--ink-2); border-color:var(--border-2); }
-body.lobby .q-streak-pill.is-hot { color:#ffd54a; background:var(--gold-2); border-color:rgba(251,191,36,.6); box-shadow:0 0 18px -4px rgba(251,191,36,.6); }
-body.lobby .q-mini-progress { background:rgba(0,0,0,.35); border-color:var(--border-2); }
-body.lobby .qopt { background:rgba(255,255,255,.05); border-color:var(--border-2); color:#fff; }
-body.lobby .qopt:hover:not(.is-locked) { background:rgba(139,124,255,.16); border-color:var(--lobby-cyan); }
-body.lobby .qopt .letter { background:rgba(255,255,255,.1); border-color:var(--border-2); color:#fff; }
-body.lobby .qopt.is-pending { background:rgba(139,124,255,.2); }
-body.lobby .qopt.is-correct, body.lobby .qopt.is-correct-untouched { background:linear-gradient(160deg,rgba(52,211,153,.28),rgba(52,211,153,.08)); border-color:var(--ok); box-shadow:0 0 22px -6px rgba(52,211,153,.7); }
-body.lobby .qopt.is-wrong { background:linear-gradient(160deg,rgba(251,113,133,.28),rgba(251,113,133,.08)); border-color:var(--danger); box-shadow:0 0 22px -6px rgba(251,113,133,.6); }
-body.lobby .qopt.is-correct .letter, body.lobby .qopt.is-correct-untouched .letter { background:var(--ok); border-color:var(--ok); color:#053b2a; }
-body.lobby .qopt.is-wrong .letter { background:var(--danger); border-color:var(--danger); color:#4c0519; }
-body.lobby .feedback.ok { border-color:rgba(52,211,153,.55); box-shadow:0 0 24px -8px rgba(52,211,153,.7); }
-body.lobby .feedback.ok .icon { background:var(--ok); color:#053b2a; box-shadow:0 0 16px rgba(52,211,153,.8); }
-body.lobby .feedback.no .icon { background:var(--danger); color:#4c0519; }
-body.lobby .feedback.no { border-color:rgba(251,113,133,.55); }
+/* practice-run.html — the question card is a LIGHT "paper" surface inside the dark lobby.
+   Maths, equations and diagrams are authored on white, and a reader needs the most contrast
+   here; the dark chrome around it keeps the game feel. Tokens are reset locally so every
+   base.css / page rule that reads a variable renders its normal light-theme value. */
+body.lobby .qcard {
+  --ink:#1a1d29; --ink-2:#475066; --ink-3:#6b7490; --white:#ffffff; --paper:#f4f3fb;
+  --border:#dedcf0; --border-2:#c9c5e6;
+  --ok:#166534; --ok-bg:#dcfce7; --danger:#b91c1c; --danger-bg:#fee2e2;
+  --gold-2:#fef3c7; --stage-primary:#6c5ce7; --stage-primary-dk:#4e3db8; --stage-primary-2:#efedfb;
+  --stage-accent:#0891b2;
+  background:#fff; color:#1a1d29; border:2px solid #fff3c4; border-radius:22px; backdrop-filter:none;
+  box-shadow:0 28px 60px -24px rgba(0,0,0,.9), 0 0 0 6px rgba(139,124,255,.18), 0 0 40px -8px rgba(139,124,255,.55);
+}
+body.lobby .qcard-head { background:linear-gradient(135deg,#ece8ff,#d9f6fb); border-bottom:1px solid #dedcf0; }
+body.lobby .q-counter { color:#4e3db8; }
+body.lobby .q-streak-pill { background:#fff; color:#475066; border-color:#c9c5e6; }
+body.lobby .q-streak-pill.is-hot { color:#92400e; background:#fef3c7; border-color:#fcd34d; box-shadow:0 6px 16px -8px rgba(245,158,11,.8); }
+body.lobby .q-mini-progress { background:rgba(108,92,231,.14); border-color:rgba(108,92,231,.22); }
+body.lobby .qstem { color:#1a1d29; }
+body.lobby .qopt { background:#fff; border:2px solid #dedcf0; border-bottom-width:4px; border-radius:16px; color:#1a1d29; box-shadow:none; }
+body.lobby .qopt:hover:not(.is-locked) { background:#f4f1ff; border-color:#6c5ce7; transform:translateY(-2px); box-shadow:0 10px 20px -14px rgba(108,92,231,.7); }
+body.lobby .qopt:active:not(.is-locked) { transform:translateY(2px); border-bottom-width:2px; }
+body.lobby .qopt .letter { background:#efedfb; border:1.5px solid #c9c5e6; color:#4e3db8; }
+body.lobby .qopt.is-pending { background:#efedfb; border-color:#6c5ce7; }
+body.lobby .qopt.is-correct, body.lobby .qopt.is-correct-untouched { background:#dcfce7; border-color:#22a35a; box-shadow:0 0 0 3px rgba(34,163,90,.18); }
+body.lobby .qopt.is-wrong { background:#fee2e2; border-color:#e5484d; box-shadow:0 0 0 3px rgba(229,72,77,.15); }
+body.lobby .qopt.is-correct .letter, body.lobby .qopt.is-correct-untouched .letter { background:#22a35a; border-color:#22a35a; color:#fff; }
+body.lobby .qopt.is-wrong .letter { background:#e5484d; border-color:#e5484d; color:#fff; }
+body.lobby .feedback.ok { background:#dcfce7; color:#166534; border-color:#86e0ac; box-shadow:none; }
+body.lobby .feedback.no { background:#fee2e2; color:#b91c1c; border-color:#f5a3a6; }
+body.lobby .feedback.ok .icon { background:#22a35a; color:#fff; box-shadow:none; }
+body.lobby .feedback.no .icon { background:#e5484d; color:#fff; }
+body.lobby .fb-explain { color:#475066; }
 body.lobby .btn-next { background:linear-gradient(180deg,#ffd54a,#f5a30b); color:#3b2600; border:2px solid #fff3c4; box-shadow:0 4px 0 #b45309, 0 12px 24px -8px rgba(245,158,11,.6); }
+body.lobby .btn-next:disabled { background:linear-gradient(180deg,#d9d6ee,#bdb8de); color:#6b6890; border-color:#e8e6f6; box-shadow:0 4px 0 #9b96c4; opacity:1; }
 body.lobby .btn-next:active:not(:disabled) { transform:translateY(3px); box-shadow:0 1px 0 #b45309; }
+/* the Next button sits on the paper card, so keep its disabled state quiet but legible */
 
 /* shared decorative primitives (reused by page blocks) */
 @keyframes lobbyPulse { 0%,100%{box-shadow:0 6px 0 #b45309,0 16px 34px -6px rgba(245,158,11,.55)} 50%{box-shadow:0 6px 0 #b45309,0 16px 46px 0 rgba(245,158,11,.95)} }
