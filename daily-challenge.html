@@ -238,8 +238,8 @@
 
     window.addEventListener('authReady', async (ev) => {
       if (!ev.detail.signedIn) return;
-      document.getElementById('dateChip').textContent =
-        new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+      paintDateChip();
+      setInterval(paintDateChip, 30000);
 
       // Wire subject tabs
       document.querySelectorAll('.subj-tab').forEach(t => {
@@ -252,6 +252,22 @@
       paintTabs();
       selectSubject('math');
     });
+
+    function paintDateChip() {
+      const now = new Date();
+      const label = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+      }).formatToParts(now).reduce((acc, part) => {
+        if (part.type !== 'literal') acc[part.type] = Number(part.value);
+        return acc;
+      }, {});
+      const secondsNow = (parts.hour || 0) * 3600 + (parts.minute || 0) * 60 + (parts.second || 0);
+      const left = Math.max(0, 86400 - secondsNow);
+      const h = Math.floor(left / 3600);
+      const m = Math.floor((left % 3600) / 60);
+      document.getElementById('dateChip').textContent = label + ' · resets in ' + h + 'h ' + String(m).padStart(2, '0') + 'm';
+    }
 
     async function fetchChallenge(subj) {
       try {

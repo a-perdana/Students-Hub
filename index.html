@@ -190,6 +190,127 @@
     }
     @media (max-width: 880px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
 
+    .command-deck {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr;
+      gap: 12px;
+      margin: -4px 0 22px;
+    }
+    @media (max-width: 920px) { .command-deck { grid-template-columns: 1fr; } }
+    .command-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      min-height: 132px;
+      box-shadow: 0 10px 24px -20px rgba(15, 23, 42, .32);
+    }
+    .command-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -28px -42px auto;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: var(--stage-primary-2);
+      opacity: .75;
+      pointer-events: none;
+    }
+    .command-eyebrow {
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--stage-primary-dk);
+      margin-bottom: 8px;
+    }
+    .command-main {
+      font-family: 'Lora', serif;
+      font-size: 1.45rem;
+      line-height: 1.05;
+      color: var(--ink);
+      margin-bottom: 7px;
+      position: relative;
+      z-index: 1;
+    }
+    .command-sub {
+      color: var(--ink-3);
+      font-size: .82rem;
+      line-height: 1.45;
+      max-width: 28rem;
+      position: relative;
+      z-index: 1;
+    }
+    .xp-track {
+      height: 9px;
+      border-radius: 99px;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin: 14px 0 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .xp-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--stage-primary), var(--stage-accent), var(--gold));
+      transition: width .9s cubic-bezier(.2,.8,.2,1);
+    }
+    .command-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      color: var(--stage-primary-dk);
+      font-weight: 800;
+      font-size: .8rem;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+    }
+    .command-link:hover { text-decoration: underline; }
+    .quest-track {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 760px) { .quest-track { grid-template-columns: 1fr; } }
+    .quest-node {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      color: var(--ink-2);
+      font-size: .78rem;
+      font-weight: 700;
+    }
+    .quest-node .node-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--border-2);
+      flex-shrink: 0;
+    }
+    .quest-node.is-done {
+      background: var(--ok-bg);
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+    .quest-node.is-done .node-dot {
+      background: var(--ok);
+      border-color: var(--ok);
+      box-shadow: inset 0 0 0 4px #fff;
+    }
+
     /* ─── Achievements row ────────────────────────────────────── */
     .ach-card {
       margin-bottom: 22px;
@@ -419,9 +540,36 @@
           <div class="q-reward">★ Streak bonus</div>
         </a>
       </div>
+      <div class="quest-track" aria-label="Today progress">
+        <div class="quest-node" id="nodeChallenge"><span class="node-dot"></span><span>Challenge clear</span></div>
+        <div class="quest-node" id="nodePractice"><span class="node-dot"></span><span>Practice run</span></div>
+        <div class="quest-node" id="nodeStreak"><span class="node-dot"></span><span>Streak saved</span></div>
+      </div>
     </section>
 
-    <!-- ─── STAT TILES (kept from v1) ─── -->
+    <!-- Game status deck -->
+    <section class="command-deck" aria-label="Game status">
+      <div class="command-card">
+        <div class="command-eyebrow">Next level</div>
+        <div class="command-main" id="xpRemaining">Loading...</div>
+        <div class="xp-track" aria-hidden="true"><div class="xp-fill" id="xpFill"></div></div>
+        <div class="command-sub" id="xpSub">Your XP ring updates after every scored run.</div>
+      </div>
+      <div class="command-card">
+        <div class="command-eyebrow">Streak watch</div>
+        <div class="command-main" id="streakStatus">Loading...</div>
+        <div class="command-sub" id="streakSub">One scored run keeps the chain alive.</div>
+        <a class="command-link" href="/practice">Start a run</a>
+      </div>
+      <div class="command-card">
+        <div class="command-eyebrow">Weekly league</div>
+        <div class="command-main" id="leagueRank">Building...</div>
+        <div class="command-sub" id="leagueSub">Rank appears after the board refreshes.</div>
+        <a class="command-link" href="/leaderboard">Open leaderboard</a>
+      </div>
+    </section>
+
+    <!-- Stat tiles -->
     <section class="stat-row" id="statRow">
       <div class="stat-tile">
         <div class="stat-tile-icon icon-gold">
@@ -563,6 +711,7 @@
       loadPoints(uid);
       checkChallengeDone(uid);
       checkPracticeDoneToday(uid);
+      loadLeaguePreview(uid);
       loadRecentPractice(uid);
     });
 
@@ -606,6 +755,7 @@
         const C = 2 * Math.PI * 50; // r=50
         ring.setAttribute('stroke-dasharray', C);
         ring.setAttribute('stroke-dashoffset', C * (1 - prog/100));
+        paintCommandDeck(d);
 
         // Tier pill
         const t = tierFor(lvl);
@@ -656,12 +806,83 @@
         document.getElementById('streakDays').textContent = '0';
         document.getElementById('practiceRuns').textContent = '0';
         document.getElementById('dailiesDone').textContent  = '0';
+        paintCommandDeck({});
         renderAchievements({});
         recomputeQuestMeta();
       }
     }
 
     // ─── Challenge done today? ─────────────────────────────────
+    function paintCommandDeck(d) {
+      const lvl = d.level || 1;
+      const inLevel = d.levelXp || 0;
+      const req = d.levelXpRequired || 100;
+      const prog = Math.max(0, Math.min(100, d.levelProgress || 0));
+      const left = Math.max(0, req - inLevel);
+      const streak = d.streak?.current || 0;
+      const todayMatch = streak > 0 && d.streak?.lastDayISO === TODAY;
+      const nextMilestone = streak < 7 ? 7 : streak < 30 ? 30 : null;
+
+      document.getElementById('xpRemaining').textContent = left === 0 ? 'Level ready' : left.toLocaleString('en-GB') + ' XP to Lv ' + (lvl + 1);
+      document.getElementById('xpFill').style.width = prog + '%';
+      document.getElementById('xpSub').textContent = 'Level ' + lvl + ' is ' + prog + '% complete. Every correct answer moves the ring.';
+
+      document.getElementById('streakStatus').textContent = todayMatch ? 'Safe today' : (streak ? 'Streak at risk' : 'Start today');
+      document.getElementById('streakSub').textContent = nextMilestone
+        ? streak + ' / ' + nextMilestone + ' days toward the next streak bonus.'
+        : 'Legend chain active. Keep showing up daily to hold the crown.';
+      document.getElementById('nodeStreak').classList.toggle('is-done', todayMatch);
+    }
+
+    async function loadLeaguePreview(uid) {
+      const rankEl = document.getElementById('leagueRank');
+      const subEl = document.getElementById('leagueSub');
+      const p = window.studentProfile || {};
+      if (!p.schoolId || !p.gradeLevel) {
+        rankEl.textContent = 'No grade yet';
+        subEl.textContent = 'Pick your grade first so your weekly league can load.';
+        return;
+      }
+      try {
+        const boardId = 'grade_' + p.schoolId + '|' + p.gradeLevel + '_weekly';
+        const snap = await getDoc(doc(window.db, 'school_leaderboards', boardId));
+        if (snap.exists()) {
+          const entries = snap.data().entries || [];
+          const mine = entries.find(e => e.studentUid === uid);
+          if (mine) {
+            rankEl.textContent = '#' + (mine.rank || entries.indexOf(mine) + 1);
+            subEl.textContent = (mine.weeklyPoints || 0).toLocaleString('en-GB') + ' weekly points in Grade ' + p.gradeLevel + '.';
+            return;
+          }
+          rankEl.textContent = 'Top 100 chase';
+          subEl.textContent = 'Score points this week to break into your grade board.';
+          return;
+        }
+
+        const q = query(
+          collection(window.db, 'student_points'),
+          where('schoolId', '==', p.schoolId),
+          where('gradeLevel', '==', Number(p.gradeLevel)),
+          orderBy('weeklyPoints', 'desc'),
+          limit(50)
+        );
+        const live = await getDocs(q);
+        const rows = live.docs.map((d, i) => ({ rank: i + 1, id: d.id, ...d.data() }));
+        const mine = rows.find(e => (e.studentUid || e.id) === uid);
+        if (mine) {
+          rankEl.textContent = '#' + mine.rank;
+          subEl.textContent = 'Live preview. Official ranks refresh hourly.';
+        } else {
+          rankEl.textContent = 'First points';
+          subEl.textContent = 'Finish a run to enter this week\'s grade board.';
+        }
+      } catch (e) {
+        console.warn('[dashboard] league preview failed', e.message);
+        rankEl.textContent = 'Board loading';
+        subEl.textContent = 'Your weekly rank will appear after the next refresh.';
+      }
+    }
+
     async function checkChallengeDone(uid) {
       try {
         const subs = ['math','english','science'];
@@ -684,6 +905,7 @@
         if (questState.challengeDone) {
           const card = document.querySelector('.quest-card[data-quest="challenge"]');
           card.classList.add('is-done');
+          document.getElementById('nodeChallenge').classList.add('is-done');
           card.querySelector('.q-sub').textContent = 'Done — see how your grade is doing today.';
           // Hero CTA pivots to leaderboard preview
           const cta = document.getElementById('heroCta');
@@ -721,6 +943,7 @@
         if (foundToday) {
           const card = document.querySelector('.quest-card[data-quest="practice"]');
           card.classList.add('is-done');
+          document.getElementById('nodePractice').classList.add('is-done');
           card.querySelector('.q-sub').textContent = 'Done today. One more for a bigger streak!';
         }
       } catch (e) { console.warn('[dashboard] practiceDone check failed', e.message); }
