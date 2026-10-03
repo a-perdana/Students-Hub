@@ -913,6 +913,75 @@
     return makeSvg('0 0 560 280', children);
   }
 
+  function collisionBalls(spec) {
+    const before = spec.before || {};
+    const after = spec.after || {};
+    const x = spec.x || {};
+    const y = spec.y || {};
+    const children = [
+      rect(18, 18, 524, 262, { fill: '#fbfdff', stroke: '#dbe4ff', rx: 18 }),
+      text(280, 44, spec.heading || 'Head-on collision model', { fill: '#4338ca', 'font-size': 16, 'font-weight': 800 }),
+      rect(54, 68, 452, 72, { fill: '#ffffff', stroke: '#dbeafe', 'stroke-width': 2, rx: 14 }),
+      rect(54, 170, 452, 72, { fill: '#ffffff', stroke: '#e0e7ff', 'stroke-width': 2, rx: 14 }),
+      text(92, 91, 'before', { fill: '#475569', 'font-size': 12, 'font-weight': 900, 'text-anchor': 'start' }),
+      text(92, 193, 'after', { fill: '#475569', 'font-size': 12, 'font-weight': 900, 'text-anchor': 'start' }),
+      line(112, 124, 462, 124, { stroke: '#cbd5e1', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+      line(112, 226, 462, 226, { stroke: '#cbd5e1', 'stroke-width': 3, 'stroke-linecap': 'round' }),
+    ];
+
+    function ball(cx, cy, label, mass, fill, stroke) {
+      children.push(circle(cx, cy, 24, { fill, stroke, 'stroke-width': 3 }));
+      children.push(text(cx, cy + 5, label, { fill: '#0f172a', 'font-size': 16, 'font-weight': 900 }));
+      if (mass) children.push(text(cx, cy + 39, mass, { fill: '#475569', 'font-size': 11, 'font-weight': 800 }));
+    }
+
+    function arrow(x1, y1, x2, y2, color, label, labelOffset) {
+      const right = x2 >= x1;
+      children.push(line(x1, y1, x2, y2, { stroke: color, 'stroke-width': 5, 'stroke-linecap': 'round' }));
+      children.push(polygon(right
+        ? `${x2},${y2} ${x2 - 14},${y2 - 8} ${x2 - 14},${y2 + 8}`
+        : `${x2},${y2} ${x2 + 14},${y2 - 8} ${x2 + 14},${y2 + 8}`, {
+        fill: color,
+        stroke: 'none',
+      }));
+      if (label) {
+        children.push(text((x1 + x2) / 2, y1 + (labelOffset || -13), label, {
+          fill: color,
+          'font-size': 12,
+          'font-weight': 900,
+        }));
+      }
+    }
+
+    ball(178, 124, x.label || 'X', x.mass || before.xMass || '', '#dbeafe', '#2563eb');
+    ball(358, 124, y.label || 'Y', y.mass || before.yMass || '', '#fef3c7', '#d97706');
+    arrow(210, 104, 302, 104, '#2563eb', before.xVelocity || '', -12);
+    children.push(text(358, 91, before.yVelocity || 'stationary', {
+      fill: '#92400e',
+      'font-size': 12,
+      'font-weight': 900,
+    }));
+    children.push(svgEl('path', {
+      d: 'M 254 128 C 270 110, 288 110, 304 128',
+      fill: 'none',
+      stroke: '#94a3b8',
+      'stroke-width': 2,
+      'stroke-dasharray': '5 5',
+      'stroke-linecap': 'round',
+    }));
+
+    ball(202, 226, x.label || 'X', x.mass || after.xMass || '', '#dbeafe', '#2563eb');
+    ball(358, 226, y.label || 'Y', y.mass || after.yMass || '', '#fef3c7', '#d97706');
+    arrow(174, 204, 118, 204, '#ef4444', after.xVelocity || '', -12);
+    arrow(390, 204, 466, 204, '#0f766e', after.yVelocity || 'v?', -12);
+    children.push(text(280, 264, spec.note || 'Take right as positive; use momentum before = momentum after.', {
+      fill: '#475569',
+      'font-size': 12,
+      'font-weight': 800,
+    }));
+    return makeSvg('0 0 560 300', children);
+  }
+
   const RENDERERS = {
     'solid-fact-cards': solidFactCards,
     'cone-on-cylinder': coneOnCylinder,
@@ -941,6 +1010,7 @@
     'bar-magnet-field': barMagnetField,
     'line-graph': lineGraph,
     'atom-structure': atomStructure,
+    'collision-balls': collisionBalls,
   };
 
   const SCIENCE_RENDERERS = new Set([
@@ -957,6 +1027,7 @@
     'bar-magnet-field',
     'line-graph',
     'atom-structure',
+    'collision-balls',
   ]);
 
   function itemText(item) {
@@ -1076,6 +1147,33 @@
         renderer: 'atom-structure',
         title: 'Atom structure',
         alt: 'Atom structure diagram showing nucleus and electron shells.',
+      };
+    }
+
+    const collisionMatch = raw.match(/Ball\s+([A-Z])\s+has a mass of\s+(\d+(?:\.\d+)?)\s*kg\s+and moves(?: to the \w+)? at\s+(\d+(?:\.\d+)?)\s*m\s*s(?:\u207b\u00b9|\^-?1|-1)?/i);
+    const stationaryMatch = raw.match(/stationary ball\s+([A-Z])\s+of mass\s+(\d+(?:\.\d+)?)\s*kg/i);
+    const backMatch = raw.match(/After the collision,\s*([A-Z])\s+moves back[^.]*?at\s+(\d+(?:\.\d+)?)\s*m\s*s(?:\u207b\u00b9|\^-?1|-1)?/i);
+    if ((lower.includes('collision') || lower.includes('collides')) && collisionMatch && stationaryMatch) {
+      const xLabel = collisionMatch[1].toUpperCase();
+      const yLabel = stationaryMatch[1].toUpperCase();
+      const backLabel = backMatch ? backMatch[1].toUpperCase() : xLabel;
+      return {
+        kind: 'programmatic',
+        renderer: 'collision-balls',
+        title: 'Collision model',
+        heading: 'Before and after the collision',
+        x: { label: xLabel, mass: `${collisionMatch[2]} kg` },
+        y: { label: yLabel, mass: `${stationaryMatch[2]} kg` },
+        before: {
+          xVelocity: `${collisionMatch[3]} m s^-1`,
+          yVelocity: 'stationary',
+        },
+        after: {
+          xVelocity: `${backLabel}: ${backMatch ? backMatch[2] : '?'} m s^-1 back`,
+          yVelocity: `${yLabel}: v?`,
+        },
+        note: 'Momentum is conserved; compare kinetic energy to classify the collision.',
+        alt: `Before and after model of a head-on collision between ball ${xLabel} and stationary ball ${yLabel}.`,
       };
     }
 
