@@ -325,6 +325,7 @@
     const unlockAll = () => !!(window.shTesterUnlockAll && window.shTesterUnlockAll());
     const have = (it) => {
       if (unlockAll()) return true;
+      if (((window.studentProfile && window.studentProfile.chestLoot) || []).indexOf(it.id) >= 0) return true;   // won from the daily chest
       const r = it.req;
       return (r.t === 'level' ? stats.level : r.t === 'streak' ? stats.streak : stats.perfect) >= r.n;
     };

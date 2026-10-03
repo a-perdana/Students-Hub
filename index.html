@@ -717,10 +717,10 @@
           <div class="q-reward">★ +50 points</div>
         </a>
         <a href="/practice" class="quest-card" data-quest="practice">
-          <span class="q-glyph">🎯</span>
-          <div class="q-title">Free practice run</div>
-          <div class="q-sub">Pick a topic and try 10 questions. Earn points + climb tiers.</div>
-          <div class="q-reward">★ +20-120 points</div>
+          <span class="q-glyph" id="twistGlyph">🎯</span>
+          <div class="q-title" id="twistTitle">Today's twist</div>
+          <div class="q-sub" id="twistSub">A fresh mini-goal every day.</div>
+          <div class="q-reward" id="twistReward">★ Counts toward the chest</div>
         </a>
         <a href="#" class="quest-card" data-quest="streak" id="streakQuest">
           <span class="q-glyph">🔥</span>
@@ -838,10 +838,12 @@
   <script type="module" src="auth-guard.js"></script>
   <script src="./partials/feedback-fx.js"></script>
   <script src="./partials/badges.js"></script>
+  <script src="./partials/quests.js"></script>
   <script type="module">
     import {
       collection, query, where, orderBy, limit, getDocs, doc, getDoc, updateDoc
     } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
@@ -921,6 +923,7 @@
       try {
         const snap = await getDoc(doc(window.db, 'student_points', uid));
         const d = snap.exists() ? snap.data() : {};
+        window._lastFreeze = d.lastFreeze && d.lastFreeze.day ? { day: d.lastFreeze.day, used: d.lastFreeze.used || 1 } : null;
         const pts    = d.totalPoints || 0;
         const lvl    = d.level || 1;
         const prog   = Math.max(0, Math.min(100, d.levelProgress || 0));
@@ -1124,20 +1127,28 @@
           where('mode', '==', 'practice'),
           where('status', '==', 'submitted'),
           orderBy('submittedAt', 'desc'),
-          limit(5)
+          limit(20)
         );
         const snap = await getDocs(qs);
-        let foundToday = false;
+        const todays = [];
         snap.forEach(d => {
-          const t = d.data().submittedAt?.toDate?.();
-          if (t && t.getTime() >= since.getTime()) foundToday = true;
+          const a = d.data();
+          const t = a.submittedAt?.toDate?.();
+          if (t && t.getTime() >= since.getTime()) todays.push(a);
         });
+        // today's rotating twist (same pick the server verifies when the chest is opened)
+        const Q = window.SH_QUESTS;
+        const v = Q.pick(uid, TODAY);
+        const prog = Q.progress(v, todays);
+        const foundToday = prog >= v.target;
         questState.practiceDone = foundToday;
+        const card = document.querySelector('.quest-card[data-quest="practice"]');
+        card.querySelector('#twistGlyph').textContent = v.glyph;
+        card.querySelector('#twistTitle').textContent = v.title;
+        card.querySelector('#twistSub').textContent = foundToday ? 'Done today. Nice one!' : (v.target > 1 ? prog + ' / ' + v.target + ' · ' : '') + v.sub;
         if (foundToday) {
-          const card = document.querySelector('.quest-card[data-quest="practice"]');
           card.classList.add('is-done');
           document.getElementById('nodePractice').classList.add('is-done');
-          card.querySelector('.q-sub').textContent = 'Done today. One more for a bigger streak!';
         }
       } catch (e) { console.warn('[dashboard] practiceDone check failed', e.message); }
       recomputeQuestMeta();
@@ -1215,6 +1226,118 @@
         console.warn('[dashboard] recent practice load failed', e.message);
         box.innerHTML = '<div class="empty" style="padding:18px 0; font-size:.88rem">Could not load recent practice.</div>';
       }
+    }
+
+    // ─── Daily chest (opens when the three quests are done; server verifies + rolls the loot) ───
+    // claimDailyChest (Central Hub CF): one chest per Jakarta day. Loot = a streak-freeze token or a
+    // cosmetic unlocked early. It never grants points.
+    let chestBusy = false;
+    function chestOpenedToday() { return (window.studentProfile && window.studentProfile.chestDay) === TODAY; }
+    function lootText(loot, tokens) {
+      if (!loot) return { icon: '🎁', title: 'Chest opened', sub: 'Come back tomorrow for another one.' };
+      if (loot.type === 'freeze') return { icon: '❄️', title: 'Streak Freeze +1', sub: 'If you miss a day, a freeze saves your streak. You hold ' + tokens + ' (max 3).' };
+      if (loot.type === 'item') return { icon: '✨', title: (window.SH_QUESTS.itemNames[loot.id] || 'New item') + ' unlocked!', sub: 'Equip it in Character Studio.', art: window.SH_QUESTS.itemArt(loot.id) };
+      return { icon: '🎉', title: 'You have everything!', sub: 'Nothing left to find. Legend.' };
+    }
+    function paintFreezeInfo() {
+      const n = Number(window.studentProfile && window.studentProfile.freezeTokens) || 0;
+      const el = document.getElementById('streakSub');
+      if (el && !el.dataset.fz) { el.dataset.fz = '1'; }
+      let chip = document.getElementById('freezeChip');
+      if (!chip && el) {
+        chip = document.createElement('div');
+        chip.id = 'freezeChip';
+        chip.style.cssText = 'margin-top:8px;font-size:.78rem;font-weight:800;color:var(--ink-2)';
+        el.insertAdjacentElement('afterend', chip);
+      }
+      if (chip) chip.textContent = '❄️ ' + n + ' streak freeze' + (n === 1 ? '' : 's') + (n ? ' ready' : ' · win one from the daily chest');
+    }
+    function showChestReveal(loot, tokens) {
+      const x = lootText(loot, tokens);
+      const ov = document.createElement('div');
+      ov.className = 'fx-levelup-overlay';
+      ov.style.pointerEvents = 'auto';
+      ov.innerHTML = '<div class="fx-levelup-card" style="background:linear-gradient(160deg,#1a1545,#0f0b24);border:2px solid #fbbf24;box-shadow:0 0 60px -6px #fbbf24,0 30px 60px -10px rgba(0,0,0,.7);max-width:min(340px,86vw)">'
+        + '<div class="fx-levelup-eyebrow" style="color:#fbbf24">DAILY CHEST</div>'
+        + (x.art ? '<img src="' + x.art + '" alt="" style="width:130px;height:130px;border-radius:18px;display:block;margin:8px auto 10px;box-shadow:0 0 30px rgba(251,191,36,.55)">'
+                 : '<div style="font-size:4.2rem;line-height:1;margin:10px 0">' + x.icon + '</div>')
+        + '<div class="fx-levelup-num" style="font-size:1.6rem;font-family:Outfit,sans-serif">' + escHtml(x.title) + '</div>'
+        + '<div style="margin-top:8px;font-size:.86rem;opacity:.85">' + escHtml(x.sub) + '</div></div>';
+      document.body.appendChild(ov);
+      requestAnimationFrame(() => ov.classList.add('is-shown'));
+      if (window.fx) { window.fx.play('levelUp'); window.fx.haptic([40, 60, 60]); window.fx.confetti({ count: 220, y: window.innerHeight / 2 }); }
+      const done = () => { ov.classList.remove('is-shown'); setTimeout(() => ov.remove(), 350); };
+      const timer = setTimeout(done, 3600);
+      ov.addEventListener('click', () => { clearTimeout(timer); done(); }, { once: true });
+    }
+    // NOTE: classList.add/remove always queue a mutation record, even when nothing changes. This runs
+    // from a MutationObserver on the chest's class attribute, so write ONLY when the value really
+    // differs, otherwise the observer re-triggers itself forever and freezes the page.
+    function paintChestState() {
+      const chest = document.getElementById('questChest');
+      const txt = document.getElementById('questChestTxt');
+      if (!chest) return;
+      const setTxt = (t) => { if (txt.textContent !== t) txt.textContent = t; };
+      if (chestOpenedToday()) {
+        const x = lootText(window.studentProfile.chestLastLoot, window.studentProfile.freezeTokens || 0);
+        if (chest.classList.contains('is-open')) chest.classList.remove('is-open');
+        if (chest.classList.contains('is-ready')) chest.classList.remove('is-ready');
+        const ico = chest.querySelector('.chest-ico');
+        if (ico.textContent !== '📭') ico.textContent = '📭';
+        setTxt('Chest opened today: ' + x.title);
+        return;
+      }
+      if (chest.classList.contains('is-open')) {
+        if (!chest.classList.contains('is-ready')) chest.classList.add('is-ready');
+        if (chest.getAttribute('role') !== 'button') { chest.setAttribute('role', 'button'); chest.setAttribute('tabindex', '0'); }
+        setTxt('All quests clear. Tap to open your chest!');
+      }
+    }
+    async function claimChest() {
+      const chest = document.getElementById('questChest');
+      if (chestBusy || chestOpenedToday() || !chest.classList.contains('is-open')) return;
+      chestBusy = true;
+      const txt = document.getElementById('questChestTxt');
+      txt.textContent = 'Opening…';
+      try {
+        const fns = getFunctions(window.firebaseApp, 'asia-southeast1');
+        const res = (await httpsCallable(fns, 'claimDailyChest')({})).data;
+        const p = window.studentProfile = window.studentProfile || {};
+        p.chestDay = TODAY; p.chestLastLoot = res.loot; p.freezeTokens = res.freezeTokens; p.chestLoot = res.chestLoot || p.chestLoot || [];
+        if (!res.already) showChestReveal(res.loot, res.freezeTokens);
+        paintChestState(); paintFreezeInfo();
+      } catch (e) {
+        console.warn('[dashboard] chest', e && (e.code || e.message));
+        txt.textContent = (e && e.message) ? String(e.message).replace(/^.*?: /, '') : 'Could not open the chest. Try again.';
+        setTimeout(paintChestState, 3500);
+      }
+      chestBusy = false;
+    }
+    {
+      const chest = document.getElementById('questChest');
+      if (chest) {
+        chest.addEventListener('click', claimChest);
+        chest.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); claimChest(); } });
+        new MutationObserver(paintChestState).observe(chest, { attributes: true, attributeFilter: ['class'] });
+      }
+      const wire = () => { paintFreezeInfo(); paintChestState(); };
+      if (window.studentProfile) wire(); else window.addEventListener('authReady', wire);
+      // a freeze that saved the streak since the last visit
+      window.addEventListener('authReady', () => {
+        setTimeout(() => {
+          const lf = window._lastFreeze;
+          const uid = window.currentUser && window.currentUser.uid;
+          if (!lf || !uid) return;
+          const key = 'sh-freeze-seen:' + uid;
+          let seen = ''; try { seen = localStorage.getItem(key) || ''; } catch (_) {}
+          if (seen === lf.day) return;
+          try { localStorage.setItem(key, lf.day); } catch (_) {}
+          const b = document.createElement('div');
+          b.style.cssText = 'margin:0 0 14px;padding:12px 16px;border-radius:16px;border:2px solid #22d3ee;background:rgba(34,211,238,.14);font-weight:700;font-size:.9rem;color:var(--ink)';
+          b.textContent = '❄️ A streak freeze saved your streak! (' + lf.used + ' day' + (lf.used > 1 ? 's' : '') + ' covered)';
+          const hero = document.querySelector('.hero-v2'); if (hero) hero.parentNode.insertBefore(b, hero);
+        }, 1500);
+      });
     }
 
     function escHtml(s) {

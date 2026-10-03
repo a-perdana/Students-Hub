@@ -107,6 +107,7 @@ function processFile(filename) {
   html = html.replace(/src="\.\/partials\/question-visuals\.js"/g, 'src="/partials/question-visuals.js"');
   html = html.replace(/src="\.\/partials\/footer\.js"/g, 'src="/partials/footer.js"');
   html = html.replace(/src="\.\/partials\/badges\.js"/g, 'src="/partials/badges.js"');
+  html = html.replace(/src="\.\/partials\/quests\.js"/g, 'src="/partials/quests.js"');
 
   // 5. Rewrite internal .html links → clean URLs
   LINK_REWRITES.forEach(([pat, repl]) => { html = html.replace(pat, repl); });
