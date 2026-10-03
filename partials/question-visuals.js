@@ -29,6 +29,12 @@
         height: auto;
         max-height: 270px;
       }
+      .q-visual[data-renderer="em-wave-comparison"] svg,
+      .q-visual[data-renderer="wave-comparison"] svg {
+        max-height: none;
+        max-width: 620px;
+        margin: 0 auto;
+      }
       .q-visual-title {
         display: inline-flex;
         align-items: center;
@@ -830,15 +836,16 @@
     const children = [
       rect(18, 18, 524, 262, { fill: '#fbfdff', stroke: '#dbe4ff', rx: 18 }),
       text(280, 44, spec.heading || 'Loaded potential divider', { fill: '#4338ca', 'font-size': 16, 'font-weight': 800 }),
-      line(100, 92, 100, 220, { stroke: '#334155', 'stroke-width': 4 }),
+      line(100, 92, 100, 136, { stroke: '#334155', 'stroke-width': 4 }),
+      line(84, 136, 116, 136, { stroke: '#334155', 'stroke-width': 4 }),
+      line(92, 154, 108, 154, { stroke: '#334155', 'stroke-width': 4 }),
+      line(100, 154, 100, 220, { stroke: '#334155', 'stroke-width': 4 }),
       line(100, 92, 164, 92, { stroke: '#334155', 'stroke-width': 4 }),
       line(234, 92, 304, 92, { stroke: '#334155', 'stroke-width': 4 }),
       line(374, 92, 460, 92, { stroke: '#334155', 'stroke-width': 4 }),
       line(460, 92, 460, 220, { stroke: '#334155', 'stroke-width': 4 }),
       line(100, 220, 460, 220, { stroke: '#334155', 'stroke-width': 4 }),
-      line(142, 126, 142, 156, { stroke: '#334155', 'stroke-width': 4 }),
-      line(160, 114, 160, 168, { stroke: '#334155', 'stroke-width': 4 }),
-      text(132, 185, supply, { fill: '#334155', 'font-size': 13, 'font-weight': 900 }),
+      text(68, 149, supply, { fill: '#334155', 'font-size': 13, 'font-weight': 900, 'text-anchor': 'end' }),
       rect(164, 72, 70, 40, { fill: '#eef2ff', stroke: '#4f46e5', 'stroke-width': 3, rx: 7 }),
       text(199, 96, 'R1', { fill: '#312e81', 'font-size': 13, 'font-weight': 900 }),
       text(199, 123, seriesA, { fill: '#475569', 'font-size': 12, 'font-weight': 900 }),
@@ -868,21 +875,91 @@
       rect(18, 18, 524, 222, { fill: '#fbfdff', stroke: '#dbe4ff', rx: 18 }),
       text(280, 44, spec.heading || 'Wave diagram', { fill: '#4338ca', 'font-size': 16, 'font-weight': 800 }),
       line(90, 145, 470, 145, { stroke: '#94a3b8', 'stroke-width': 2 }),
-      svgEl('path', {
-        d: 'M 90 145 C 125 75, 160 75, 195 145 S 265 215, 300 145 S 370 75, 405 145 S 455 200, 470 170',
-        fill: 'none',
-        stroke: '#2563eb',
-        'stroke-width': 5,
-        'stroke-linecap': 'round',
-      }),
-      line(125, 145, 125, 82, { stroke: '#ef4444', 'stroke-width': 3, 'stroke-dasharray': '5 5' }),
-      text(118, 109, amplitude, { fill: '#b91c1c', 'font-size': 12, 'font-weight': 900, 'text-anchor': 'end' }),
-      line(125, 220, 405, 220, { stroke: '#0f766e', 'stroke-width': 3 }),
-      polygon('125,220 140,213 140,227', { fill: '#0f766e', stroke: 'none' }),
-      polygon('405,220 390,213 390,227', { fill: '#0f766e', stroke: 'none' }),
-      text(265, 238, wavelength, { fill: '#0f766e', 'font-size': 12, 'font-weight': 900 }),
+      sineWave(90, 470, 145, 50, 200, '#2563eb'),
+      doubleArrow(140, 145, 140, 95, '#ef4444', 'amplitude'),
+      text(128, 121, amplitude, { fill: '#b91c1c', 'font-size': 12, 'font-weight': 900, 'text-anchor': 'end' }),
+      line(140, 95, 140, 220, { stroke: '#cbd5e1', 'stroke-width': 1, 'stroke-dasharray': '4 5' }),
+      line(340, 95, 340, 220, { stroke: '#cbd5e1', 'stroke-width': 1, 'stroke-dasharray': '4 5' }),
+      doubleArrow(140, 220, 340, 220, '#0f766e', 'wavelength'),
+      text(240, 238, wavelength, { fill: '#0f766e', 'font-size': 12, 'font-weight': 900 }),
     ];
     return makeSvg('0 0 560 260', children);
+  }
+
+  function sineWave(start, end, baseline, amplitude, period, color) {
+    const points = [];
+    for (let x = start; x <= end; x += 1) {
+      const y = baseline - amplitude * Math.sin(2 * Math.PI * (x - start) / period);
+      points.push(`${x},${y.toFixed(3)}`);
+    }
+    return svgEl('polyline', {
+      points: points.join(' '), fill: 'none', stroke: color,
+      'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+      'data-measure': 'wave',
+    });
+  }
+
+  function doubleArrow(x1, y1, x2, y2, color, measure) {
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    function head(x, y, direction) {
+      const dx = Math.cos(direction), dy = Math.sin(direction);
+      return polygon(`${x},${y} ${x - 8 * dx - 4 * dy},${y - 8 * dy + 4 * dx} ${x - 8 * dx + 4 * dy},${y - 8 * dy - 4 * dx}`, { fill: color, stroke: 'none' });
+    }
+    return svgEl('g', { 'data-measure': measure }, [
+      line(x1, y1, x2, y2, { stroke: color, 'stroke-width': 2 }),
+      head(x1, y1, angle + Math.PI), head(x2, y2, angle),
+    ]);
+  }
+
+  function frequencyText(x, y, frequency, color) {
+    return svgEl('text', {
+      x, y, fill: color, 'font-family': 'DM Sans, Arial, sans-serif',
+      'font-size': 15, 'font-weight': 700, 'text-anchor': 'start',
+    }, [
+      `${frequency.coefficient} \u00d7 10`,
+      svgEl('tspan', { 'baseline-shift': 'super', 'font-size': 11 }, [String(frequency.exponent)]),
+      ' Hz',
+    ]);
+  }
+
+  function emWaveComparison(spec) {
+    const children = [
+      text(28, 28, 'In free space', { 'text-anchor': 'start', 'font-size': 15, fill: '#475569' }),
+    ];
+    [
+      { label: 'Radio wave', frequency: spec.radioFrequency, baseline: 99, period: 180, color: '#2563eb' },
+      { label: 'Gamma ray', frequency: spec.gammaFrequency, baseline: 237, period: 36, color: '#b45309' },
+    ].forEach(row => {
+      children.push(text(28, row.baseline - 38, row.label, { 'text-anchor': 'start', 'font-size': 16, fill: row.color }));
+      children.push(frequencyText(28, row.baseline - 12, row.frequency, row.color));
+      children.push(text(28, row.baseline + 13, 'speed = ?', { 'text-anchor': 'start', 'font-size': 13, fill: '#475569' }));
+      children.push(line(198, row.baseline, 532, row.baseline, { stroke: '#cbd5e1', 'stroke-width': 1 }));
+      children.push(sineWave(198, 528, row.baseline, 26, row.period, row.color));
+      const crest = 198 + row.period / 4;
+      const measureY = row.baseline + 47;
+      [crest, crest + row.period].forEach(x => children.push(line(x, row.baseline - 26, x, measureY, {
+        stroke: '#cbd5e1', 'stroke-width': 1, 'stroke-dasharray': '3 4',
+      })));
+      children.push(doubleArrow(crest, measureY, crest + row.period, measureY, row.color, 'wavelength'));
+      children.push(text(388, measureY + 21, 'wavelength = ?', { 'font-size': 13, fill: row.color }));
+    });
+    children.push(text(280, 330, 'Schematic wave profiles; wavelengths are not drawn to scale.', { 'font-size': 12, fill: '#64748b' }));
+    return makeSvg('0 0 560 348', children);
+  }
+
+  function waveComparison(spec) {
+    const children = [text(280, 28, 'Sound waveforms', { 'font-size': 16, fill: '#334155' })];
+    [
+      { label: 'P', baseline: 105, amplitude: 40, color: '#2563eb' },
+      { label: 'Q', baseline: 228, amplitude: 20, color: '#0f766e' },
+    ].forEach(row => {
+      children.push(text(38, row.baseline + 5, row.label, { 'font-size': 18, fill: row.color }));
+      children.push(line(80, row.baseline, 520, row.baseline, { stroke: '#cbd5e1', 'stroke-width': 1 }));
+      children.push(sineWave(80, 520, row.baseline, row.amplitude, 180, row.color));
+      children.push(doubleArrow(125, row.baseline, 125, row.baseline - row.amplitude, row.color, 'amplitude'));
+    });
+    children.push(text(280, 299, 'time', { 'font-size': 13, fill: '#475569' }));
+    return makeSvg('0 0 560 316', children);
   }
 
   function barMagnetField(spec) {
@@ -1047,6 +1124,8 @@
     'circuit-diagram': circuitDiagram,
     'loaded-voltmeter-divider': loadedVoltmeterDivider,
     'wave-diagram': waveDiagram,
+    'em-wave-comparison': emWaveComparison,
+    'wave-comparison': waveComparison,
     'bar-magnet-field': barMagnetField,
     'line-graph': lineGraph,
     'atom-structure': atomStructure,
@@ -1065,6 +1144,8 @@
     'circuit-diagram',
     'loaded-voltmeter-divider',
     'wave-diagram',
+    'em-wave-comparison',
+    'wave-comparison',
     'bar-magnet-field',
     'line-graph',
     'atom-structure',
@@ -1073,28 +1154,54 @@
 
   function itemText(item) {
     if (!item) return '';
-    return [
-      item.stem,
-      item.stemHtml,
-      item.chapter,
-      item.topic,
-      item.topicGroup,
-    ].filter(Boolean).join(' ')
+    return String(item.stem || item.stemHtml || '')
+      .replace(/<sup>([^<]+)<\/sup>/gi, '^$1')
       .replace(/<[^>]+>/g, ' ')
       .replace(/\\\(|\\\)|\$/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
   }
 
+  function normalizedScienceText(item) {
+    return itemText(item)
+      .replace(/[\u2070\u00b9\u00b2\u00b3\u2074-\u2079\u207b]+/g, run => '^' + Array.from(run, ch => ({
+        '\u2070': '0', '\u00b9': '1', '\u00b2': '2', '\u00b3': '3', '\u2074': '4',
+        '\u2075': '5', '\u2076': '6', '\u2077': '7', '\u2078': '8', '\u2079': '9', '\u207b': '-',
+      }[ch])).join(''));
+  }
+
+  function inferWaveComparison(item) {
+    const raw = normalizedScienceText(item);
+    const match = raw.match(/^In free space,?\s+a radio wave has a frequency of\s+(\d+(?:\.\d+)?)\s*[\u00d7x]\s*10\^([+-]?\d+)\s*Hz\s+and a gamma ray has a frequency of\s+(\d+(?:\.\d+)?)\s*[\u00d7x]\s*10\^([+-]?\d+)\s*Hz\./i);
+    if (match && /ratio.*speed.*wavelength/i.test(raw)) {
+      return {
+        kind: 'programmatic', renderer: 'em-wave-comparison', title: 'Radio wave and gamma ray',
+        radioFrequency: { coefficient: match[1], exponent: Number(match[2]) },
+        gammaFrequency: { coefficient: match[3], exponent: Number(match[4]) },
+        alt: `Radio wave at ${match[1]} times 10 to the power ${match[2]} Hz and gamma ray at ${match[3]} times 10 to the power ${match[4]} Hz in free space. Speeds and wavelengths are unknown. Wave profiles are schematic, not to scale.`,
+      };
+    }
+    if (/^Sound P and sound Q have the same frequency\. The waveform of sound P has a larger amplitude than the waveform of sound Q\./i.test(raw)) {
+      return {
+        kind: 'programmatic', renderer: 'wave-comparison', title: 'Sound P and sound Q',
+        alt: 'Sound P and Q plotted against time with the same period. P has a larger amplitude than Q.',
+      };
+    }
+    return null;
+  }
+
   function inferVisual(item) {
     const raw = itemText(item);
     if (!raw) return null;
     const lower = raw.toLowerCase();
+    const waveComparisonSpec = inferWaveComparison(item);
+    if (waveComparisonSpec) return waveComparisonSpec;
 
     const shorterSides = lower.match(/two shorter sides(?: of length)?\s+(\d+(?:\.\d+)?)\s*(cm|m|mm|km)?\s+and\s+(\d+(?:\.\d+)?)\s*(cm|m|mm|km)?/);
     if (lower.includes('right-angled triangle') && lower.includes('hypotenuse') && shorterSides) {
       const a = Number(shorterSides[1]);
       const b = Number(shorterSides[3]);
+      if (a <= 0 || b <= 0 || (shorterSides[2] && shorterSides[4] && shorterSides[2] !== shorterSides[4])) return null;
       const unit = shorterSides[2] || shorterSides[4] || '';
       const base = Math.max(a, b);
       const height = Math.min(a, b);
@@ -1114,7 +1221,8 @@
     }
 
     const solidStats = lower.match(/(\d+)\s+faces?,\s*(\d+)\s+edges?\s+and\s+(\d+)\s+vertices?/);
-    if (solidStats && lower.includes('triangles') && lower.includes('rectangles')) {
+    if (solidStats && solidStats[1] === '5' && solidStats[2] === '9' && solidStats[3] === '6' &&
+      /two of its faces are triangles/.test(lower) && /other three faces are rectangles/.test(lower)) {
       return {
         kind: 'programmatic',
         renderer: 'solid-fact-cards',
@@ -1137,24 +1245,6 @@
       };
     }
 
-    if (lower.includes('chromatography')) {
-      return {
-        kind: 'programmatic',
-        renderer: 'chromatography-paper',
-        title: 'Chromatography setup',
-        alt: 'Paper chromatography diagram with solvent level, start line, and separated spots.',
-      };
-    }
-
-    if (lower.includes('burette') || lower.includes('titration')) {
-      return {
-        kind: 'programmatic',
-        renderer: 'titration-setup',
-        title: 'Titration apparatus',
-        alt: 'Titration setup with burette, conical flask, and indicator.',
-      };
-    }
-
     const twoSeriesResistors = raw.match(/Two\s+(\d+(?:\.\d+)?)\s*k(?:\u03a9|ohm|ohms)\s+resistors are connected in series to a\s+(\d+(?:\.\d+)?)\s*V\s+supply/i);
     const loadedVoltmeter = raw.match(/voltmeter of resistance\s+(\d+(?:\.\d+)?)\s*k(?:\u03a9|ohm|ohms)\s+is connected across one of the resistors/i);
     if (twoSeriesResistors && loadedVoltmeter) {
@@ -1167,54 +1257,19 @@
         seriesA: `${twoSeriesResistors[1]} k\u03a9`,
         seriesB: `${twoSeriesResistors[1]} k\u03a9`,
         meter: `${loadedVoltmeter[1]} k\u03a9`,
-        note: 'The voltmeter is in parallel with one 10 k\u03a9 resistor, changing the divider ratio.',
+        note: `The voltmeter is in parallel with one ${twoSeriesResistors[1]} k\u03a9 resistor.`,
         alt: 'Circuit with two series resistors and a non-ideal voltmeter connected in parallel across one resistor.',
-      };
-    }
-
-    if (lower.includes('circuit') || lower.includes('ammeter') || lower.includes('voltmeter')) {
-      return {
-        kind: 'programmatic',
-        renderer: 'circuit-diagram',
-        title: 'Circuit model',
-        alt: 'Simple circuit diagram with cell, lamp, and measuring instrument.',
-      };
-    }
-
-    if (lower.includes('wave') && (lower.includes('wavelength') || lower.includes('amplitude') || lower.includes('frequency'))) {
-      return {
-        kind: 'programmatic',
-        renderer: 'wave-diagram',
-        title: 'Wave diagram',
-        alt: 'Wave diagram with amplitude and wavelength marked.',
-      };
-    }
-
-    if (lower.includes('bar magnet') || lower.includes('magnetic field')) {
-      return {
-        kind: 'programmatic',
-        renderer: 'bar-magnet-field',
-        title: 'Magnetic field',
-        alt: 'Bar magnet with field lines from north to south.',
-      };
-    }
-
-    if (lower.includes('atom') && (lower.includes('electron') || lower.includes('shell') || lower.includes('nucleus'))) {
-      return {
-        kind: 'programmatic',
-        renderer: 'atom-structure',
-        title: 'Atom structure',
-        alt: 'Atom structure diagram showing nucleus and electron shells.',
       };
     }
 
     const collisionMatch = raw.match(/Ball\s+([A-Z])\s+has a mass of\s+(\d+(?:\.\d+)?)\s*kg\s+and moves(?: to the \w+)? at\s+(\d+(?:\.\d+)?)\s*m\s*s(?:\u207b\u00b9|\^-?1|-1)?/i);
     const stationaryMatch = raw.match(/stationary ball\s+([A-Z])\s+of mass\s+(\d+(?:\.\d+)?)\s*kg/i);
     const backMatch = raw.match(/After the collision,\s*([A-Z])\s+moves back[^.]*?at\s+(\d+(?:\.\d+)?)\s*m\s*s(?:\u207b\u00b9|\^-?1|-1)?/i);
-    if ((lower.includes('collision') || lower.includes('collides')) && collisionMatch && stationaryMatch) {
+    if (lower.includes('head-on') && collisionMatch && stationaryMatch && backMatch && lower.includes('moves forwards')) {
       const xLabel = collisionMatch[1].toUpperCase();
       const yLabel = stationaryMatch[1].toUpperCase();
       const backLabel = backMatch ? backMatch[1].toUpperCase() : xLabel;
+      if (backLabel !== xLabel || xLabel === yLabel) return null;
       return {
         kind: 'programmatic',
         renderer: 'collision-balls',
@@ -1238,13 +1293,66 @@
     return null;
   }
 
+  // These legacy templates have geometric/topological errors, even with valid metadata.
+  const QUARANTINED_RENDERERS = {
+    'circuit-diagram': 'Legacy circuit has a disconnected source and omits branch components.',
+    'bar-magnet-field': 'Legacy field curves do not consistently connect north to south and lack direction arrows.',
+    'titration-setup': 'Legacy burette outlet overlaps the flask instead of delivering into its neck.',
+    'parallel-lines': 'Legacy angle arcs do not meet the lines at the stated vertices.',
+    'bearing-diagram': 'Legacy bearing direction is fixed regardless of the supplied angle.',
+    'sector-circle': 'Legacy sector angle is fixed regardless of the supplied angle.',
+  };
+
+  function specIssues(spec, item) {
+    const issues = [];
+    if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return ['Visual must be an object.'];
+    if (spec.kind !== 'programmatic' || !Object.prototype.hasOwnProperty.call(RENDERERS, spec.renderer)) return ['Unsupported visual renderer.'];
+    if (QUARANTINED_RENDERERS[spec.renderer]) issues.push(QUARANTINED_RENDERERS[spec.renderer]);
+    const raw = itemText(item);
+    if (spec.renderer === 'em-wave-comparison') {
+      for (const key of ['radioFrequency', 'gammaFrequency']) {
+        const f = spec[key];
+        if (!f || !Number.isFinite(Number(f.coefficient)) || Number(f.coefficient) <= 0 || !Number.isInteger(f.exponent) || Math.abs(f.exponent) > 100) {
+          issues.push(`${key} must contain a positive coefficient and an integer exponent.`);
+        }
+      }
+      const expected = item && inferWaveComparison(item);
+      if (item && (!expected || expected.renderer !== spec.renderer || ['radioFrequency', 'gammaFrequency'].some(key =>
+        Number(expected[key].coefficient) !== Number(spec[key] && spec[key].coefficient) || expected[key].exponent !== (spec[key] && spec[key].exponent)))) {
+        issues.push('Electromagnetic comparison frequencies must match the question.');
+      }
+    }
+    if (spec.renderer === 'wave-comparison' && item) {
+      const expected = inferWaveComparison(item);
+      if (!expected || expected.renderer !== spec.renderer) issues.push('Sound comparison requires the stated P/Q frequency and amplitude relationship.');
+    }
+    if (spec.renderer === 'wave-diagram' && item && !/\btransverse\b/i.test(raw)) issues.push('A spatial transverse-wave diagram requires an explicitly transverse wave question.');
+    if (spec.renderer === 'atom-structure' && !Array.isArray(spec.shells)) issues.push('Electron shells must be specified; no default element may be invented.');
+    if (spec.renderer === 'cell-diagram' && spec.cellType === 'plant' && /no chloroplasts/i.test(raw)) issues.push('Plant-cell template includes chloroplasts that the question explicitly excludes.');
+    if (spec.renderer === 'particle-model' && /\breaction\b|\bmolecule\b/i.test(raw)) issues.push('State-of-matter template does not represent the reaction or molecular bonds in this question.');
+    if (spec.renderer === 'coordinate-plane' && /\(\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+\s*\)/.test(raw)) issues.push('A two-dimensional grid cannot represent the three-dimensional coordinates in this question.');
+    if (spec.renderer === 'line-graph' && item) issues.push('Legacy graph has no question data or verified mathematical function.');
+    return issues;
+  }
+
+  function inspectVisual(item) {
+    if (!item || item.visual === false || item.retired || item.diagramUrl || item.diagramStoragePath || item.diagramAsset) {
+      return { spec: null, source: 'none', issues: [] };
+    }
+    // Reconcile old Firestore wave metadata using only values in the current stem.
+    const upgradedWave = (!item.visual || item.visual.renderer === 'wave-diagram') && inferWaveComparison(item);
+    const spec = upgradedWave || item.visual || inferVisual(item);
+    if (!spec) return { spec: null, source: 'none', issues: [] };
+    const issues = specIssues(spec, item);
+    return { spec: issues.length ? null : spec, source: upgradedWave ? 'stem' : item.visual ? 'explicit' : 'stem', issues };
+  }
+
   function visualFor(item) {
-    if (!item) return null;
-    return item.visual || inferVisual(item);
+    return inspectVisual(item).spec;
   }
 
   function render(spec) {
-    if (!spec || spec.kind !== 'programmatic') return null;
+    if (!spec || specIssues(spec).length) return null;
     const renderer = RENDERERS[spec.renderer];
     if (!renderer) return null;
     ensureStyles();
@@ -1273,5 +1381,5 @@
     return figure;
   }
 
-  window.StudentHubQuestionVisuals = { render, inferVisual, visualFor };
+  window.StudentHubQuestionVisuals = { render, inferVisual, visualFor, inspectVisual };
 })();

@@ -4,6 +4,7 @@
   "private": true,
   "description": "Students Hub — assessment delivery + growth tracking for partner-school students",
   "scripts": {
+    "test:visuals": "node --test tests/question-visuals.test.cjs",
     "build": "node build.js",
     "dev": "node build.js && npx serve dist"
   }
