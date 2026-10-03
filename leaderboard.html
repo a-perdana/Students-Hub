@@ -434,7 +434,7 @@
         const e = top3[i];
         if (!e) return '<div class="podium-step ' + rankClasses[i] + '" style="visibility:hidden"></div>';
         const isMe = e.studentUid === me;
-        const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(e.studentUid, { size: 128 }) : '';
+        const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(e.studentUid, { size: 128, level: e.level }) : '';
         return '<div class="podium-step ' + rankClasses[i] + '">'
           + '<div class="podium-avatar">'
           + '<img src="' + escAttr(avatarUrl) + '" alt="" loading="lazy">'
@@ -452,7 +452,7 @@
         const rank = e.rank || (idx + 4);
         const isMe = e.studentUid === me;
         const medal = rank === 1 ? 'medal-gold' : rank === 2 ? 'medal-silver' : rank === 3 ? 'medal-bronze' : 'medal-num';
-        const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(e.studentUid, { size: 64 }) : '';
+        const avatarUrl = window.studentAvatarUrl ? window.studentAvatarUrl(e.studentUid, { size: 64, level: e.level }) : '';
         const delta = e.delta != null
           ? '<span class="delta ' + (e.delta >= 0 ? 'up' : 'down') + '">' + (e.delta >= 0 ? '▲' : '▼') + ' ' + Math.abs(e.delta) + '</span>'
           : '<span class="delta">—</span>';

@@ -140,59 +140,38 @@ window.applyStageTheme = function (gradeLevel) {
   return stage;
 };
 
-// ─── Avatar URL (DiceBear — cosmetic) ────────────────────────────
-// Deterministic avatar keyed off uid (or per-student override via
-// students/{uid}.avatarSeed + avatarStyle, set on the /avatar page).
-// NEVER pulls from photoURL (Google profile picture stays internal).
-// Cosmetic only — never feeds assessment. Same (style, seed) →
-// same avatar across every render surface.
-//
-// Default style: bottts (robot, CC0, no human likeness — safest
-// floor for a school setting with parent visibility). Students can
-// switch to adventurer / lorelei / notionists / shapes / fun-emoji
-// via /avatar; the rule envelope in students/{uid} pins the allow
-// list to those 6 styles.
-//
-// Opts:
-//   uid:    auth uid (required) — also identifies "self" vs "peer":
-//           if uid === currentUser.uid, falls back to the current
-//           profile's avatarStyle/avatarSeed; otherwise peer renders
-//           with default style + seed=uid (we don't have their
-//           preferences loaded, and leaking the current user's
-//           style/seed onto peer rows is a visible bug).
-//   size:   pixel size (default 96)
-//   style:  explicit override; takes precedence over profile fallback
-//   seed:   explicit override; same precedence
-//
-// To render peer avatars with their actual preferences, the calling
-// page must fetch students/{peerUid}.avatarStyle/avatarSeed itself
-// (cost: N reads for N rows) and pass them via opts. The dashboard
-// leaderboard preview, /leaderboard, /daily-challenge class board do
-// NOT do this today — they accept the default bottts(seed=uid) for
-// peer rows, which is still deterministic + on-brand.
+// ─── Mascot avatars (Character Studio, 2026-10-03) ─────────────────
+// Every avatar in the portal is now Sparky's head in the evolution form that
+// matches a level (same bands as tierFor()). studentAvatarUrl(uid, opts):
+//   opts.level  → that level's form (leaderboard rows carry e.level)
+//   self        → window.studentLevel (loaded below from student_points),
+//                 else the level cached on this device, else 1
+//   other peers → no level known → the Apprentice form
+// Art lives in /assets/mascot/head-<form>.webp (192px). The legacy DiceBear
+// picker is gone; opts.dicebear === true still yields the old URL if ever needed.
 const AVATAR_STYLE_ALLOWLIST = new Set([
   'bottts', 'adventurer', 'lorelei', 'notionists', 'shapes', 'fun-emoji'
 ]);
+window.mascotFormFor = function (level) {
+  const l = Number(level) || 1;
+  return l >= 35 ? 'fellow' : l >= 20 ? 'master' : l >= 10 ? 'mentor' : l >= 5 ? 'scholar' : 'apprentice';
+};
 window.studentAvatarUrl = function (uid, opts) {
-  if (!uid) return '';
   const o = opts || {};
-  const size = o.size || 96;
-  const selfUid = window.currentUser && window.currentUser.uid;
-  const isSelf  = uid === selfUid;
-  const profile = isSelf ? (window.studentProfile || {}) : {};
-  // Style precedence: explicit opts → profile (self only) → bottts default.
-  let style = o.style || profile.avatarStyle || 'bottts';
-  if (!AVATAR_STYLE_ALLOWLIST.has(style)) style = 'bottts';
-  // Seed precedence: explicit opts → profile seed (self only) → uid.
-  const seed = o.seed || profile.avatarSeed || uid;
-  // brand palette without the # — most DiceBear styles accept a CSV;
-  // multiple values mean "pick one deterministically per seed".
-  const bg = 'efedfb,ecfeff,fef3c7,d1fae5,fee2e2,e0e7ff';
-  return 'https://api.dicebear.com/9.x/' + style + '/svg'
-    + '?seed=' + encodeURIComponent(seed)
-    + '&size=' + size
-    + '&backgroundColor=' + bg
-    + '&radius=50';
+  if (o.dicebear) {
+    if (!uid) return '';
+    const style = AVATAR_STYLE_ALLOWLIST.has(o.style) ? o.style : 'bottts';
+    return 'https://api.dicebear.com/9.x/' + style + '/svg?seed=' + encodeURIComponent(o.seed || uid)
+      + '&size=' + (o.size || 96) + '&backgroundColor=efedfb,ecfeff,fef3c7,d1fae5,fee2e2,e0e7ff&radius=50';
+  }
+  let level = o.level;
+  if (level == null && uid && uid === (window.currentUser && window.currentUser.uid)) {
+    level = window.studentLevel;
+    if (level == null) {
+      try { level = parseInt(localStorage.getItem('sh-level:' + uid) || '', 10); } catch (_) {}
+    }
+  }
+  return '/assets/mascot/head-' + window.mascotFormFor(level) + '.webp';
 };
 
 // ─── Bypass: pages that don't need a logged-in active student ────
@@ -375,6 +354,18 @@ onAuthStateChanged(auth, async (user) => {
   window.dispatchEvent(new CustomEvent('authReady', {
     detail: { signedIn: true, status, schoolId: profile.schoolId, gradeLevel: profile.gradeLevel || null, stage }
   }));
+
+  // 7. Mascot level (best effort, never blocks): one student_points read per page load,
+  //    cached on this device so the next page paints the right form instantly.
+  (async () => {
+    try {
+      const sp = await getDoc(doc(db, 'student_points', user.uid));
+      const lvl = sp.exists() ? (sp.data().level || 1) : 1;
+      window.studentLevel = lvl;
+      try { localStorage.setItem('sh-level:' + user.uid, String(lvl)); } catch (_) {}
+      window.dispatchEvent(new CustomEvent('mascot-level', { detail: { level: lvl } }));
+    } catch (e) { /* rules / network — keep the cached or default form */ }
+  })();
  } catch (e) {
   // Any unhandled error after sign-in (rule rejection on students/{uid},
   // network blip mid-flow, etc.) used to leave the page on display:none

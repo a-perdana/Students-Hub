@@ -117,6 +117,10 @@
         : '';
       if (url) av.innerHTML = '<img src="' + url + '" alt="" loading="lazy">';
     });
+    window.addEventListener('mascot-level', () => {
+      const av = document.getElementById('profileAvatar');
+      if (av && window.currentUser) av.innerHTML = '<img src="' + window.studentAvatarUrl(window.currentUser.uid, { size: 192 }) + '" alt="" loading="lazy">';
+    });
     document.getElementById('signOutBtn').addEventListener('click', () => window.signOutStudent());
   </script>
 </body>

@@ -99,6 +99,11 @@
     }
 
     .hero-copy { margin: 56px 0; max-width: 520px; }
+    .login-sparky { display: block; width: 190px; height: auto; margin: 6px 0 0 -14px; mix-blend-mode: lighten; pointer-events: none; user-select: none;
+      -webkit-mask-image: radial-gradient(closest-side, #000 80%, transparent 100%); mask-image: radial-gradient(closest-side, #000 80%, transparent 100%); animation: loginFloat 5s ease-in-out infinite; }
+    @keyframes loginFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @media (max-width: 960px) { .login-sparky { margin: 6px auto 0; } }
+    @media (prefers-reduced-motion: reduce) { .login-sparky { animation: none; } }
     @media (max-width: 960px) { .hero-copy { margin: 40px auto; } }
 
     .eyebrow {
@@ -375,6 +380,7 @@
             </span>
           </li>
         </ul>
+      <img class="login-sparky" src="/assets/mascot/form-apprentice.webp" alt="" aria-hidden="true">
       </div>
 
       <div class="hero-foot">

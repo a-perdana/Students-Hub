@@ -249,9 +249,17 @@
   function levelUpOverlay(level, tierLabel) {
     const ov = document.createElement('div');
     ov.className = 'fx-levelup-overlay';
+    // Sparky joins the celebration (Character Studio, 2026-10-03). On a tier boundary
+    // (Lv 5 / 10 / 20 / 35) he EVOLVES: full new-form art and a longer, bigger card.
+    const evolved = level === 5 || level === 10 || level === 20 || level === 35;
+    const form = level >= 35 ? 'fellow' : level >= 20 ? 'master' : level >= 10 ? 'mentor' : level >= 5 ? 'scholar' : 'apprentice';
+    const art = evolved
+      ? '<img src="/assets/mascot/form-' + form + '.webp" alt="" style="width:min(240px,60vw);height:auto;border-radius:22px;display:block;margin:0 auto 10px;box-shadow:0 0 40px rgba(251,191,36,.55)">'
+      : '<img src="/assets/mascot/head-' + form + '.webp" alt="" style="width:96px;height:96px;border-radius:50%;display:block;margin:0 auto 8px;border:3px solid rgba(255,255,255,.7);box-shadow:0 0 28px rgba(255,255,255,.35)">';
     ov.innerHTML = ''
       + '<div class="fx-levelup-card">'
-      +   '<div class="fx-levelup-eyebrow">LEVEL UP</div>'
+      +   art
+      +   '<div class="fx-levelup-eyebrow">' + (evolved ? 'SPARKY EVOLVED!' : 'LEVEL UP') + '</div>'
       +   '<div class="fx-levelup-num">' + level + '</div>'
       +   '<div class="fx-levelup-tier">' + (tierLabel || '') + '</div>'
       + '</div>';
@@ -259,11 +267,11 @@
     requestAnimationFrame(() => ov.classList.add('is-shown'));
     play('levelUp');
     haptic([40, 60, 60]);
-    confetti({ count: 200, y: window.innerHeight / 2 });
+    confetti({ count: evolved ? 320 : 200, y: window.innerHeight / 2 });
     setTimeout(() => {
       ov.classList.remove('is-shown');
       setTimeout(() => ov.remove(), 400);
-    }, 1800);
+    }, evolved ? 3200 : 1800);
   }
 
   // ─── Streak milestone overlay ───────────────────────────────────
