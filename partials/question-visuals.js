@@ -822,6 +822,45 @@
     return makeSvg('0 0 560 260', children);
   }
 
+  function loadedVoltmeterDivider(spec) {
+    const supply = spec.supply || '12 V';
+    const seriesA = spec.seriesA || '10 k\u03a9';
+    const seriesB = spec.seriesB || '10 k\u03a9';
+    const meter = spec.meter || '10 k\u03a9';
+    const children = [
+      rect(18, 18, 524, 262, { fill: '#fbfdff', stroke: '#dbe4ff', rx: 18 }),
+      text(280, 44, spec.heading || 'Loaded potential divider', { fill: '#4338ca', 'font-size': 16, 'font-weight': 800 }),
+      line(100, 92, 100, 220, { stroke: '#334155', 'stroke-width': 4 }),
+      line(100, 92, 164, 92, { stroke: '#334155', 'stroke-width': 4 }),
+      line(234, 92, 304, 92, { stroke: '#334155', 'stroke-width': 4 }),
+      line(374, 92, 460, 92, { stroke: '#334155', 'stroke-width': 4 }),
+      line(460, 92, 460, 220, { stroke: '#334155', 'stroke-width': 4 }),
+      line(100, 220, 460, 220, { stroke: '#334155', 'stroke-width': 4 }),
+      line(142, 126, 142, 156, { stroke: '#334155', 'stroke-width': 4 }),
+      line(160, 114, 160, 168, { stroke: '#334155', 'stroke-width': 4 }),
+      text(132, 185, supply, { fill: '#334155', 'font-size': 13, 'font-weight': 900 }),
+      rect(164, 72, 70, 40, { fill: '#eef2ff', stroke: '#4f46e5', 'stroke-width': 3, rx: 7 }),
+      text(199, 96, 'R1', { fill: '#312e81', 'font-size': 13, 'font-weight': 900 }),
+      text(199, 123, seriesA, { fill: '#475569', 'font-size': 12, 'font-weight': 900 }),
+      rect(304, 72, 70, 40, { fill: '#ecfeff', stroke: '#0891b2', 'stroke-width': 3, rx: 7 }),
+      text(339, 96, 'R2', { fill: '#0e7490', 'font-size': 13, 'font-weight': 900 }),
+      text(339, 123, seriesB, { fill: '#475569', 'font-size': 12, 'font-weight': 900 }),
+      circle(339, 170, 25, { fill: '#ffffff', stroke: '#ef4444', 'stroke-width': 3 }),
+      text(339, 176, 'V', { fill: '#b91c1c', 'font-size': 18, 'font-weight': 900 }),
+      text(339, 209, meter, { fill: '#b91c1c', 'font-size': 12, 'font-weight': 900 }),
+      line(304, 92, 304, 170, { stroke: '#0891b2', 'stroke-width': 3 }),
+      line(374, 92, 374, 170, { stroke: '#0891b2', 'stroke-width': 3 }),
+      line(304, 170, 314, 170, { stroke: '#0891b2', 'stroke-width': 3 }),
+      line(364, 170, 374, 170, { stroke: '#0891b2', 'stroke-width': 3 }),
+      text(339, 246, spec.note || 'The voltmeter is in parallel with R2, so it loads the divider.', {
+        fill: '#475569',
+        'font-size': 12,
+        'font-weight': 800,
+      }),
+    ];
+    return makeSvg('0 0 560 300', children);
+  }
+
   function waveDiagram(spec) {
     const amplitude = spec.amplitude || 'amplitude';
     const wavelength = spec.wavelength || 'wavelength';
@@ -1006,6 +1045,7 @@
     'gas-syringe-apparatus': gasSyringeApparatus,
     'titration-setup': titrationSetup,
     'circuit-diagram': circuitDiagram,
+    'loaded-voltmeter-divider': loadedVoltmeterDivider,
     'wave-diagram': waveDiagram,
     'bar-magnet-field': barMagnetField,
     'line-graph': lineGraph,
@@ -1023,6 +1063,7 @@
     'gas-syringe-apparatus',
     'titration-setup',
     'circuit-diagram',
+    'loaded-voltmeter-divider',
     'wave-diagram',
     'bar-magnet-field',
     'line-graph',
@@ -1111,6 +1152,23 @@
         renderer: 'titration-setup',
         title: 'Titration apparatus',
         alt: 'Titration setup with burette, conical flask, and indicator.',
+      };
+    }
+
+    const twoSeriesResistors = raw.match(/Two\s+(\d+(?:\.\d+)?)\s*k(?:\u03a9|ohm|ohms)\s+resistors are connected in series to a\s+(\d+(?:\.\d+)?)\s*V\s+supply/i);
+    const loadedVoltmeter = raw.match(/voltmeter of resistance\s+(\d+(?:\.\d+)?)\s*k(?:\u03a9|ohm|ohms)\s+is connected across one of the resistors/i);
+    if (twoSeriesResistors && loadedVoltmeter) {
+      return {
+        kind: 'programmatic',
+        renderer: 'loaded-voltmeter-divider',
+        title: 'Loaded voltmeter divider',
+        heading: 'Voltmeter loading one resistor',
+        supply: `${twoSeriesResistors[2]} V`,
+        seriesA: `${twoSeriesResistors[1]} k\u03a9`,
+        seriesB: `${twoSeriesResistors[1]} k\u03a9`,
+        meter: `${loadedVoltmeter[1]} k\u03a9`,
+        note: 'The voltmeter is in parallel with one 10 k\u03a9 resistor, changing the divider ratio.',
+        alt: 'Circuit with two series resistors and a non-ideal voltmeter connected in parallel across one resistor.',
       };
     }
 
