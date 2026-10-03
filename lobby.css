@@ -165,3 +165,219 @@ body.lobby .btn-next:active:not(:disabled) { transform:translateY(3px); box-shad
 @media (prefers-reduced-motion: reduce) {
   body.lobby *, body.lobby *::before, body.lobby *::after { animation:none !important; transition:none !important; }
 }
+
+/* ═══ BLOOM theme (light) — Stitch "Bloom Journal Gamified Study" ═══════════
+ * Second, opt-in look: html.theme-bloom (set by the navbar toggle, remembered in
+ * localStorage 'sh-theme'). Same lobby mechanics, but a warm cream / lilac / blush /
+ * peach / mint surface, plum ink, rose + violet + honey accents. Higher specificity
+ * (html.theme-bloom body.lobby …) so it beats both the dark rules above and the home
+ * page's own inline dark block without touching either.
+ * Stitch project 17354194080994457753.
+ */
+html.theme-bloom { background:#fff8fb; color-scheme:light; }
+html.theme-bloom body.lobby {
+  --ink:#211143; --ink-2:#4a3f6b; --ink-3:#7a6f99;
+  --white:#ffffff; --paper:#f9f1ff;
+  --border:#eadff8; --border-2:#d9c9f3;
+  --mor:#7757fa; --mor-dk:#5e39e0; --mor-2:#efe7ff;
+  --cyan:#0891b2; --cyan-dk:#0e7490; --cyan-2:#e0f7fb;
+  --ok:#15803d; --ok-bg:#dcfce7; --warn:#92400e; --warn-bg:#fff1cc;
+  --danger:#be123c; --danger-bg:#ffe1e8;
+  --gold:#ffb830; --gold-2:#fff1cc; --silver:#94a3b8; --silver-2:#f1f5f9; --bronze:#c2570c; --bronze-2:#ffe6d2;
+  --stage-primary:#7757fa; --stage-primary-dk:#5e39e0; --stage-primary-2:#efe7ff;
+  --stage-accent:#ff6fae; --stage-accent-dk:#be185d; --stage-accent-2:#ffe1ee;
+  --stage-gradient:linear-gradient(135deg,#6a4bf0 0%,#9b5cf6 52%,#e0529c 100%);
+  --stage-glow:0 16px 34px -16px rgba(119,87,250,.55);
+  --shadow-sm:0 8px 22px -16px rgba(119,87,250,.35); --shadow:0 14px 34px -18px rgba(119,87,250,.4); --shadow-lg:0 26px 56px -22px rgba(119,87,250,.45);
+  --glass:linear-gradient(160deg,#ffffff,#fdf8ff);
+  --lobby-cyan:#7757fa; --flame:#ff7a2f;
+  background:
+    radial-gradient(700px 420px at 8% -6%,#e9defd 0%,transparent 62%),
+    radial-gradient(640px 420px at 96% 4%,#ffd9e8 0%,transparent 62%),
+    radial-gradient(620px 460px at 4% 98%,#d4f5e4 0%,transparent 60%),
+    radial-gradient(640px 460px at 100% 100%,#ffe3cf 0%,transparent 60%),
+    #fff8fb;
+  background-attachment:fixed; color:var(--ink);
+}
+html.theme-bloom:has(body.lobby) { background:#fff8fb; color-scheme:light; }
+html.theme-bloom body.lobby h1, html.theme-bloom body.lobby h2, html.theme-bloom body.lobby h3,
+html.theme-bloom body.lobby .card-title, html.theme-bloom body.lobby .hero-name,
+html.theme-bloom body.lobby .command-main, html.theme-bloom body.lobby .stat-tile-val,
+html.theme-bloom body.lobby .quest-card .q-title, html.theme-bloom body.lobby .card-h h3 { font-family:'Comfortaa','DM Sans',sans-serif; color:var(--ink); }
+html.theme-bloom body.lobby a { color:#5e39e0; }
+html.theme-bloom body.lobby ::selection { background:#ffd9e8; color:#211143; }
+
+/* chrome */
+html.theme-bloom body.lobby .topbar { background:rgba(255,248,251,.86); border-bottom:1px solid var(--border); }
+html.theme-bloom body.lobby .topbar-brand { color:var(--ink); }
+html.theme-bloom body.lobby .topbar-nav a { color:var(--ink-2); }
+html.theme-bloom body.lobby .topbar-nav a:hover { background:#efe7ff; color:#5e39e0; }
+html.theme-bloom body.lobby .topbar-nav a.active { background:linear-gradient(180deg,#8d70ff,#7757fa); color:#fff; box-shadow:0 3px 0 #5232c9, 0 8px 18px -6px rgba(119,87,250,.6); }
+html.theme-bloom body.lobby .page-intro { background:linear-gradient(135deg,#f3ecff,#ffe9f2); border-color:#e3d3fb; }
+html.theme-bloom body.lobby .page-intro-title, html.theme-bloom body.lobby .page-intro-text strong, html.theme-bloom body.lobby .page-intro-link { color:#5e39e0; }
+html.theme-bloom body.lobby .page-intro-text { color:var(--ink-2); }
+html.theme-bloom body.lobby .page-intro-dismiss { background:#fff; border-color:#e3d3fb; color:var(--ink-2); }
+
+/* surfaces */
+html.theme-bloom body.lobby .card, html.theme-bloom body.lobby .modal,
+html.theme-bloom body.lobby .command-card, html.theme-bloom body.lobby .stat-tile,
+html.theme-bloom body.lobby .quest-card, html.theme-bloom body.lobby .ach-tile,
+html.theme-bloom body.lobby .flow-step, html.theme-bloom body.lobby .page-card,
+html.theme-bloom body.lobby .glossary, html.theme-bloom body.lobby section.hpw-card {
+  background:var(--glass); border:1px solid var(--border); border-radius:26px; color:var(--ink);
+  box-shadow:0 14px 34px -20px rgba(119,87,250,.38), inset 0 1px 0 #fff; backdrop-filter:none;
+}
+html.theme-bloom body.lobby .modal-overlay { background:rgba(60,30,110,.35); }
+html.theme-bloom body.lobby .card-sub, html.theme-bloom body.lobby .empty, html.theme-bloom body.lobby .command-sub,
+html.theme-bloom body.lobby .quest-card .q-sub, html.theme-bloom body.lobby .stat-tile-lbl { color:var(--ink-3); }
+html.theme-bloom body.lobby .empty-title { color:var(--ink-2); }
+html.theme-bloom body.lobby .skel { background:#efe7ff; }
+
+/* buttons */
+html.theme-bloom body.lobby .btn { font-family:'Comfortaa','DM Sans',sans-serif; border-radius:999px; }
+html.theme-bloom body.lobby .btn-primary { background:linear-gradient(180deg,#8d70ff,#7757fa); color:#fff; border:1px solid #a994ff; box-shadow:0 4px 0 #5232c9, 0 12px 24px -10px rgba(119,87,250,.6); }
+html.theme-bloom body.lobby .btn-primary:hover { box-shadow:0 6px 0 #5232c9, 0 16px 28px -10px rgba(119,87,250,.7); }
+html.theme-bloom body.lobby .btn-primary:active { box-shadow:0 1px 0 #5232c9; }
+html.theme-bloom body.lobby .btn-secondary { background:#fff; color:var(--ink); border:1.5px solid var(--border-2); border-bottom-width:3px; }
+html.theme-bloom body.lobby .btn-secondary:hover { background:#f6f0ff; border-color:#7757fa; }
+html.theme-bloom body.lobby .btn-ghost { color:var(--ink-2); }
+html.theme-bloom body.lobby .btn-ghost:hover { background:#efe7ff; color:#5e39e0; }
+html.theme-bloom body.lobby .btn-danger { background:linear-gradient(180deg,#ff6b8f,#e11d48); box-shadow:0 4px 0 #9f1239; }
+html.theme-bloom body.lobby .card .btn-secondary { background:#fff; color:var(--ink); border:1.5px solid var(--border-2); border-bottom-width:3px; border-radius:999px; }
+html.theme-bloom body.lobby .card .btn-secondary:hover { background:#f6f0ff; border-color:#7757fa; }
+
+/* forms + chips */
+html.theme-bloom body.lobby .field-label { color:var(--ink-2); }
+html.theme-bloom body.lobby .input, html.theme-bloom body.lobby .select, html.theme-bloom body.lobby .textarea,
+html.theme-bloom body.lobby select, html.theme-bloom body.lobby input[type=text], html.theme-bloom body.lobby input[type=search] {
+  background:#fff; color:var(--ink); border:1.5px solid var(--border-2); border-radius:14px;
+}
+html.theme-bloom body.lobby .select option, html.theme-bloom body.lobby select option { background:#fff; color:var(--ink); }
+html.theme-bloom body.lobby .badge { background:#f6f0ff; color:var(--ink-2); border-color:var(--border-2); }
+html.theme-bloom body.lobby .badge-mor { background:#efe7ff; color:#5e39e0; border-color:#d3c3fb; }
+html.theme-bloom body.lobby .badge-cyan { background:#e0f7fb; color:#0e7490; border-color:#a5e3ef; }
+html.theme-bloom body.lobby .badge-ok { background:#dcfce7; color:#15803d; border-color:#9be6b5; }
+html.theme-bloom body.lobby .badge-warn { background:#fff1cc; color:#92400e; border-color:#f6d27a; }
+html.theme-bloom body.lobby .badge-danger { background:#ffe1e8; color:#be123c; border-color:#f7a8bc; }
+
+/* home hero — pastel journal card */
+html.theme-bloom body.lobby .hero-v2 {
+  background:
+    radial-gradient(360px 200px at 100% 0%,rgba(255,111,174,.30),transparent 65%),
+    radial-gradient(360px 220px at 0% 100%,rgba(119,87,250,.22),transparent 65%),
+    linear-gradient(135deg,#eadffd 0%,#ffdce9 58%,#ffe6d3 100%);
+  border:1px solid #fff; color:var(--ink);
+  box-shadow:0 26px 50px -26px rgba(119,87,250,.5), inset 0 1px 0 #fff;
+}
+html.theme-bloom body.lobby .hero-v2::before { background:radial-gradient(circle at 92% 18%,rgba(255,255,255,.7) 0%,transparent 55%); }
+html.theme-bloom body.lobby .hero-v2::after { background-image:radial-gradient(2.5px 2.5px at 18% 28%,#ffb830,transparent),radial-gradient(2px 2px at 64% 74%,#ff6fae,transparent),radial-gradient(2.5px 2.5px at 84% 24%,#7757fa,transparent),radial-gradient(2px 2px at 42% 86%,#ffb830,transparent); opacity:.7; }
+html.theme-bloom body.lobby .hero-avatar-shell { filter:drop-shadow(0 8px 16px rgba(119,87,250,.35)); }
+html.theme-bloom body.lobby .hero-avatar-shell .ring-track-v2 { stroke:rgba(119,87,250,.16); }
+html.theme-bloom body.lobby .hero-avatar-shell .ring-fill-v2 { stroke:#ff6fae; filter:drop-shadow(0 0 6px rgba(255,111,174,.6)); }
+html.theme-bloom body.lobby .hero-avatar-shell .avatar-pic { background:#fff; box-shadow:inset 0 0 0 3px #fff, 0 6px 16px -6px rgba(119,87,250,.4); }
+html.theme-bloom body.lobby .hero-avatar-shell .lvl-badge { background:linear-gradient(180deg,#ffd266,#ffb020); color:#4a2b00; border:2px solid #fff; box-shadow:0 3px 0 #c98108, 0 8px 16px rgba(255,176,32,.5); }
+html.theme-bloom body.lobby .hero-greet { color:#8a3d6e; }
+html.theme-bloom body.lobby .hero-name { color:var(--ink); text-shadow:none; }
+html.theme-bloom body.lobby .hero-pill { background:rgba(255,255,255,.75); border-color:#e3d3fb; color:var(--ink-2); }
+html.theme-bloom body.lobby .hero-pill[data-tier] { background:#fff1cc; border-color:#f6d27a; color:#7a4a00; }
+html.theme-bloom body.lobby .hero-cta { background:linear-gradient(180deg,#ffd266,#ffb020); color:#4a2b00; border:2px solid #fff; border-radius:999px; box-shadow:0 5px 0 #c98108, 0 14px 28px -8px rgba(255,176,32,.7); }
+html.theme-bloom body.lobby .hero-cta-eyebrow, html.theme-bloom body.lobby .hero-cta .reset { color:#7a4a00; }
+html.theme-bloom body.lobby .hero-cta .reward { background:#4a2b00; color:#ffd266; }
+
+/* headings of home sections */
+html.theme-bloom body.lobby .quest-h h2::before { content:'🌸 '; }
+html.theme-bloom body.lobby .quest-h .meta, html.theme-bloom body.lobby .ach-h .meta { color:#5e39e0; background:#efe7ff; border-color:#d3c3fb; }
+
+/* quests */
+html.theme-bloom body.lobby .quest-card { border-color:#e3d3fb; }
+html.theme-bloom body.lobby .quest-card::before { background:radial-gradient(240px 120px at 0% 0%,rgba(255,111,174,.14),transparent 70%); }
+html.theme-bloom body.lobby .quest-card:hover { border-color:#7757fa; box-shadow:0 20px 40px -20px rgba(119,87,250,.55); }
+html.theme-bloom body.lobby .quest-card .q-glyph { background:linear-gradient(160deg,#9b83ff,#7757fa); box-shadow:0 4px 0 #5232c9; color:#fff; }
+html.theme-bloom body.lobby .quest-card[data-quest="challenge"] .q-glyph { background:linear-gradient(160deg,#ffd266,#ffb020); box-shadow:0 4px 0 #c98108; }
+html.theme-bloom body.lobby .quest-card[data-quest="streak"] .q-glyph { background:linear-gradient(160deg,#ff9bc6,#ff6fae); box-shadow:0 4px 0 #c2417f; }
+html.theme-bloom body.lobby .quest-card .q-reward { color:#b86e00; border-top-color:#eadff8; }
+html.theme-bloom body.lobby .quest-card.is-done { background:linear-gradient(160deg,#e3f9ec,#f3fcf7); border-color:#6ed3a0; }
+html.theme-bloom body.lobby .quest-card.is-done::after { background:#22a35a; color:#fff; box-shadow:none; }
+html.theme-bloom body.lobby .quest-card.is-done .q-glyph { background:linear-gradient(160deg,#4cd08a,#22a35a); box-shadow:0 4px 0 #17803f; }
+html.theme-bloom body.lobby .quest-card.is-done .q-reward { color:#15803d; }
+html.theme-bloom body.lobby .quest-node { background:#fff; border-color:var(--border); color:var(--ink-2); }
+html.theme-bloom body.lobby .quest-node .node-dot { background:#fff; border-color:#d3c3fb; }
+html.theme-bloom body.lobby .quest-node.is-done { background:#e3f9ec; border-color:#6ed3a0; color:#15803d; }
+html.theme-bloom body.lobby .quest-node.is-done .node-dot { background:#22a35a; box-shadow:none; }
+html.theme-bloom body.lobby .quest-chest { background:#fff; border-color:#d3c3fb; color:var(--ink-3); }
+html.theme-bloom body.lobby .quest-chest.is-open { background:linear-gradient(160deg,#fff1cc,#ffe3a0); border-color:#ffb830; color:#7a4a00; animation:none; box-shadow:0 8px 20px -10px rgba(255,176,32,.8); }
+
+/* status deck, streak week, stats */
+html.theme-bloom body.lobby .command-card::after { background:radial-gradient(circle,rgba(255,111,174,.22),transparent 70%); }
+html.theme-bloom body.lobby .command-eyebrow { color:#7757fa; }
+html.theme-bloom body.lobby .command-main { color:var(--ink); }
+html.theme-bloom body.lobby .xp-track { background:#efe7ff; border-color:#e3d3fb; box-shadow:inset 0 2px 4px rgba(119,87,250,.12); }
+html.theme-bloom body.lobby .xp-fill { background:linear-gradient(90deg,#9b83ff,#ff6fae 60%,#ffb830); box-shadow:0 0 12px rgba(255,111,174,.5); }
+html.theme-bloom body.lobby .command-link { color:#5e39e0; }
+html.theme-bloom body.lobby .week-cal .wd { color:var(--ink-3); }
+html.theme-bloom body.lobby .week-cal .wd i { background:#f4eaff; border-color:#e3d3fb; }
+html.theme-bloom body.lobby .week-cal .wd.on i { background:linear-gradient(160deg,#ff9bc6,#ff6fae); border-color:#ffc2dc; box-shadow:0 4px 10px -3px rgba(255,111,174,.7); }
+html.theme-bloom body.lobby .week-cal .wd.today i { outline-color:#ffb830; }
+html.theme-bloom body.lobby .stat-tile-val { color:var(--ink); }
+html.theme-bloom body.lobby .stat-tile-icon { box-shadow:none; }
+html.theme-bloom body.lobby .stat-tile-icon.icon-gold { background:#fff1cc; color:#e69a00; }
+html.theme-bloom body.lobby .stat-tile-icon.icon-flame { background:#ffe6d2; color:#f26a1f; }
+html.theme-bloom body.lobby .stat-tile-icon.icon-mor { background:#efe7ff; color:#7757fa; }
+html.theme-bloom body.lobby .stat-tile-icon.icon-cyan { background:#ffe1ee; color:#e0529c; }
+
+/* achievements = enamel pins */
+html.theme-bloom body.lobby .ach-tile:not(.locked) { border-color:#ffd27a; background:linear-gradient(160deg,#fff4d6,#fffaf0); box-shadow:0 12px 26px -14px rgba(255,176,32,.7); }
+html.theme-bloom body.lobby .ach-tile .ach-glyph { filter:drop-shadow(0 4px 6px rgba(255,176,32,.45)); }
+html.theme-bloom body.lobby .ach-tile.locked { background:#f6f0ff; border:1.5px dashed #d3c3fb; }
+html.theme-bloom body.lobby .ach-tile.locked .ach-glyph { filter:grayscale(1) opacity(.45); }
+html.theme-bloom body.lobby .ach-tile .ach-label { color:var(--ink); }
+html.theme-bloom body.lobby .ach-tile.locked .ach-label { color:var(--ink-3); }
+html.theme-bloom body.lobby .ach-tile .ach-progress { background:#eadff8; }
+html.theme-bloom body.lobby .ach-tile .ach-progress > span { background:linear-gradient(90deg,#9b83ff,#ff6fae); }
+
+/* recent practice */
+html.theme-bloom body.lobby .card-h .more { color:#5e39e0; }
+html.theme-bloom body.lobby .test-row:hover { background:#f9f1ff; }
+html.theme-bloom body.lobby .test-row-title { color:var(--ink); }
+html.theme-bloom body.lobby .test-row-meta { color:var(--ink-3); }
+html.theme-bloom body.lobby .test-row-score { background:#fff1cc; color:#8a5200; border-color:#f6d27a; }
+
+/* welcome / how-points-work leftovers */
+html.theme-bloom body.lobby .page-card-icon { background:linear-gradient(135deg,#efe7ff,#ffe1ee); }
+html.theme-bloom body.lobby .flow-step-num, html.theme-bloom body.lobby .flow-step-link { color:#5e39e0; }
+html.theme-bloom body.lobby .page-card-open { background:linear-gradient(180deg,#8d70ff,#7757fa); box-shadow:0 3px 0 #5232c9; color:#fff; }
+html.theme-bloom body.lobby .tip { background:#fff4d6; border-left-color:#ffb830; color:#78350f; }
+html.theme-bloom body.lobby .tip strong { color:#92400e; }
+html.theme-bloom body.lobby .boundary { background:#ffe9ee; border-color:#f7b4c4; }
+html.theme-bloom body.lobby .boundary-title, html.theme-bloom body.lobby .boundary-text strong { color:#9f1239; }
+html.theme-bloom body.lobby .boundary-text { color:#7f1d3a; }
+html.theme-bloom body.lobby .gloss-def code { background:#f4eaff; color:#5e39e0; }
+html.theme-bloom body.lobby .not-built .nb { background:#f9f1ff; }
+
+/* practice-run question card: same paper, softer frame */
+html.theme-bloom body.lobby .qcard { border:2px solid #fff; box-shadow:0 22px 46px -22px rgba(119,87,250,.5), 0 0 0 6px rgba(255,111,174,.12); }
+html.theme-bloom body.lobby .qcard-head { background:linear-gradient(135deg,#f0e8ff,#ffe6f0); }
+html.theme-bloom body.lobby .qopt { border-color:#eadff8; border-radius:20px; }
+html.theme-bloom body.lobby .qopt.is-correct, html.theme-bloom body.lobby .qopt.is-correct-untouched { border-color:#22a35a; box-shadow:0 0 0 3px rgba(34,163,90,.18); }
+html.theme-bloom body.lobby .qopt.is-wrong { border-color:#e5484d; box-shadow:0 0 0 3px rgba(229,72,77,.15); }
+html.theme-bloom body.lobby .qopt.is-pending { border-color:#7757fa; }
+html.theme-bloom body.lobby .btn-next { border-radius:999px; }
+
+
+/* gradient banners keep white text in Bloom; stand-alone chips get a pastel pill */
+html.theme-bloom body.lobby .stage-hero, html.theme-bloom body.lobby .hero-dc, html.theme-bloom body.lobby .av-hero,
+html.theme-bloom body.lobby .hpw-hero, html.theme-bloom body.lobby .welcome-hero { color:#fff; }
+html.theme-bloom body.lobby .stage-hero h1, html.theme-bloom body.lobby .stage-hero h2, html.theme-bloom body.lobby .stage-hero h3,
+html.theme-bloom body.lobby .hero-dc h1, html.theme-bloom body.lobby .hero-dc h2, html.theme-bloom body.lobby .av-hero h1,
+html.theme-bloom body.lobby .av-hero h2, html.theme-bloom body.lobby .hpw-hero h1, html.theme-bloom body.lobby .hpw-hero h2,
+html.theme-bloom body.lobby .welcome-hero h1, html.theme-bloom body.lobby .welcome-hero h2 { color:#fff; }
+html.theme-bloom body.lobby .stage-hero a, html.theme-bloom body.lobby .hero-dc a, html.theme-bloom body.lobby .welcome-hero a { color:#fff; }
+html.theme-bloom body.lobby .stage-chip { background:#efe7ff; border:1px solid #d3c3fb; color:#5e39e0; backdrop-filter:none; }
+html.theme-bloom body.lobby .stage-hero .stage-chip, html.theme-bloom body.lobby .hero-dc .stage-chip, html.theme-bloom body.lobby .av-hero .stage-chip {
+  background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.45); color:#fff; }
+html.theme-bloom body.lobby .welcome-hero { background:var(--stage-gradient); }
+html.theme-bloom body.lobby .hero-pra p { color:var(--ink-3); }
+
+/* theme toggle button in the navbar (shared by both themes) */
+.theme-toggle-btn { background:transparent; border:1px solid var(--border-2,#d3d7e1); border-radius:999px; width:34px; height:34px; cursor:pointer; font-size:1rem; line-height:1; display:inline-flex; align-items:center; justify-content:center; transition:transform .12s; }
+.theme-toggle-btn:hover { transform:scale(1.1) rotate(-8deg); }

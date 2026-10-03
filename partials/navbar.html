@@ -31,6 +31,7 @@
       </span>
       <span id="topbarPointsVal">0</span>
     </span>
+    <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Change look" aria-label="Change look">🌸</button>
     <button type="button" class="fx-mute-btn" id="fxMuteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
     <a href="/avatar" class="topbar-avatar" id="topbarAvatar" title="Customize avatar">·</a>
   </div>
@@ -126,5 +127,31 @@
     wireMuteBtn();
     if (!(window.fx)) setTimeout(wireMuteBtn, 200);
     document.addEventListener('fx-mute-changed', paintMuteBtn);
+
+    // Look switcher: Arcade (dark, default) <-> Bloom (light). Per-device, stored in
+    // localStorage 'sh-theme'; pages apply it before paint from a tiny head script.
+    function paintThemeBtn() {
+      var b = document.getElementById('themeToggleBtn');
+      if (!b) return;
+      var bloom = document.documentElement.classList.contains('theme-bloom');
+      b.textContent = bloom ? '🌙' : '🌸';
+      b.title = bloom ? 'Switch to the dark Arcade look' : 'Switch to the light Bloom look';
+    }
+    var tb = document.getElementById('themeToggleBtn');
+    if (tb && !tb._wired) {
+      tb._wired = true;
+      tb.addEventListener('click', function () {
+        var on = document.documentElement.classList.toggle('theme-bloom');
+        try { localStorage.setItem('sh-theme', on ? 'bloom' : 'arcade'); } catch (e) {}
+        if (on && !document.getElementById('bloomFont')) {
+          var l = document.createElement('link'); l.id = 'bloomFont'; l.rel = 'stylesheet';
+          l.href = 'https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap';
+          document.head.appendChild(l);
+        }
+        paintThemeBtn();
+        if (window.fx && window.fx.play) window.fx.play('tick');
+      });
+      paintThemeBtn();
+    }
   })();
 </script>
