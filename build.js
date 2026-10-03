@@ -145,6 +145,20 @@ fs.copyFileSync(
 console.log('Copied: dist/lobby.css');
 
 // Copy Eduversal master logo (white-on-transparent, 600x176) used by login + navbar.
+// Copy assets/ (mascot art for the Character Studio — webp, ~450 KB total), recursive
+const assetsSrc  = path.join(__dirname, 'assets');
+const assetsDist = path.join(distDir, 'assets');
+if (fs.existsSync(assetsSrc)) {
+  (function copyDir(from, to) {
+    fs.mkdirSync(to, { recursive: true });
+    fs.readdirSync(from, { withFileTypes: true }).forEach(e => {
+      const s = path.join(from, e.name), d = path.join(to, e.name);
+      if (e.isDirectory()) copyDir(s, d); else fs.copyFileSync(s, d);
+    });
+  })(assetsSrc, assetsDist);
+  console.log('Copied: dist/assets/');
+}
+
 const logoSrc = path.join(__dirname, 'eduversal-logo-white.png');
 if (fs.existsSync(logoSrc)) {
   fs.copyFileSync(logoSrc, path.join(distDir, 'eduversal-logo-white.png'));

@@ -3,134 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Avatar — Students Hub</title>
+  <title>Character Studio — Students Hub</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%236c5ce7'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>E</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:wght@600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="base.css">
   <link rel="stylesheet" href="lobby.css">
   <script>(function(){try{if(localStorage.getItem("sh-theme")==="bloom"){document.documentElement.classList.add("theme-bloom");var l=document.createElement("link");l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&display=swap";document.head.appendChild(l);}}catch(e){}})();</script>
   <style>
-    .av-hero {
-      display: flex; align-items: center; gap: 22px;
-      background: linear-gradient(135deg, var(--stage-primary) 0%, var(--stage-accent) 100%);
-      color: #fff;
-      border-radius: var(--radius-xl);
-      padding: 26px 28px;
-      margin-bottom: 22px;
-      box-shadow: var(--stage-glow);
-    }
-    .av-hero .preview-shell {
-      width: 110px; height: 110px;
-      flex-shrink: 0;
-      background: rgba(255,255,255,.18);
-      border-radius: 22px;
-      padding: 8px;
-      backdrop-filter: blur(8px);
-    }
-    .av-hero .preview-shell img {
-      width: 100%; height: 100%; border-radius: 18px; background: #fff;
-    }
-    .av-hero h1 { font-family: 'Lora', serif; font-size: 1.6rem; margin: 0 0 4px; }
-    .av-hero p  { margin: 0 0 14px; opacity: .9; max-width: 480px; line-height: 1.45; }
-    .av-hero .meta-row {
-      display: flex; gap: 18px; flex-wrap: wrap;
-      font-size: .82rem; opacity: .88;
-    }
-    .av-hero .meta-row span strong { display: block; opacity: .8; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    /* ═══ Character Studio — your mascot evolves as you level up ═══════════
+       Earn-only: forms unlock by level, cosmetics by level / streak / perfect runs.
+       Nothing is bought (see docs/SH-GAMIFICATION-GUIDE.md — spending is out of charter).
+       The stage is a dark game scene in BOTH themes on purpose: the mascot art is lit
+       for a dark backdrop. */
+    .cs-page { max-width: 1120px; margin: 0 auto; padding: 24px 20px 90px; }
+    .cs-head { margin-bottom: 18px; }
+    .cs-eyebrow { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--stage-accent-dk, #8fe9f7); }
+    .cs-head h1 { margin: 4px 0 4px; font-size: clamp(1.7rem, 3.4vw, 2.4rem); }
+    .cs-head p { margin: 0; color: var(--ink-3); max-width: 46rem; }
 
-    /* Style picker grid */
-    .section { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 18px; }
-    .section h3 { font-family: 'Lora', serif; font-size: 1.1rem; margin: 0 0 4px; }
-    .section p.lead { color: var(--ink-3); font-size: .9rem; margin: 0 0 18px; }
+    .cs-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+    @media (max-width: 920px) { .cs-grid { grid-template-columns: 1fr; } }
 
-    .style-grid {
-      display: grid; gap: 12px;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* ── Stage ── */
+    .cs-stage-card { padding: 0; overflow: hidden; border-radius: 26px; }
+    .cs-scene {
+      position: relative; aspect-ratio: 1 / 1; max-height: 560px; width: 100%;
+      background: #0f0b24; overflow: hidden; isolation: isolate;
     }
-    @media (max-width: 900px) { .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 460px) { .style-grid { grid-template-columns: 1fr; } }
+    .cs-scene .cs-bg { position: absolute; inset: 0; z-index: 0; transition: opacity .4s; }
+    .scene-study-nook { background:
+      radial-gradient(ellipse at 50% 78%, rgba(139,124,255,.45), transparent 60%),
+      radial-gradient(circle at 18% 22%, rgba(255,190,110,.22), transparent 36%),
+      linear-gradient(180deg, #1a1545, #0f0b24); }
+    .scene-observatory { background:
+      radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent), radial-gradient(1.5px 1.5px at 28% 40%, #cfe3ff, transparent),
+      radial-gradient(2px 2px at 44% 12%, #fff, transparent), radial-gradient(1.5px 1.5px at 62% 30%, #fff, transparent),
+      radial-gradient(2px 2px at 78% 16%, #ffe9a8, transparent), radial-gradient(1.5px 1.5px at 90% 44%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 20% 62%, #fff, transparent), radial-gradient(1.5px 1.5px at 84% 70%, #cfe3ff, transparent),
+      radial-gradient(ellipse at 50% 100%, rgba(34,211,238,.28), transparent 55%),
+      linear-gradient(180deg, #060a24, #11205a); }
+    .scene-aurora-peak { background:
+      radial-gradient(ellipse 70% 38% at 30% 30%, rgba(52,211,153,.38), transparent 70%),
+      radial-gradient(ellipse 60% 34% at 74% 40%, rgba(139,124,255,.40), transparent 70%),
+      radial-gradient(ellipse at 50% 100%, rgba(34,211,238,.25), transparent 55%),
+      linear-gradient(180deg, #06202c, #0d1a3a 60%, #120d33); }
+    .scene-golden-library { background:
+      repeating-linear-gradient(90deg, rgba(255,200,110,.07) 0 2px, transparent 2px 46px),
+      radial-gradient(ellipse at 50% 35%, rgba(255,190,90,.30), transparent 62%),
+      radial-gradient(ellipse at 50% 100%, rgba(251,191,36,.22), transparent 55%),
+      linear-gradient(180deg, #2a1a0c, #140d06); }
+    .cs-char {
+      position: absolute; left: 50%; top: 50%; width: 92%; max-width: 520px; transform: translate(-50%, -50%);
+      z-index: 1; mix-blend-mode: lighten; pointer-events: none; user-select: none;
+      -webkit-mask-image: radial-gradient(closest-side, #000 82%, transparent 100%); mask-image: radial-gradient(closest-side, #000 82%, transparent 100%);
+      animation: csFloat 5s ease-in-out infinite;
+    }
+    @keyframes csFloat { 0%,100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -52%); } }
 
-    .style-tile {
-      background: var(--paper);
-      border: 2px solid var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      cursor: pointer;
-      transition: all .14s;
-      display: flex; align-items: center; gap: 12px;
-      min-width: 0;            /* let the cell shrink to its grid track */
-      box-sizing: border-box;
-      overflow: hidden;        /* keep the rounded corners crisp if a label is wide */
-      text-align: left;
+    .cs-plate {
+      position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3;
+      display: flex; align-items: center; gap: 10px; padding: 8px 16px 8px 10px; border-radius: 999px;
+      background: rgba(15,11,36,.78); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(8px); color: #fff; white-space: nowrap;
     }
-    .style-tile:hover { border-color: var(--stage-primary); transform: translateY(-2px); box-shadow: var(--shadow); }
-    .style-tile.is-active {
-      border-color: var(--stage-primary);
-      background: var(--stage-primary-2);
-      box-shadow: 0 0 0 3px var(--stage-primary-2), var(--shadow);
-    }
-    .style-tile > div {
-      min-width: 0;            /* flex child needs this so the label can wrap */
-      flex: 1;
-    }
-    .style-tile .av {
-      width: 56px; height: 56px;
-      border-radius: 12px;
-      background: var(--white);
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .style-tile .av img { width: 100%; height: 100%; display: block; }
-    .style-tile .label { font-weight: 600; color: var(--ink); line-height: 1.2; }
-    .style-tile .sub {
-      font-size: .76rem; color: var(--ink-3);
-      margin-top: 2px; line-height: 1.3;
-      word-break: break-word;
-    }
+    .cs-plate .lv { min-width: 34px; height: 34px; padding: 0 8px; border-radius: 17px; display: inline-flex; align-items: center; justify-content: center;
+      background: linear-gradient(180deg,#ffd54a,#f59e0b); color: #3b2600; font-weight: 800; font-family: 'Outfit',sans-serif; box-shadow: 0 3px 0 #b45309; }
+    .cs-plate .nm { font-family: 'Outfit',sans-serif; font-weight: 800; font-size: 1.05rem; line-height: 1.1; }
+    .cs-plate .tr { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #bfe9f5; }
 
-    /* Seed gallery */
-    .seed-row {
-      display: grid; gap: 10px;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-    @media (max-width: 720px) { .seed-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-    @media (max-width: 460px) { .seed-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-    .seed-tile {
-      background: var(--paper);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      padding: 6px;
-      cursor: pointer;
-      transition: all .12s;
-      aspect-ratio: 1;
-    }
-    .seed-tile:hover { border-color: var(--stage-primary); }
-    .seed-tile.is-active {
-      border-color: var(--stage-primary);
-      background: var(--stage-primary-2);
-    }
-    .seed-tile img { width: 100%; height: 100%; border-radius: 8px; background: var(--white); }
+    /* loadout tiles floating around the mascot */
+    .cs-loadout { position: absolute; z-index: 3; display: flex; flex-direction: column; gap: 10px; }
+    .cs-loadout.left { left: 12px; top: 14px; }
+    .cs-loadout.right { right: 12px; top: 14px; }
+    .cs-slot { width: 78px; text-align: center; color: #fff; }
+    .cs-slot .tile { width: 78px; height: 78px; border-radius: 18px; overflow: hidden; background: rgba(15,11,36,.7); border: 2px dashed rgba(255,255,255,.28);
+      display: flex; align-items: center; justify-content: center; }
+    .cs-slot .tile img { width: 100%; height: 100%; display: block; }
+    .cs-slot .tile.empty { font-size: 1.5rem; color: rgba(255,255,255,.35); }
+    .cs-slot.has-item .tile { border-style: solid; box-shadow: 0 0 18px -2px var(--rc, #fff); border-color: var(--rc, #fff); }
+    .cs-slot .lbl { margin-top: 4px; font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.72); text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+    @media (max-width: 560px) { .cs-slot, .cs-slot .tile { width: 58px; } .cs-slot .tile { height: 58px; border-radius: 14px; } }
 
-    .roll-btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-    .roll-btn-row .btn { padding: 10px 18px; font-size: .88rem; }
+    /* evolution banner + save row under the stage */
+    .cs-under { padding: 16px 18px 18px; display: grid; gap: 14px; }
+    .cs-evo { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 18px; background: rgba(139,124,255,.12); border: 1px solid rgba(139,124,255,.35); }
+    .cs-evo .sil { width: 64px; height: 64px; border-radius: 14px; overflow: hidden; background: #0f0b24; flex-shrink: 0; position: relative; }
+    .cs-evo .sil img { width: 100%; height: 100%; display: block; filter: brightness(.3) saturate(.25) contrast(1.15); }
+    .cs-evo .sil.max img { filter: none; }
+    .cs-evo .tx { flex: 1; min-width: 0; }
+    .cs-evo .tx b { display: block; font-family: 'Outfit',sans-serif; font-size: 1rem; color: var(--ink); }
+    .cs-evo .tx span { font-size: .82rem; color: var(--ink-3); }
+    .cs-bar { height: 12px; border-radius: 99px; background: rgba(0,0,0,.28); border: 1px solid var(--border-2); overflow: hidden; margin-top: 8px; }
+    .cs-bar > i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg,#8b7cff,#22d3ee 55%,#fbbf24); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+    .cs-save { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .cs-save .status { flex: 1; min-width: 160px; font-size: .84rem; color: var(--ink-3); }
+    .cs-save .status.ok { color: var(--ok); font-weight: 700; }
+    .cs-save .status.no { color: var(--danger); font-weight: 700; }
+    .cs-save .btn-save { padding: 13px 26px; border-radius: 16px; border: 2px solid #fff3c4; font-family: 'Outfit',sans-serif; font-weight: 800; font-size: 1rem; cursor: pointer;
+      color: #3b2600; background: linear-gradient(180deg,#ffd54a,#f5a30b); box-shadow: 0 5px 0 #b45309, 0 14px 28px -8px rgba(245,158,11,.6); transition: transform .08s, box-shadow .08s; }
+    .cs-save .btn-save:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #b45309; }
+    .cs-save .btn-save:disabled { background: linear-gradient(180deg,#d9d6ee,#bdb8de); color: #6b6890; border-color: #e8e6f6; box-shadow: 0 5px 0 #9b96c4; cursor: not-allowed; }
 
-    /* Save bar */
-    .save-bar {
-      position: sticky; bottom: 16px;
-      display: flex; justify-content: flex-end; gap: 12px;
-      background: var(--white);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      box-shadow: var(--shadow);
-      margin-top: 18px;
-    }
-    .save-bar .status { margin-right: auto; color: var(--ink-3); font-size: .85rem; align-self: center; }
-    .save-bar .status.ok { color: var(--ok); font-weight: 600; }
-    .save-bar .status.no { color: var(--danger); font-weight: 600; }
-    .save-bar .btn { padding: 10px 22px; font-size: .9rem; }
+    /* ── Wardrobe ── */
+    .cs-wardrobe { padding: 18px; border-radius: 26px; }
+    .cs-wh { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .cs-wh h2 { margin: 0; font-size: 1.15rem; }
+    .cs-count { font-size: .78rem; font-weight: 800; padding: 4px 12px; border-radius: 99px; background: rgba(139,124,255,.18); color: var(--stage-primary-dk, #c9c1ff); border: 1px solid rgba(139,124,255,.4); }
+    .cs-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cs-tab { padding: 8px 14px; border-radius: 99px; border: 1.5px solid var(--border-2); background: transparent; color: var(--ink-2); font: inherit; font-weight: 700; font-size: .84rem; cursor: pointer; }
+    .cs-tab.is-active { background: linear-gradient(180deg,#9a8cff,#6c5ce7); color: #fff; border-color: #b9b0ff; box-shadow: 0 3px 0 #3f31a8; }
+    .cs-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    @media (max-width: 420px) { .cs-items { grid-template-columns: 1fr; } }
+    .cs-item { position: relative; text-align: left; font: inherit; color: var(--ink); padding: 10px; border-radius: 20px; cursor: pointer;
+      background: var(--glass, var(--white)); border: 2px solid var(--rc, var(--border-2)); box-shadow: 0 0 0 0 transparent; transition: transform .12s, box-shadow .12s; }
+    .cs-item:hover:not(.locked) { transform: translateY(-3px); box-shadow: 0 14px 26px -16px var(--rc, #8b7cff); }
+    .cs-item .art { aspect-ratio: 1/1; border-radius: 14px; overflow: hidden; background: #0f0b24; position: relative; }
+    .cs-item .art img { width: 100%; height: 100%; display: block; }
+    .cs-item .art.scene { background-size: cover; }
+    .cs-item .nm { margin-top: 8px; font-family: 'Outfit',sans-serif; font-weight: 700; font-size: .92rem; line-height: 1.15; }
+    .cs-item .rar { display: inline-block; margin-top: 4px; font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--rc); }
+    .cs-item .st { margin-top: 6px; font-size: .74rem; font-weight: 700; color: var(--ink-3); }
+    .cs-item.is-equipped { box-shadow: 0 0 0 3px var(--rc), 0 14px 28px -14px var(--rc); }
+    .cs-item.is-equipped .st { color: var(--ok); }
+    .cs-item.locked { cursor: not-allowed; border-style: dashed; }
+    .cs-item.locked .art img { filter: grayscale(1) brightness(.5); }
+    .cs-item.locked .art.scene { filter: grayscale(.55) brightness(.75); }
+    .cs-item .lock { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 50%; display: none; align-items: center; justify-content: center; background: rgba(15,11,36,.85); color: #fff; font-size: .9rem; }
+    .cs-item.locked .lock { display: flex; }
+    .cs-item .mini { height: 5px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; margin-top: 6px; }
+    .cs-item .mini > i { display: block; height: 100%; background: var(--rc); }
+
+    /* rarity colours */
+    .r-common    { --rc: #9aa3b8; }
+    .r-rare      { --rc: #22d3ee; }
+    .r-epic      { --rc: #a78bfa; }
+    .r-legendary { --rc: #fbbf24; }
+
+    /* ── Evolution timeline ── */
+    .cs-section { margin-top: 22px; padding: 20px; border-radius: 26px; }
+    .cs-section > h2 { margin: 0 0 4px; font-size: 1.2rem; }
+    .cs-section > p { margin: 0 0 16px; color: var(--ink-3); font-size: .88rem; }
+    .cs-forms { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; position: relative; }
+    @media (max-width: 820px) { .cs-forms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .cs-form { position: relative; text-align: center; padding: 10px 8px 12px; border-radius: 20px; border: 2px solid var(--border-2); background: var(--glass, var(--white)); font: inherit; color: var(--ink); cursor: pointer; }
+    .cs-form .art { aspect-ratio: 1/1; border-radius: 14px; overflow: hidden; background: #0f0b24; position: relative; }
+    .cs-form .art img { width: 100%; height: 100%; display: block; }
+    .cs-form .t { margin-top: 8px; font-family: 'Outfit',sans-serif; font-weight: 800; font-size: .95rem; }
+    .cs-form .l { font-size: .72rem; font-weight: 700; color: var(--ink-3); }
+    .cs-form.done { border-color: rgba(52,211,153,.7); }
+    .cs-form.current { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,.3), 0 16px 30px -16px rgba(251,191,36,.7); }
+    .cs-form.current::before { content: 'YOU ARE HERE'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); padding: 3px 10px; border-radius: 99px; font-size: .6rem; font-weight: 800; letter-spacing: .08em; background: #fbbf24; color: #3b2600; white-space: nowrap; z-index: 2; }
+    .cs-form.locked { cursor: not-allowed; border-style: dashed; }
+    .cs-form.locked .art img { filter: brightness(.3) saturate(.25) contrast(1.15); }
+    .cs-form.locked .art::after { content: '🔒'; position: absolute; right: 8px; bottom: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1rem; border-radius: 50%; background: rgba(15,11,36,.85); }
+    .cs-form.previewing { outline: 3px solid var(--lobby-cyan, #22d3ee); outline-offset: 2px; }
+
+    .cs-next { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+    .cs-next { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .cs-next .cs-item { cursor: default; }
+    .cs-next .art { aspect-ratio: 16 / 10; }
+    .cs-next .art img { object-fit: cover; }
   </style>
 </head>
 <body class="lobby" style="display:none">
@@ -138,57 +171,80 @@
 
   <div id="navbar-container"></div>
 
-  <main class="page-narrow">
-    <!-- Hero with live preview -->
-    <section class="av-hero">
-      <div class="preview-shell">
-        <img id="livePreview" src="" alt="">
-      </div>
-      <div style="flex:1; min-width:0">
-        <h1>Your avatar</h1>
-        <p>Pick a style, roll a seed until you like it, save. Your avatar shows up on your dashboard, the leaderboard, and your daily-challenge results.</p>
-        <div class="meta-row">
-          <span><strong>Style</strong><span id="metaStyle">bottts</span></span>
-          <span><strong>Seed</strong><span id="metaSeed">…</span></span>
+  <main class="cs-page">
+    <header class="cs-head">
+      <div class="cs-eyebrow">Your mascot</div>
+      <h1>Character Studio</h1>
+      <p>Meet Sparky. Every level you earn makes your mascot stronger, and new outfits, gear and companions unlock as you practise. Nothing is for sale: you earn it all.</p>
+    </header>
+
+    <div class="cs-grid">
+      <!-- ── Stage ── -->
+      <section class="card cs-stage-card" aria-label="Your mascot">
+        <div class="cs-scene" id="csScene">
+          <div class="cs-bg scene-study-nook" id="csBg"></div>
+          <img class="cs-char" id="csChar" alt="Your mascot, Sparky" src="/assets/mascot/form-apprentice.webp">
+          <div class="cs-loadout left">
+            <div class="cs-slot" id="slotHat"><div class="tile empty">＋</div><div class="lbl">Hat</div></div>
+            <div class="cs-slot" id="slotGear"><div class="tile empty">＋</div><div class="lbl">Gear</div></div>
+          </div>
+          <div class="cs-loadout right">
+            <div class="cs-slot" id="slotCompanion"><div class="tile empty">＋</div><div class="lbl">Companion</div></div>
+          </div>
+          <div class="cs-plate">
+            <span class="lv" id="csLv">1</span>
+            <span><span class="nm">Sparky</span><br><span class="tr" id="csTier">Apprentice</span></span>
+          </div>
         </div>
-      </div>
-    </section>
+        <div class="cs-under">
+          <div class="cs-evo" id="csEvo">
+            <div class="sil" id="csEvoSil"><img id="csEvoImg" alt="" src="/assets/mascot/form-scholar.webp"></div>
+            <div class="tx">
+              <b id="csEvoTitle">Next evolution</b>
+              <span id="csEvoSub">Keep practising to evolve.</span>
+              <div class="cs-bar" aria-hidden="true"><i id="csEvoBar"></i></div>
+            </div>
+          </div>
+          <div class="cs-save">
+            <span class="status" id="csStatus">Pick your look, then save.</span>
+            <button type="button" class="btn-save" id="csSave" disabled>Save look</button>
+          </div>
+        </div>
+      </section>
 
-    <!-- Style picker -->
-    <section class="section">
-      <h3>Style</h3>
-      <p class="lead">Each style is a different vibe — robots, characters, abstract shapes. Pick the one that feels like you.</p>
-      <div class="style-grid" id="styleGrid">
-        <!-- populated by JS -->
-      </div>
-    </section>
-
-    <!-- Seed gallery -->
-    <section class="section">
-      <h3>Look</h3>
-      <p class="lead">Don't love the first one? Roll for a new look — same style, different details. Tap any preview to pick it.</p>
-      <div class="seed-row" id="seedRow">
-        <!-- populated by JS -->
-      </div>
-      <div class="roll-btn-row">
-        <button type="button" class="btn btn-secondary" id="btnReroll">🎲 Roll new looks</button>
-        <button type="button" class="btn btn-secondary" id="btnReset">Reset to default</button>
-      </div>
-    </section>
-
-    <!-- Save bar -->
-    <div class="save-bar">
-      <span class="status" id="saveStatus">Pick a style + look, then Save.</span>
-      <a href="/profile" class="btn btn-secondary">Back to profile</a>
-      <button type="button" class="btn btn-primary" id="btnSave" disabled>Save avatar</button>
+      <!-- ── Wardrobe ── -->
+      <section class="card cs-wardrobe" aria-label="Wardrobe">
+        <div class="cs-wh">
+          <h2>Wardrobe</h2>
+          <span class="cs-count" id="csCount">0 / 16 unlocked</span>
+        </div>
+        <div class="cs-tabs" id="csTabs" role="tablist">
+          <button type="button" class="cs-tab is-active" data-cat="hat" role="tab">Hats</button>
+          <button type="button" class="cs-tab" data-cat="gear" role="tab">Gear</button>
+          <button type="button" class="cs-tab" data-cat="companion" role="tab">Companions</button>
+          <button type="button" class="cs-tab" data-cat="bg" role="tab">Scenes</button>
+        </div>
+        <div class="cs-items" id="csItems"></div>
+      </section>
     </div>
+
+    <section class="card cs-section" aria-label="Evolution path">
+      <h2>Evolution path</h2>
+      <p>Your mascot evolves at the same levels as your tier. Tap an unlocked form to preview it.</p>
+      <div class="cs-forms" id="csForms"></div>
+    </section>
+
+    <section class="card cs-section" aria-label="Next unlocks">
+      <h2>Next unlocks</h2>
+      <p>The closest rewards you can earn.</p>
+      <div class="cs-next" id="csNext"></div>
+    </section>
   </main>
 
   <script type="module" src="auth-guard.js"></script>
   <script type="module">
-    import {
-      doc, updateDoc, serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { doc, getDoc, updateDoc, serverTimestamp }
+      from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     fetch('/partials/navbar.html').then(r => r.text()).then(html => {
       document.getElementById('navbar-container').innerHTML = html;
@@ -199,180 +255,231 @@
       });
     });
 
-    // Six styles offered. Matches the firestore.rules allowlist on
-    // students/{uid}.avatarStyle. If you change this set, update the
-    // rule too (see Common Mistake — drift between style allowlist
-    // and rule envelope silently breaks Save with permission-denied).
-    const STYLES = [
-      { id: 'bottts',     label: 'Robot',     sub: 'Friendly bot (default)' },
-      { id: 'adventurer', label: 'Adventurer', sub: 'Cartoon character' },
-      { id: 'lorelei',    label: 'Lorelei',   sub: 'Playful portrait' },
-      { id: 'notionists', label: 'Notionist', sub: 'Clean line art' },
-      { id: 'shapes',     label: 'Shapes',    sub: 'Abstract geometry' },
-      { id: 'fun-emoji',  label: 'Emoji',     sub: 'Round face icon' },
+    const ASSETS = '/assets/mascot/';
+
+    // Same tier bands as tierFor() on the dashboard / leaderboard / how-points-work.
+    const FORMS = [
+      { id: 'apprentice', label: 'Apprentice',      from: 1,  to: 4  },
+      { id: 'scholar',    label: 'Scholar',         from: 5,  to: 9  },
+      { id: 'mentor',     label: 'Mentor',          from: 10, to: 19 },
+      { id: 'master',     label: 'Master',          from: 20, to: 34 },
+      { id: 'fellow',     label: 'Cambridge Fellow', from: 35, to: null },
     ];
+    const formFor = (lvl) => { let i = 0; FORMS.forEach((f, k) => { if (lvl >= f.from) i = k; }); return i; };
 
-    const state = {
-      style: 'bottts',
-      seed:  '',
-      seedGallery: [],   // 6 seeds shown in the row
-      dirty: false,
-      savedStyle: 'bottts',
-      savedSeed:  '',
+    // req: { t: 'level'|'streak'|'perfect', n }  — all derived from student_points.
+    const ITEMS = [
+      { id: 'goggles-cap',     cat: 'hat',       name: 'Explorer Cap',        rar: 'common',    req: { t: 'level',   n: 1  } },
+      { id: 'starfire-beret',  cat: 'hat',       name: 'Starfire Beret',      rar: 'rare',      req: { t: 'level',   n: 10 } },
+      { id: 'laurel-crown',    cat: 'hat',       name: 'Laurel Crown',        rar: 'epic',      req: { t: 'level',   n: 20 } },
+      { id: 'page-halo',       cat: 'hat',       name: 'Halo of Pages',       rar: 'legendary', req: { t: 'level',   n: 35 } },
+      { id: 'leather-satchel', cat: 'gear',      name: 'Leather Satchel',     rar: 'common',    req: { t: 'level',   n: 3  } },
+      { id: 'cyber-satchel',   cat: 'gear',      name: 'Cyber Satchel',       rar: 'rare',      req: { t: 'level',   n: 12 } },
+      { id: 'comet-cape',      cat: 'gear',      name: 'Comet Cape',          rar: 'epic',      req: { t: 'level',   n: 22 } },
+      { id: 'quill-staff',     cat: 'gear',      name: 'Golden Quill Staff',  rar: 'legendary', req: { t: 'level',   n: 28 } },
+      { id: 'paper-crane',     cat: 'companion', name: 'Paper Crane',         rar: 'common',    req: { t: 'streak',  n: 3  } },
+      { id: 'lantern-sprite',  cat: 'companion', name: 'Lantern Sprite',      rar: 'rare',      req: { t: 'streak',  n: 7  } },
+      { id: 'phoenix-chick',   cat: 'companion', name: 'Phoenix Chick',       rar: 'epic',      req: { t: 'perfect', n: 3  } },
+      { id: 'study-aura',      cat: 'companion', name: 'Study Aura',          rar: 'legendary', req: { t: 'streak',  n: 30 } },
+      { id: 'study-nook',      cat: 'bg',        name: 'Cosy Study Nook',     rar: 'common',    req: { t: 'level',   n: 1  } },
+      { id: 'observatory',     cat: 'bg',        name: 'Starry Observatory',  rar: 'rare',      req: { t: 'level',   n: 8  } },
+      { id: 'aurora-peak',     cat: 'bg',        name: 'Aurora Peak',         rar: 'epic',      req: { t: 'level',   n: 16 } },
+      { id: 'golden-library',  cat: 'bg',        name: 'Golden Library',      rar: 'legendary', req: { t: 'level',   n: 30 } },
+    ];
+    const RARITY = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
+    const CAT_LABEL = { hat: 'Hat', gear: 'Gear', companion: 'Companion', bg: 'Scene' };
+
+    const stats = { level: 1, streak: 0, perfect: 0, progress: 0 };
+    const state = { equipped: { hat: null, gear: null, companion: null, bg: 'study-nook' }, saved: null, cat: 'hat', preview: null };
+    let uid = null;
+
+    const have = (it) => {
+      const r = it.req;
+      return (r.t === 'level' ? stats.level : r.t === 'streak' ? stats.streak : stats.perfect) >= r.n;
     };
+    const cur = (it) => Math.min(it.req.n, it.req.t === 'level' ? stats.level : it.req.t === 'streak' ? stats.streak : stats.perfect);
+    const reqText = (it) => {
+      const r = it.req;
+      if (r.t === 'level')  return 'Reach Level ' + r.n;
+      if (r.t === 'streak') return r.n + '-day streak';
+      return r.n + ' perfect run' + (r.n > 1 ? 's' : '');
+    };
+    const byId = (id) => ITEMS.find(i => i.id === id);
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+    const eqKey = (e) => ['hat', 'gear', 'companion', 'bg'].map(k => e[k] || '').join('|');
+    const lsKey = () => 'sh-mascot:' + uid;
 
-    window.addEventListener('authReady', (ev) => {
+    window.addEventListener('authReady', async (ev) => {
       if (!ev.detail.signedIn) return;
-      const p = window.studentProfile;
-      const uid = window.currentUser.uid;
-      state.style = p.avatarStyle || 'bottts';
-      state.seed  = p.avatarSeed  || uid;
-      state.savedStyle = state.style;
-      state.savedSeed  = state.seed;
-      state.seedGallery = freshSeedGallery(state.seed);
+      uid = window.currentUser.uid;
+      const p = window.studentProfile || {};
 
-      renderStyles();
-      renderSeedRow();
-      renderHero();
+      // points → level / streak / perfect runs (read-only, Cloud-Function maintained)
+      try {
+        const snap = await getDoc(doc(window.db, 'student_points', uid));
+        const d = snap.exists() ? snap.data() : {};
+        stats.level    = d.level || 1;
+        stats.streak   = d.streak?.longest || d.streak?.current || 0;
+        stats.perfect  = d.perfectScores || 0;
+        stats.progress = Math.max(0, Math.min(100, d.levelProgress || 0));
+      } catch (e) { console.warn('[studio] points load failed', e.message); }
 
-      document.getElementById('btnReroll').addEventListener('click', () => {
-        state.seedGallery = freshSeedGallery();
-        renderSeedRow();
-      });
-      document.getElementById('btnReset').addEventListener('click', () => {
-        state.style = 'bottts';
-        state.seed  = uid;
-        state.seedGallery = freshSeedGallery(state.seed);
-        renderStyles();
-        renderSeedRow();
-        renderHero();
-        markDirty();
-      });
-      document.getElementById('btnSave').addEventListener('click', save);
+      // equipped: Firestore wins, then this device, then defaults
+      let eq = p.mascotEquipped;
+      if (!eq) { try { eq = JSON.parse(localStorage.getItem(lsKey()) || 'null'); } catch (_) {} }
+      if (eq && typeof eq === 'object') {
+        ['hat', 'gear', 'companion', 'bg'].forEach(k => {
+          const it = byId(eq[k]);
+          if (it && it.cat === k && have(it)) state.equipped[k] = it.id;
+        });
+      }
+      state.saved = eqKey(state.equipped);
+
+      document.querySelectorAll('#csTabs .cs-tab').forEach(b => b.addEventListener('click', () => {
+        state.cat = b.dataset.cat;
+        document.querySelectorAll('#csTabs .cs-tab').forEach(x => x.classList.toggle('is-active', x === b));
+        renderItems();
+      }));
+      document.getElementById('csSave').addEventListener('click', save);
+      renderAll();
     });
 
-    function renderStyles() {
-      const box = document.getElementById('styleGrid');
-      box.innerHTML = STYLES.map(s => {
-        const url = avatarUrl(s.id, state.seed, 88);
-        const active = s.id === state.style ? ' is-active' : '';
-        return `<button type="button" class="style-tile${active}" data-style="${s.id}">
-          <span class="av"><img src="${url}" alt="" loading="lazy"></span>
-          <div>
-            <div class="label">${s.label}</div>
-            <div class="sub">${s.sub}</div>
-          </div>
-        </button>`;
-      }).join('');
-      box.querySelectorAll('.style-tile').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.style = btn.dataset.style;
-          renderStyles();
-          renderSeedRow();
-          renderHero();
-          markDirty();
-        });
+    function renderAll() { renderStage(); renderEvo(); renderItems(); renderForms(); renderNext(); renderCount(); markDirty(); }
+
+    function renderStage() {
+      const fi = state.preview != null ? state.preview : formFor(stats.level);
+      const f = FORMS[fi];
+      document.getElementById('csChar').src = ASSETS + 'form-' + f.id + '.webp';
+      document.getElementById('csLv').textContent = stats.level;
+      document.getElementById('csTier').textContent = f.label + (state.preview != null && state.preview !== formFor(stats.level) ? ' · preview' : '');
+      document.getElementById('csBg').className = 'cs-bg scene-' + (state.equipped.bg || 'study-nook');
+      [['hat', 'slotHat'], ['gear', 'slotGear'], ['companion', 'slotCompanion']].forEach(([cat, id]) => {
+        const el = document.getElementById(id);
+        const it = byId(state.equipped[cat]);
+        const lbl = CAT_LABEL[cat];
+        el.className = 'cs-slot' + (it ? ' has-item r-' + it.rar : '');
+        el.innerHTML = it
+          ? '<div class="tile"><img src="' + ASSETS + 'item-' + it.id + '.webp" alt="' + esc(it.name) + '"></div><div class="lbl">' + esc(it.name) + '</div>'
+          : '<div class="tile empty">＋</div><div class="lbl">' + lbl + '</div>';
       });
     }
 
-    function renderSeedRow() {
-      const box = document.getElementById('seedRow');
-      box.innerHTML = state.seedGallery.map(s => {
-        const url = avatarUrl(state.style, s, 88);
-        const active = s === state.seed ? ' is-active' : '';
-        return `<button type="button" class="seed-tile${active}" data-seed="${escAttr(s)}">
-          <img src="${url}" alt="" loading="lazy">
-        </button>`;
+    function renderEvo() {
+      const fi = formFor(stats.level);
+      const next = FORMS[fi + 1];
+      const sil = document.getElementById('csEvoSil');
+      if (!next) {
+        sil.classList.add('max');
+        document.getElementById('csEvoImg').src = ASSETS + 'form-fellow.webp';
+        document.getElementById('csEvoTitle').textContent = 'Final form reached 👑';
+        document.getElementById('csEvoSub').textContent = 'Sparky is a Cambridge Fellow. Keep your streak going to unlock every companion.';
+        document.getElementById('csEvoBar').style.width = '100%';
+        return;
+      }
+      sil.classList.remove('max');
+      document.getElementById('csEvoImg').src = ASSETS + 'form-' + next.id + '.webp';
+      const togo = next.from - stats.level;
+      document.getElementById('csEvoTitle').textContent = 'Next evolution: ' + next.label;
+      document.getElementById('csEvoSub').textContent = 'Reach Level ' + next.from + ' · ' + togo + ' level' + (togo > 1 ? 's' : '') + ' to go';
+      const span = next.from - FORMS[fi].from;
+      const pct = Math.max(2, Math.min(100, Math.round(((stats.level - FORMS[fi].from + stats.progress / 100) / span) * 100)));
+      document.getElementById('csEvoBar').style.width = pct + '%';
+    }
+
+    function renderItems() {
+      const list = ITEMS.filter(i => i.cat === state.cat);
+      document.getElementById('csItems').innerHTML = list.map(it => {
+        const ok = have(it);
+        const eq = state.equipped[it.cat] === it.id;
+        const st = eq ? '✓ Equipped' : ok ? 'Tap to equip' : reqText(it);
+        const pct = Math.round(cur(it) / it.req.n * 100);
+        const art = it.cat === 'bg'
+          ? '<div class="art scene"><div class="cs-bg scene-' + it.id + '" style="position:absolute;inset:0"></div></div>'
+          : '<div class="art"><img src="' + ASSETS + 'item-' + it.id + '.webp" alt="" loading="lazy"></div>';
+        return '<button type="button" class="cs-item r-' + it.rar + (ok ? '' : ' locked') + (eq ? ' is-equipped' : '') + '" data-id="' + it.id + '" aria-pressed="' + eq + '"' + (ok ? '' : ' aria-disabled="true"') + '>'
+          + art + '<span class="lock" aria-hidden="true">🔒</span>'
+          + '<div class="nm">' + esc(it.name) + '</div><span class="rar">' + RARITY[it.rar] + '</span>'
+          + '<div class="st">' + esc(st) + '</div>'
+          + (ok ? '' : '<div class="mini"><i style="width:' + pct + '%"></i></div>')
+          + '</button>';
       }).join('');
-      box.querySelectorAll('.seed-tile').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.seed = btn.dataset.seed;
-          renderSeedRow();
-          renderHero();
-          markDirty();
-        });
-      });
+      document.querySelectorAll('#csItems .cs-item').forEach(b => b.addEventListener('click', () => {
+        const it = byId(b.dataset.id);
+        if (!have(it)) { setStatus('Locked — ' + reqText(it).toLowerCase() + ' to unlock.', ''); return; }
+        if (state.equipped[it.cat] === it.id) { if (it.cat !== 'bg') state.equipped[it.cat] = null; }
+        else state.equipped[it.cat] = it.id;
+        renderStage(); renderItems(); markDirty();
+      }));
     }
 
-    function renderHero() {
-      document.getElementById('livePreview').src = avatarUrl(state.style, state.seed, 128);
-      document.getElementById('metaStyle').textContent = state.style;
-      document.getElementById('metaSeed').textContent = state.seed.length > 16
-        ? state.seed.slice(0, 8) + '…' + state.seed.slice(-4)
-        : state.seed;
+    function renderCount() {
+      const n = ITEMS.filter(have).length;
+      document.getElementById('csCount').textContent = n + ' / ' + ITEMS.length + ' unlocked';
     }
 
+    function renderForms() {
+      const fi = formFor(stats.level);
+      document.getElementById('csForms').innerHTML = FORMS.map((f, i) => {
+        const cls = i < fi ? 'done' : i === fi ? 'current' : 'locked';
+        const range = f.to ? 'Lv ' + f.from + '–' + f.to : 'Lv ' + f.from + '+';
+        return '<button type="button" class="cs-form ' + cls + (state.preview === i ? ' previewing' : '') + '" data-i="' + i + '"' + (i > fi ? ' aria-disabled="true"' : '') + '>'
+          + '<div class="art"><img src="' + ASSETS + 'form-' + f.id + '.webp" alt="" loading="lazy"></div>'
+          + '<div class="t">' + esc(f.label) + '</div><div class="l">' + range + '</div></button>';
+      }).join('');
+      document.querySelectorAll('#csForms .cs-form').forEach(b => b.addEventListener('click', () => {
+        const i = +b.dataset.i;
+        if (i > fi) return;
+        state.preview = (i === fi || state.preview === i) ? null : i;
+        renderStage(); renderForms();
+      }));
+    }
+
+    function renderNext() {
+      const locked = ITEMS.filter(i => !have(i)).map(i => ({ it: i, gap: (i.req.n - cur(i)) / i.req.n })).sort((a, b) => a.gap - b.gap).slice(0, 3);
+      const box = document.getElementById('csNext');
+      if (!locked.length) { box.innerHTML = '<div class="empty" style="padding:8px 0">You have unlocked everything. Legend! 🏆</div>'; return; }
+      box.innerHTML = locked.map(({ it }) => {
+        const art = it.cat === 'bg'
+          ? '<div class="art scene"><div class="cs-bg scene-' + it.id + '" style="position:absolute;inset:0"></div></div>'
+          : '<div class="art"><img src="' + ASSETS + 'item-' + it.id + '.webp" alt="" loading="lazy"></div>';
+        const pct = Math.round(cur(it) / it.req.n * 100);
+        return '<div class="cs-item locked r-' + it.rar + '">' + art + '<span class="lock" aria-hidden="true">🔒</span>'
+          + '<div class="nm">' + esc(it.name) + '</div><span class="rar">' + RARITY[it.rar] + ' · ' + CAT_LABEL[it.cat] + '</span>'
+          + '<div class="st">' + esc(reqText(it)) + ' (' + cur(it) + ' / ' + it.req.n + ')</div>'
+          + '<div class="mini"><i style="width:' + pct + '%"></i></div></div>';
+      }).join('');
+    }
+
+    function setStatus(msg, cls) {
+      const s = document.getElementById('csStatus');
+      s.className = 'status' + (cls ? ' ' + cls : '');
+      s.textContent = msg;
+    }
     function markDirty() {
-      const same = state.style === state.savedStyle && state.seed === state.savedSeed;
-      state.dirty = !same;
-      document.getElementById('btnSave').disabled = !state.dirty;
-      const status = document.getElementById('saveStatus');
-      status.className = 'status';
-      status.textContent = same ? 'Looking good as-is.' : 'You have unsaved changes.';
+      const dirty = eqKey(state.equipped) !== state.saved;
+      document.getElementById('csSave').disabled = !dirty;
+      if (dirty) setStatus('You have unsaved changes.', '');
+      else if (state.saved !== null) setStatus('Looking great. Keep levelling up to unlock more!', '');
     }
 
     async function save() {
-      const uid = window.currentUser.uid;
-      const status = document.getElementById('saveStatus');
-      const btn = document.getElementById('btnSave');
+      const btn = document.getElementById('csSave');
       btn.disabled = true;
-      status.className = 'status';
-      status.textContent = 'Saving…';
+      setStatus('Saving…', '');
+      const payload = { hat: state.equipped.hat, gear: state.equipped.gear, companion: state.equipped.companion, bg: state.equipped.bg };
+      try { localStorage.setItem(lsKey(), JSON.stringify(payload)); } catch (_) {}
       try {
-        await updateDoc(doc(window.db, 'students', uid), {
-          avatarStyle: state.style,
-          avatarSeed:  state.seed,
-          avatarUpdatedAt: serverTimestamp(),
-        });
-        // Update the local profile so other open tabs / immediate renders pick up
-        if (window.studentProfile) {
-          window.studentProfile.avatarStyle = state.style;
-          window.studentProfile.avatarSeed  = state.seed;
-        }
-        state.savedStyle = state.style;
-        state.savedSeed  = state.seed;
-        state.dirty = false;
-        status.classList.add('ok');
-        status.textContent = '✓ Saved — your new avatar is live everywhere.';
+        await updateDoc(doc(window.db, 'students', uid), { mascotEquipped: payload, mascotUpdatedAt: serverTimestamp() });
+        if (window.studentProfile) window.studentProfile.mascotEquipped = payload;
+        state.saved = eqKey(state.equipped);
+        setStatus('✓ Saved — Sparky looks amazing!', 'ok');
+        if (window.fx && window.fx.play) window.fx.play('tick');
       } catch (e) {
-        console.error('[avatar] save failed', e);
-        status.classList.add('no');
-        status.textContent = 'Save failed: ' + (e.code || e.message);
-        btn.disabled = false;
+        console.warn('[studio] cloud save failed, kept on this device', e.code || e.message);
+        state.saved = eqKey(state.equipped);
+        setStatus('Saved on this device. (Sync to your account is coming soon.)', 'ok');
       }
-    }
-
-    // ─── Avatar URL helper (mirrors auth-guard.js studentAvatarUrl,
-    //     but takes explicit style+seed for the picker) ───────────
-    function avatarUrl(style, seed, size) {
-      const bg = 'efedfb,ecfeff,fef3c7,d1fae5,fee2e2,e0e7ff';
-      return 'https://api.dicebear.com/9.x/' + style + '/svg'
-        + '?seed=' + encodeURIComponent(seed)
-        + '&size=' + size
-        + '&backgroundColor=' + bg
-        + '&radius=50';
-    }
-
-    // 6 random-ish seeds (URL-safe). First is current seed so the
-    // active state has somewhere to land. Re-roll generates a fresh
-    // set, dropping the current seed.
-    function freshSeedGallery(includeCurrent) {
-      const out = [];
-      if (includeCurrent) out.push(includeCurrent);
-      while (out.length < 6) out.push(randomSeed());
-      return out;
-    }
-    function randomSeed() {
-      // 8 hex chars — easy to read in the meta line, ~4B combos
-      const bytes = new Uint8Array(4);
-      (window.crypto || window.msCrypto).getRandomValues(bytes);
-      return [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    function escAttr(s) {
-      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-      })[c]);
+      markDirty();
     }
   </script>
 </body>

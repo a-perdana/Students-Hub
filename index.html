@@ -822,7 +822,7 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px">
           <a href="/practice" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🎯 Practice</a>
           <a href="/leaderboard" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🏆 Leaderboard</a>
-          <a href="/avatar" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🎨 Avatar</a>
+          <a href="/avatar" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">🐾 Character Studio</a>
           <a href="/how-points-work" class="btn btn-secondary" style="padding:10px 12px; font-size:.85rem">⭐ How points work</a>
         </div>
       </div>
@@ -1280,6 +1280,24 @@
     }
     paintChest();
     nodes.forEach(n => n && new MutationObserver(paintChest).observe(n, { attributes: true, attributeFilter: ['class'] }));
+
+    // 4) mascot portrait in the hero ring — Sparky's head for the current evolution form
+    //    (Character Studio, 2026-10-03). Falls back to the DiceBear avatar if the art fails to load.
+    const heroImg = document.getElementById('heroAvatarImg');
+    const lvlBadge = document.getElementById('heroLvlBadge');
+    function mascotForm(l) { return l >= 35 ? 'fellow' : l >= 20 ? 'master' : l >= 10 ? 'mentor' : l >= 5 ? 'scholar' : 'apprentice'; }
+    function paintMascot() {
+      if (!heroImg || !lvlBadge) return;
+      const lvl = parseInt(lvlBadge.textContent, 10) || 1;
+      const url = '/assets/mascot/head-' + mascotForm(lvl) + '.webp';
+      if ((heroImg.getAttribute('src') || '').indexOf(url) !== -1) return;
+      const probe = new Image();
+      probe.onload = function () { heroImg.src = url; heroImg.style.objectFit = 'cover'; };
+      probe.src = url;
+    }
+    if (lvlBadge) new MutationObserver(paintMascot).observe(lvlBadge, { childList: true, characterData: true, subtree: true });
+    if (heroImg) new MutationObserver(paintMascot).observe(heroImg, { attributes: true, attributeFilter: ['src'] });
+    paintMascot();
   })();
   </script>
 </body>
