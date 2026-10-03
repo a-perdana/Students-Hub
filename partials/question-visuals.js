@@ -498,6 +498,10 @@
   }
 
   function rightTriangle(spec) {
+    const rawAngle = spec.angle || '';
+    const isRightAngle = /^\s*90\s*(deg|degrees|\u00b0)?\s*$/i.test(rawAngle);
+    const acuteAngle = isRightAngle ? '' : rawAngle;
+    const rightAngleLabel = spec.rightAngleLabel || (isRightAngle ? '90\u00b0' : '');
     const children = [
       rect(18, 18, 524, 222, { fill: '#fbfdff', stroke: '#dbe4ff', rx: 18 }),
       text(280, 44, spec.heading || 'Right-angled triangle', { fill: '#4338ca', 'font-size': 16, 'font-weight': 800 }),
@@ -507,15 +511,29 @@
       text(290, 213, spec.base || '', { fill: '#334155', 'font-size': 14, 'font-weight': 900 }),
       text(453, 134, spec.height || '', { fill: '#334155', 'font-size': 14, 'font-weight': 900, 'text-anchor': 'start' }),
       text(284, 125, spec.hypotenuse || '', { fill: '#334155', 'font-size': 14, 'font-weight': 900 }),
-      svgEl('path', {
+    ];
+    if (rightAngleLabel) {
+      children.push(text(397, 160, rightAngleLabel, {
+        fill: '#0f766e',
+        'font-size': 13,
+        'font-weight': 900,
+        'text-anchor': 'end',
+      }));
+    }
+    if (acuteAngle) {
+      children.push(svgEl('path', {
         d: 'M 205 190 A 55 55 0 0 1 225 150',
         fill: 'none',
         stroke: '#f97316',
         'stroke-width': 3,
         'stroke-linecap': 'round',
-      }),
-      text(226, 176, spec.angle || '', { fill: '#ea580c', 'font-size': 14, 'font-weight': 900 }),
-    ];
+      }));
+      children.push(text(226, 176, acuteAngle.replace(/\s*(deg|degrees)\b/i, '\u00b0'), {
+        fill: '#ea580c',
+        'font-size': 14,
+        'font-weight': 900,
+      }));
+    }
     return makeSvg('0 0 560 260', children);
   }
 
@@ -977,7 +995,7 @@
         base: `${base}${suffix}`,
         height: `${height}${suffix}`,
         hypotenuse: 'h',
-        angle: '90 deg',
+        rightAngleLabel: '90\u00b0',
         caption: 'The hypotenuse is the side opposite the right angle.',
         alt: `Right-angled triangle with shorter sides ${height}${suffix} and ${base}${suffix}; hypotenuse labelled h.`,
       };
