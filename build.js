@@ -104,7 +104,6 @@ function processFile(filename) {
   html = html.replace(/fetch\('partials\/navbar\.html'\)/g, "fetch('/partials/navbar.html')");
   html = html.replace(/src="\.\/partials\/feedback-fx\.js"/g, 'src="/partials/feedback-fx.js"');
   html = html.replace(/src="\.\/partials\/observer-strip\.js"/g, 'src="/partials/observer-strip.js"');
-  html = html.replace(/src="\.\/partials\/question-visuals\.js"/g, 'src="/partials/question-visuals.js"');
   html = html.replace(/src="\.\/partials\/footer\.js"/g, 'src="/partials/footer.js"');
   html = html.replace(/src="\.\/partials\/badges\.js"/g, 'src="/partials/badges.js"');
   html = html.replace(/src="\.\/partials\/quests\.js"/g, 'src="/partials/quests.js"');
@@ -173,6 +172,9 @@ if (fs.existsSync(logoSrc)) {
 // Copy partials/ folder (skip firebase-env.html — already inlined)
 const partialsSrc  = path.join(__dirname, 'partials');
 const partialsDist = path.join(distDir, 'partials');
+// Remove the retired renderer from incremental builds, too.
+const retiredRenderer = path.join(partialsDist, 'question-visuals.js');
+if (fs.existsSync(retiredRenderer)) fs.unlinkSync(retiredRenderer);
 if (fs.existsSync(partialsSrc)) {
   if (!fs.existsSync(partialsDist)) fs.mkdirSync(partialsDist, { recursive: true });
   fs.readdirSync(partialsSrc).forEach(file => {
